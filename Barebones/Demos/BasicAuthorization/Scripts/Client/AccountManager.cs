@@ -24,7 +24,7 @@ namespace Barebones.MasterServer.Examples
         [SerializeField]
         private string defaultEmail = "qwerty@mail.com";
         [SerializeField]
-        private string defaultPassword = "qazwsxedc123!@#";
+        private string defaultPassword = "qwerty123!@#";
         [SerializeField]
         private bool useDefaultCredentials = false;
 

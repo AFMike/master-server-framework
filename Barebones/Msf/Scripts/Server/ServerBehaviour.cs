@@ -115,9 +115,9 @@ namespace Barebones.MasterServer
             socket.OnClientDisconnectedEvent += OnDisconnectedEventHandler;
 
             // AesKey handler
-            SetHandler((short)MsfMessageCodes.AesKeyRequest, HandleAesKeyRequest);
-            SetHandler((short)MsfMessageCodes.PermissionLevelRequest, HandlePermissionLevelRequest);
-            SetHandler((short)MsfMessageCodes.PeerGuidRequest, HandleGetPeerGuidRequest);
+            SetHandler((short)MsfMessageCodes.AesKeyRequest, GetAesKeyRequestHandler);
+            SetHandler((short)MsfMessageCodes.PermissionLevelRequest, PermissionLevelRequestHandler);
+            SetHandler((short)MsfMessageCodes.PeerGuidRequest, GetPeerGuidRequestHandler);
         }
 
         /// <summary>
@@ -144,6 +144,14 @@ namespace Barebones.MasterServer
 
                 // Initialize modules
                 InitializeModules();
+
+                // Check and notify if some modules are not uninitialized
+                var uninitializedModules = GetUninitializedModules();
+
+                if (uninitializedModules.Count > 0)
+                {
+                    logger.Warn($"Some of the {GetType().Name} modules failed to initialize: \n{string.Join(" \n", uninitializedModules.Select(m => m.GetType().ToString()).ToArray())}");
+                }
             }
 
             OnStartedServer();
@@ -213,15 +221,15 @@ namespace Barebones.MasterServer
             socket.OnClientDisconnectedEvent -= OnDisconnectedEventHandler;
         }
 
-        #region Message Handlers
+        #region MESSAGE HANDLERS
 
-        protected virtual void HandleGetPeerGuidRequest(IIncommingMessage message)
+        protected virtual void GetPeerGuidRequestHandler(IIncommingMessage message)
         {
             var extension = message.Peer.GetExtension<SecurityInfoPeerExtension>();
             message.Respond(extension.UniqueGuid.ToByteArray(), ResponseStatus.Success);
         }
 
-        protected virtual void HandlePermissionLevelRequest(IIncommingMessage message)
+        protected virtual void PermissionLevelRequestHandler(IIncommingMessage message)
         {
             var key = message.AsString();
 
@@ -253,7 +261,7 @@ namespace Barebones.MasterServer
             message.Respond(newLevel, ResponseStatus.Success);
         }
 
-        protected virtual void HandleAesKeyRequest(IIncommingMessage message)
+        protected virtual void GetAesKeyRequestHandler(IIncommingMessage message)
         {
             var extension = message.Peer.GetExtension<SecurityInfoPeerExtension>();
             var encryptedKey = extension.AesKeyEncrypted;
@@ -292,7 +300,7 @@ namespace Barebones.MasterServer
 
         #endregion
 
-        #region Virtual methods
+        #region VIRTUAL METHODS
 
         /// <summary>
         /// Invokes when new <see cref="IPeer"/> connected
@@ -363,7 +371,22 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Invokes when server started
         /// </summary>
-        protected virtual void OnStartedServer() { }
+        protected virtual void OnStartedServer()
+        {
+            if (lookForModules)
+            {
+                var initializedModules = GetInitializedModules();
+
+                if (initializedModules.Count > 0)
+                {
+                    logger.Info($"Successfully initialized modules: \n{string.Join(" \n", initializedModules.Select(m => m.GetType().ToString()).ToArray())}");
+                }
+                else
+                {
+                    logger.Info("No modules found");
+                }
+            }
+        }
 
         #endregion
 

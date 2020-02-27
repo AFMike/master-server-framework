@@ -8,7 +8,7 @@ namespace Barebones.Networking
     ///     Equivalent of System.IO.BinaryWriter, but with either endianness, depending on
     ///     the EndianBitConverter it is constructed with.
     /// </summary>
-    public class EndianBinaryWriter : IDisposable
+    public sealed class EndianBinaryWriter : IDisposable
     {
         #region IDisposable Members
 
@@ -54,10 +54,7 @@ namespace Barebones.Networking
         /// </summary>
         /// <param name="bitConverter">Converter to use when writing data</param>
         /// <param name="stream">Stream to write data to</param>
-        public EndianBinaryWriter(EndianBitConverter bitConverter,
-            Stream stream) : this(bitConverter, stream, Encoding.UTF8)
-        {
-        }
+        public EndianBinaryWriter(EndianBitConverter bitConverter, Stream stream) : this(bitConverter, stream, Encoding.UTF8) { }
 
         /// <summary>
         ///     Constructs a new binary writer with the given bit converter, writing

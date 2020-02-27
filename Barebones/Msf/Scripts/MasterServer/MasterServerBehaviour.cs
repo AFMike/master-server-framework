@@ -111,31 +111,13 @@ namespace Barebones.MasterServer
             logger.Info($"Starting Master Server... {Msf.Version}");
 
             base.StartServer(port);
-
-            // Check and notify if some modules are not uninitialized
-            var uninitializedModules = GetUninitializedModules();
-
-            if (uninitializedModules.Count > 0)
-            {
-                logger.Warn("Some of the Master Server modules failed to initialize: \n" +
-                            string.Join(" \n", uninitializedModules.Select(m => m.GetType().ToString()).ToArray()));
-            }
         }
 
         protected override void OnStartedServer()
         {
             logger.Info($"Master Server is started and listening port: {port}");
 
-            var initializedModules = GetInitializedModules();
-
-            if (initializedModules.Count > 0)
-            {
-                logger.Info("Successfully initialized modules: \n" + string.Join(" \n", initializedModules.Select(m => m.GetType().ToString()).ToArray()));
-            }
-            else
-            {
-                logger.Info("No modules found");
-            }
+            base.OnStartedServer();
 
             OnMasterStartedEvent?.Invoke(this);
         }

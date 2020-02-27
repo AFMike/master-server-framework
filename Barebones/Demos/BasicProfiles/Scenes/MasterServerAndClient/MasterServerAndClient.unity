@@ -7467,7 +7467,7 @@ MonoBehaviour:
   targetFrameRate: 60
   logLevel: 0
   port: 5000
-  autoStartInEditor: 0
+  autoStartInEditor: 1
 --- !u!4 &1005001217
 Transform:
   m_ObjectHideFlags: 0

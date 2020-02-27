@@ -15,13 +15,22 @@ namespace Barebones.MasterServer
     {
         public delegate void PermissionLevelCallback(int? permissionLevel, string error);
 
-        public int RsaKeySize = 512;
-
+        /// <summary>
+        /// Salt string
+        /// </summary>
         private byte[] _salt = Encoding.ASCII.GetBytes("o6806642kbM7c5");
 
+        /// <summary>
+        /// List of encripted data
+        /// </summary>
         private Dictionary<IClientSocket, EncryptionData> _encryptionData;
 
-        #region Password hashing
+        /// <summary>
+        /// Size of RSA key
+        /// </summary>
+        public int RsaKeySize { get; set; } = 512;
+
+        #region PASSWORD HASHING
 
         // The following constants may be changed without breaking existing hashes.
         public const int SALT_BYTE_SIZE = 24;
@@ -34,9 +43,15 @@ namespace Barebones.MasterServer
 
         #endregion
 
+        /// <summary>
+        /// Current permission level
+        /// </summary>
         public int CurrentPermissionLevel { get; private set; }
 
-        public event Action PermissionsLevelChanged;
+        /// <summary>
+        /// Fired when permission level is changed
+        /// </summary>
+        public event Action OnPermissionsLevelChangedEvent;
 
         public MsfSecurity(IClientSocket connection) : base(connection)
         {
@@ -51,21 +66,18 @@ namespace Barebones.MasterServer
         public void RequestPermissionLevel(string key, PermissionLevelCallback callback, IClientSocket connection)
         {
             connection.SendMessage((short)MsfMessageCodes.PermissionLevelRequest, key, (status, response) =>
-           {
-               if (status != ResponseStatus.Success)
-               {
-                   callback.Invoke(null, response.AsString("Unknown error"));
-               }
+            {
+                if (status != ResponseStatus.Success)
+                {
+                    callback.Invoke(null, response.AsString("Unknown error"));
+                }
 
-               CurrentPermissionLevel = response.AsInt();
+                CurrentPermissionLevel = response.AsInt();
 
-               if (PermissionsLevelChanged != null)
-               {
-                   PermissionsLevelChanged.Invoke();
-               }
+                OnPermissionsLevelChangedEvent?.Invoke();
 
-               callback.Invoke(CurrentPermissionLevel, null);
-           });
+                callback.Invoke(CurrentPermissionLevel, null);
+            });
         }
 
         /// <summary>
@@ -75,8 +87,7 @@ namespace Barebones.MasterServer
         /// </summary>
         public void GetAesKey(Action<string> callback, IClientSocket connection)
         {
-            EncryptionData data;
-            _encryptionData.TryGetValue(connection, out data);
+            _encryptionData.TryGetValue(connection, out EncryptionData data);
 
             if (data == null)
             {
@@ -401,9 +412,9 @@ namespace Barebones.MasterServer
 
         private class EncryptionData
         {
-            public string ClientAesKey;
-            public RSACryptoServiceProvider ClientsCsp;
-            public RSAParameters ClientsPublicKey;
+            public string ClientAesKey { get; set; }
+            public RSACryptoServiceProvider ClientsCsp { get; set; }
+            public RSAParameters ClientsPublicKey { get; set; }
         }
     }
 }
