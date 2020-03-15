@@ -11,6 +11,12 @@ namespace Barebones.MasterServer
             return serverSocket;
         }
 
+        public IClientSocket ClientSocket()
+        {
+            var clientSocket = Msf.Advanced.ClientSocketFactory();
+            return clientSocket;
+        }
+
         /// <summary>
         /// Creates a logger of the given name
         /// </summary>

@@ -1,7 +1,9 @@
 ﻿using Barebones.Logging;
 using Barebones.MasterServer;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Barebones.Networking
@@ -22,6 +24,11 @@ namespace Barebones.Networking
         private Dictionary<Type, IPeerExtension> extensionsList;
         private static readonly object _idGenerationLock = new object();
         private static int _peerIdGenerator;
+
+        // Flag: Has Dispose already been called?
+        private bool disposed = false;
+        // Instantiate a SafeHandle instance.
+        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
 
         /// <summary>
         /// Default timeout, after which response callback is invoked with
@@ -397,14 +404,6 @@ namespace Barebones.Networking
         }
 
         /// <summary>
-        /// Destroy peer
-        /// </summary>
-        public void Dispose()
-        {
-            MsfTimer.Instance.OnTickEvent -= HandleAckDisposalTick;
-        }
-
-        /// <summary>
         ///     Force disconnect
         /// </summary>
         /// <param name="reason"></param>
@@ -564,6 +563,29 @@ namespace Barebones.Networking
             ackCallback(responseCode, _timeoutMessage);
         }
 
+        #endregion
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    MsfTimer.Instance.OnTickEvent -= HandleAckDisposalTick;
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            // GC.SuppressFinalize(this);
+        }
         #endregion
     }
 }

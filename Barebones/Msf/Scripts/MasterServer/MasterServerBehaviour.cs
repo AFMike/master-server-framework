@@ -12,23 +12,6 @@ namespace Barebones.MasterServer
     /// </summary>
     public class MasterServerBehaviour : ServerBehaviour
     {
-        [Header("Master Server Settings"), SerializeField]
-        private HelpBox hpInfo = new HelpBox()
-        {
-            Text = "This component is responsible for starting a Master Server and initializing its modules",
-            Type = HelpBoxType.Info
-        };
-
-        [Header("Editor settings"), SerializeField]
-        private bool autoStartInEditor = true;
-
-        [SerializeField]
-        private HelpBox hpEditor = new HelpBox()
-        {
-            Text = "Editor settings are used only while running in editor",
-            Type = HelpBoxType.Warning
-        };
-
         /// <summary>
         /// Singleton instance of the master server behaviour
         /// </summary>
@@ -76,12 +59,14 @@ namespace Barebones.MasterServer
             }
         }
 
-        protected virtual void Start()
+        protected override void Start()
         {
+            base.Start();
+
             // Start master server at start
-            if (Msf.Args.StartMaster || (Msf.Runtime.IsEditor && autoStartInEditor))
+            if (Msf.Args.StartMaster && !Msf.Runtime.IsEditor)
             {
-                // Start the master server on next frame
+                // Start the server on next frame
                 MsfTimer.WaitForEndOfFrame(() => {
                     StartServer(port);
                 });

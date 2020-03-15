@@ -38,7 +38,7 @@ namespace Barebones.Networking
         /// </summary>
         /// <param name="connectionCallback"></param>
         /// <param name="timeoutSeconds"></param>
-        public void WaitConnection(Action<IClientSocket> connectionCallback, float timeoutSeconds)
+        public void WaitForConnection(Action<IClientSocket> connectionCallback, float timeoutSeconds)
         {
             if (IsConnected)
             {
@@ -81,9 +81,9 @@ namespace Barebones.Networking
         /// (even if failed to connect). If already connected, callback is invoked instantly
         /// </summary>
         /// <param name="connectionCallback"></param>
-        public void WaitConnection(Action<IClientSocket> connectionCallback)
+        public void WaitForConnection(Action<IClientSocket> connectionCallback)
         {
-            WaitConnection(connectionCallback, 10);
+            WaitForConnection(connectionCallback, 10);
         }
 
         /// <summary>
@@ -308,8 +308,6 @@ namespace Barebones.Networking
             }
 
             webSocket = new WebSocket(new Uri($"ws://{ip}:{port}/msf"));
-
-            Logs.Debug(webSocket == null);
 
             Peer = new PeerWs(webSocket);
             Peer.OnMessageReceivedEvent += HandleMessage;

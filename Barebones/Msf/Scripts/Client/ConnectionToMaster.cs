@@ -29,10 +29,10 @@ namespace Barebones.MasterServer
         private bool readMasterServerAddressFromCmd = true;
 
         [Tooltip("Address to the server"), SerializeField]
-        private string serverIp = "127.0.0.1";
+        private string masterIp = "127.0.0.1";
 
         [Tooltip("Port of the server"), SerializeField]
-        private int serverPort = 5000;
+        private int masterPort = 5000;
 
         [Header("Automation"), Tooltip("If true, will try to connect on the Start()"), SerializeField]
         private bool connectOnStart = false;
@@ -81,13 +81,13 @@ namespace Barebones.MasterServer
                 // If master IP is provided via cmd arguments
                 if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
                 {
-                    serverIp = Msf.Args.MasterIp;
+                    masterIp = Msf.Args.MasterIp;
                 }
 
                 // If master port is provided via cmd arguments
                 if (Msf.Args.IsProvided(Msf.Args.Names.MasterPort))
                 {
-                    serverPort = Msf.Args.MasterPort;
+                    masterPort = Msf.Args.MasterPort;
                 }
             }
 
@@ -107,22 +107,22 @@ namespace Barebones.MasterServer
 
         public void SetIpAddress(string serverIp)
         {
-            this.serverIp = serverIp;
+            this.masterIp = serverIp;
         }
 
         public void SetPort(int serverPort)
         {
-            this.serverPort = serverPort;
+            this.masterPort = serverPort;
         }
 
         public void StartConnection()
         {
-            StartCoroutine(StartConnectionProcess(serverIp, serverPort, maxAttemptsToConnect));
+            StartCoroutine(StartConnectionProcess(masterIp, masterPort, maxAttemptsToConnect));
         }
 
         public void StartConnection(int numberOfAttempts)
         {
-            StartCoroutine(StartConnectionProcess(serverIp, serverPort, numberOfAttempts));
+            StartCoroutine(StartConnectionProcess(masterIp, masterPort, numberOfAttempts));
         }
 
         public void StartConnection(string serverIp, int serverPort, int numberOfAttempts = 5)
@@ -148,7 +148,6 @@ namespace Barebones.MasterServer
                 // If is already connected break cycle
                 if (Connection.IsConnected)
                 {
-                    logger.Debug("Client is already connected. Stop connection process...");
                     yield break;
                 }
 
@@ -204,7 +203,7 @@ namespace Barebones.MasterServer
 
         private void OnConnectedEventHandler()
         {
-            logger.Info($"Connected to MSF server at: {serverIp}:{serverPort}");
+            logger.Info($"Connected to MSF server at: {masterIp}:{masterPort}");
 
             timeToConnect = minTimeToConnect;
 

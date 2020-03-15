@@ -11,22 +11,6 @@ namespace Barebones.Networking
     /// </summary>
     public class EndianBinaryReader : IDisposable
     {
-        #region IDisposable Members
-
-        /// <summary>
-        /// Disposes of the underlying stream.
-        /// </summary>
-        public void Dispose()
-        {
-            if (!disposed)
-            {
-                disposed = true;
-                ((IDisposable)BaseStream).Dispose();
-            }
-        }
-
-        #endregion
-
         #region Fields not directly related to properties
 
         /// <summary>
@@ -615,6 +599,35 @@ namespace Barebones.Networking
             return index;
         }
 
+        #endregion
+
+        #region IDisposable Support
+
+        /// <summary>
+        /// Disposes of the underlying stream.
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    ((IDisposable)BaseStream).Dispose();
+                }
+
+                disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Disposes of the underlying stream.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            // GC.SuppressFinalize(this);
+        }
         #endregion
     }
 }

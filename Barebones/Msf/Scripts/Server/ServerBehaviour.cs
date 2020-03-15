@@ -51,6 +51,13 @@ namespace Barebones.MasterServer
         /// </summary>
         protected Logging.Logger logger;
 
+        [SerializeField]
+        private HelpBox hpInfo = new HelpBox()
+        {
+            Text = "This component is responsible for starting a Server and initializing its modules",
+            Type = HelpBoxType.Info
+        };
+
         [Header("Base Server Settings")]
         [SerializeField, Tooltip("If true, will look for game objects with modules in scene, and initialize them")]
         private bool lookForModules = true;
@@ -69,6 +76,17 @@ namespace Barebones.MasterServer
 
         [SerializeField, Tooltip("Port, to which rooms server will listen")]
         protected int port = 55000;
+
+        [Header("Editor Settings"), SerializeField]
+        private HelpBox hpEditor = new HelpBox()
+        {
+            Text = "Editor settings are used only while running in editor",
+            Type = HelpBoxType.Warning
+        };
+
+        [SerializeField]
+        protected bool autoStartInEditor = true;
+
 
         /// <summary>
         /// Check if current server is running
@@ -118,6 +136,17 @@ namespace Barebones.MasterServer
             SetHandler((short)MsfMessageCodes.AesKeyRequest, GetAesKeyRequestHandler);
             SetHandler((short)MsfMessageCodes.PermissionLevelRequest, PermissionLevelRequestHandler);
             SetHandler((short)MsfMessageCodes.PeerGuidRequest, GetPeerGuidRequestHandler);
+        }
+
+        protected virtual void Start()
+        {
+            if(Msf.Runtime.IsEditor && autoStartInEditor)
+            {
+                // Start the server on next frame
+                MsfTimer.WaitForEndOfFrame(() => {
+                    StartServer(port);
+                });
+            }
         }
 
         /// <summary>
