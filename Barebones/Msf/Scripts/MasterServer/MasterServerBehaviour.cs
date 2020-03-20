@@ -53,6 +53,12 @@ namespace Barebones.MasterServer
             DontDestroyOnLoad(gameObject);
 
             // Check is command line argument '-msfMasterPort' is defined
+            if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
+            {
+                ip = Msf.Args.MasterIp;
+            }
+
+            // Check is command line argument '-msfMasterPort' is defined
             if (Msf.Args.IsProvided(Msf.Args.Names.MasterPort))
             {
                 port = Msf.Args.MasterPort;
@@ -68,17 +74,9 @@ namespace Barebones.MasterServer
             {
                 // Start the server on next frame
                 MsfTimer.WaitForEndOfFrame(() => {
-                    StartServer(port);
+                    StartServer();
                 });
             }
-        }
-
-        /// <summary>
-        /// Start master server with given <see cref="port"/>
-        /// </summary>
-        public void StartServer()
-        {
-            StartServer(port);
         }
 
         /// <summary>
@@ -100,7 +98,7 @@ namespace Barebones.MasterServer
 
         protected override void OnStartedServer()
         {
-            logger.Info($"Master Server is started and listening port: {port}");
+            logger.Info($"Master Server is started and listening to: {ip}:{port}");
 
             base.OnStartedServer();
 

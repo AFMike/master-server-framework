@@ -3,55 +3,9 @@ using System.Linq;
 
 namespace Barebones.MasterServer
 {
-    public class MsfArgs
+    public partial class MsfArgs
     {
         private readonly string[] _args;
-
-        public MsfArgNames Names;
-
-        public MsfArgs()
-        {
-            _args = Environment.GetCommandLineArgs();
-
-            // Android fix
-            if (_args == null)
-            {
-                _args = Array.Empty<string>();
-            }
-
-            Names = new MsfArgNames();
-
-            StartMaster = IsProvided(Names.StartMaster);
-            AutoConnectClient = IsProvided(Names.StartClientConnection);
-            DestroyUi = IsProvided(Names.DestroyUi);
-
-            MasterPort = ExtractValueInt(Names.MasterPort, 5000);
-            MasterIp = ExtractValue(Names.MasterIp);
-
-            RoomIp = ExtractValue(Names.RoomIp, "127.0.0.1");
-            RoomPort = ExtractValueInt(Names.RoomPort, 7777);
-            RoomExecutablePath = ExtractValue(Names.RoomExecutablePath);
-            RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 1000);
-
-            SpawnId = ExtractValueInt(Names.SpawnId);
-            SpawnCode = ExtractValue(Names.SpawnCode);
-            DontSpawnInBatchmode = IsProvided(Names.DontSpawnInBatchmode);
-            MaxProcesses = ExtractValueInt(Names.MaxProcesses, 0);
-
-            LoadScene = ExtractValue(Names.LoadScene);
-
-            DbConnectionString = ExtractValue(Names.DbConnectionString);
-
-            LobbyId = ExtractValueInt(Names.LobbyId);
-            WebGl = IsProvided(Names.UseWebSockets);
-        }
-
-        public override string ToString()
-        {
-            return string.Join(" ", _args);
-        }
-
-        #region Arguments
 
         /// <summary>
         /// If true, master server should be started
@@ -64,14 +18,14 @@ namespace Barebones.MasterServer
         public bool AutoConnectClient { get; private set; }
 
         /// <summary>
-        /// Port, which will be open on the master server
-        /// </summary>
-        public int MasterPort { get; private set; }
-
-        /// <summary>
         /// Ip address to the master server
         /// </summary>
         public string MasterIp { get; private set; }
+
+        /// <summary>
+        /// Port, which will be open on the master server
+        /// </summary>
+        public int MasterPort { get; private set; }
 
         /// <summary>
         /// Public ip of the machine, on which the process is running
@@ -141,9 +95,49 @@ namespace Barebones.MasterServer
         /// </summary>
         public bool WebGl { get; private set; }
 
-        #endregion
+        public MsfArgNames Names { get; set; }
 
-        #region Helper methods
+        public MsfArgs()
+        {
+            _args = Environment.GetCommandLineArgs();
+
+            // Android fix
+            if (_args == null)
+            {
+                _args = Array.Empty<string>();
+            }
+
+            Names = new MsfArgNames();
+
+            StartMaster = IsProvided(Names.StartMaster);
+            AutoConnectClient = IsProvided(Names.StartClientConnection);
+            DestroyUi = IsProvided(Names.DestroyUi);
+
+            MasterPort = ExtractValueInt(Names.MasterPort, 5000);
+            MasterIp = ExtractValue(Names.MasterIp);
+
+            RoomIp = ExtractValue(Names.RoomIp, "127.0.0.1");
+            RoomPort = ExtractValueInt(Names.RoomPort, 7777);
+            RoomExecutablePath = ExtractValue(Names.RoomExecutablePath);
+            RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 1000);
+
+            SpawnId = ExtractValueInt(Names.SpawnId);
+            SpawnCode = ExtractValue(Names.SpawnCode);
+            DontSpawnInBatchmode = IsProvided(Names.DontSpawnInBatchmode);
+            MaxProcesses = ExtractValueInt(Names.MaxProcesses, 0);
+
+            LoadScene = ExtractValue(Names.LoadScene);
+
+            DbConnectionString = ExtractValue(Names.DbConnectionString);
+
+            LobbyId = ExtractValueInt(Names.LobbyId);
+            WebGl = IsProvided(Names.UseWebSockets);
+        }
+
+        public override string ToString()
+        {
+            return string.Join(" ", _args);
+        }
 
         /// <summary>
         /// Extracts a string value for command line arguments provided
@@ -182,48 +176,6 @@ namespace Barebones.MasterServer
         public bool IsProvided(string argName)
         {
             return _args.Contains(argName);
-        }
-
-        #endregion
-
-        public class MsfArgNames
-        {
-            /// <summary>
-            /// Use this cmd to start master server after unity player is started
-            /// </summary>
-            public string StartMaster { get { return "-msfStartMaster"; } }
-            /// <summary>
-            /// Use this cmd to start server room spawner after unity player is started
-            /// </summary>
-            public string StartSpawner { get { return "-msfStartSpawner"; } }
-            /// <summary>
-            /// Use this cmd to start client connection to master server after unity player is started
-            /// </summary>
-            public string StartClientConnection { get { return "-msfStartClientConnection"; } }
-            /// <summary>
-            /// Use this cmd to set up master server connection port
-            /// </summary>
-            public string MasterPort { get { return "-msfMasterPort"; } }
-            /// <summary>
-            /// Use this cmd to set up master server connection IP address
-            /// </summary>
-            public string MasterIp { get { return "-msfMasterIp"; } }
-
-            public string SpawnId { get { return "-msfSpawnId"; } }
-            public string SpawnCode { get { return "-msfSpawnCode"; } }
-
-            public string RoomPort { get { return "-msfRoomPort"; } }
-            public string RoomIp { get { return "-msfRoomIp"; } }
-            public string RoomMaxConnections { get { return "-msfRoomMaxConnections"; } }
-            public string RoomExecutablePath { get { return "-msfRoomExe"; } }
-            public string UseWebSockets { get { return "-msfUseWebSockets"; } }
-
-            public string LoadScene { get { return "-msfLoadScene"; } }
-            public string DbConnectionString { get { return "-msfDbConnectionString"; } }
-            public string LobbyId { get { return "-msfLobbyId"; } }
-            public string DontSpawnInBatchmode { get { return "-msfDontSpawnInBatchmode"; } }
-            public string MaxProcesses { get { return "-msfMaxProcesses"; } }
-            public string DestroyUi { get { return "-msfDestroyUi"; } }
         }
     }
 }

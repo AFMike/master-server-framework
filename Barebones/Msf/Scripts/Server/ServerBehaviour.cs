@@ -74,7 +74,13 @@ namespace Barebones.MasterServer
         [SerializeField, Tooltip("Log level of this script")]
         protected LogLevel logLevel = LogLevel.Info;
 
-        [SerializeField, Tooltip("Port, to which rooms server will listen")]
+        [SerializeField, Tooltip("If true server will try to listen to your public IP address")]
+        protected bool usePublicIp = false;
+
+        [SerializeField, Tooltip("IP address, to which server will listen to")]
+        protected string ip = "127.0.0.1";
+
+        [SerializeField, Tooltip("Port, to which server will listen to")]
         protected int port = 55000;
 
         [Header("Editor Settings"), SerializeField]
@@ -144,22 +150,78 @@ namespace Barebones.MasterServer
             {
                 // Start the server on next frame
                 MsfTimer.WaitForEndOfFrame(() => {
-                    StartServer(port);
+                    StartServer();
                 });
             }
         }
 
         /// <summary>
+        /// Sets the master server IP
+        /// </summary>
+        /// <param name="listenToIp"></param>
+        public void SetIpAddress(string listenToIp)
+        {
+            ip = listenToIp;
+        }
+
+        /// <summary>
+        /// Sets the master server port
+        /// </summary>
+        /// <param name="listenToPort"></param>
+        public void SetPort(int listenToPort)
+        {
+            port = listenToPort;
+        }
+
+        /// <summary>
+        /// Start server
+        /// </summary>
+        public virtual void StartServer()
+        {
+            StartServer(ip, port);
+        }
+
+        /// <summary>
         /// Start server with given port
         /// </summary>
-        /// <param name="port"></param>
-        public virtual void StartServer(int port)
+        /// <param name="listenToPort"></param>
+        public virtual void StartServer(int listenToPort)
         {
-            socket.Listen(port);
-            IsRunning = true;
+            StartServer(ip, listenToPort);
+        }
 
-            OnServerStartedEvent?.Invoke();
+        /// <summary>
+        /// Start server with given port and ip
+        /// </summary>
+        /// <param name="listenToIp"></param>
+        /// <param name="listenToPort"></param>
+        public virtual void StartServer(string listenToIp, int listenToPort)
+        {
+            if (usePublicIp)
+            {
+                logger.Info("Trying to get public IP...");
 
+                Msf.Helper.GetPublicIp((publicIp) =>
+                {
+                    socket.Listen(publicIp, listenToPort);
+                    IsRunning = true;
+                    OnServerStartedEvent?.Invoke();
+                    LookForModules();
+                    OnStartedServer();
+                });
+            }
+            else
+            {
+                socket.Listen(listenToIp, listenToPort);
+                IsRunning = true;
+                OnServerStartedEvent?.Invoke();
+                LookForModules();
+                OnStartedServer();
+            }
+        }
+
+        private void LookForModules()
+        {
             if (lookForModules)
             {
                 // Find modules
@@ -182,8 +244,6 @@ namespace Barebones.MasterServer
                     logger.Warn($"Some of the {GetType().Name} modules failed to initialize: \n{string.Join(" \n", uninitializedModules.Select(m => m.GetType().ToString()).ToArray())}");
                 }
             }
-
-            OnStartedServer();
         }
 
         /// <summary>
@@ -199,7 +259,7 @@ namespace Barebones.MasterServer
 
         private void OnConnectedEventHandle(IPeer peer)
         {
-            logger.Debug($"Client {peer.Id} connected to server");
+            logger.Debug($"Client {peer.Id} connected to server. The number of connected is: {connectedPeers.Count}");
 
             // Listen to messages
             peer.OnMessageReceivedEvent += OnMessageReceived;
@@ -224,7 +284,7 @@ namespace Barebones.MasterServer
 
         private void OnDisconnectedEventHandler(IPeer peer)
         {
-            logger.Debug($"Client {peer.Id} disconnected from server");
+            logger.Debug($"Client {peer.Id} disconnected from server. Left: {connectedPeers.Count}");
 
             // Remove listener to messages
             peer.OnMessageReceivedEvent -= OnMessageReceived;

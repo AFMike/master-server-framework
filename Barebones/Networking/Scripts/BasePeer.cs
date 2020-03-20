@@ -15,27 +15,22 @@ namespace Barebones.Networking
     /// </summary>
     public abstract class BasePeer : IPeer
     {
-        private readonly Dictionary<int, ResponseCallback> _acks;
-        protected readonly List<long[]> _ackTimeoutQueue;
-        private readonly Dictionary<int, object> _data;
-        private int _id = -1;
-        private int _nextAckId = 1;
-        private IIncommingMessage _timeoutMessage;
+        private readonly Dictionary<int, ResponseCallback> acknowledgements;
+        protected readonly List<long[]> ackTimeoutQueue;
+        private readonly Dictionary<int, object> data;
+        private int id = -1;
+        private int nextAckId = 1;
+        private IIncommingMessage timeoutMessage;
         private Dictionary<Type, IPeerExtension> extensionsList;
-        private static readonly object _idGenerationLock = new object();
-        private static int _peerIdGenerator;
-
-        // Flag: Has Dispose already been called?
-        private bool disposed = false;
-        // Instantiate a SafeHandle instance.
-        private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+        private static readonly object idGenerationLock = new object();
+        private static int peerIdGenerator;
 
         /// <summary>
         /// Default timeout, after which response callback is invoked with
         /// timeout status.
         /// </summary>
-        public static int DefaultTimeoutSecs = 60;
-        public static bool DontCatchExceptionsInEditor = true;
+        public static int DefaultTimeoutSecs { get; set; } = 60;
+        public static bool DontCatchExceptionsInEditor { get; set; } = true;
 
         /// <summary>
         /// True, if connection is stil valid
@@ -44,14 +39,14 @@ namespace Barebones.Networking
 
         protected BasePeer()
         {
-            _data = new Dictionary<int, object>();
-            _acks = new Dictionary<int, ResponseCallback>(30);
-            _ackTimeoutQueue = new List<long[]>();
+            data = new Dictionary<int, object>();
+            acknowledgements = new Dictionary<int, ResponseCallback>(30);
+            ackTimeoutQueue = new List<long[]>();
             extensionsList = new Dictionary<Type, IPeerExtension>();
 
             MsfTimer.Instance.OnTickEvent += HandleAckDisposalTick;
 
-            _timeoutMessage = new IncommingMessage(-1, 0, "Time out".ToBytes(), DeliveryMethod.Reliable, this)
+            timeoutMessage = new IncommingMessage(-1, 0, "Time out".ToBytes(), DeliveryMethod.Reliable, this)
             {
                 Status = ResponseStatus.Timeout
             };
@@ -331,13 +326,13 @@ namespace Barebones.Networking
         /// <param name="data"></param>
         public void SetProperty(int id, object data)
         {
-            if (_data.ContainsKey(id))
+            if (this.data.ContainsKey(id))
             {
-                _data[id] = data;
+                this.data[id] = data;
             }
             else
             {
-                _data.Add(id, data);
+                this.data.Add(id, data);
             }
         }
 
@@ -348,7 +343,7 @@ namespace Barebones.Networking
         /// <returns></returns>
         public object GetProperty(int id)
         {
-            _data.TryGetValue(id, out object value);
+            data.TryGetValue(id, out object value);
             return value;
         }
 
@@ -424,10 +419,10 @@ namespace Barebones.Networking
         {
             int id;
 
-            lock (_acks)
+            lock (acknowledgements)
             {
-                id = _nextAckId++;
-                _acks.Add(id, responseCallback);
+                id = nextAckId++;
+                acknowledgements.Add(id, responseCallback);
             }
 
             message.AckRequestId = id;
@@ -439,16 +434,16 @@ namespace Barebones.Networking
         protected void TriggerAck(int ackId, ResponseStatus statusCode, IIncommingMessage message)
         {
             ResponseCallback ackCallback;
-            lock (_acks)
+            lock (acknowledgements)
             {
-                _acks.TryGetValue(ackId, out ackCallback);
+                acknowledgements.TryGetValue(ackId, out ackCallback);
 
                 if (ackCallback == null)
                 {
                     return;
                 }
 
-                _acks.Remove(ackId);
+                acknowledgements.Remove(ackId);
             }
             ackCallback(statusCode, message);
         }
@@ -456,7 +451,7 @@ namespace Barebones.Networking
         private void StartAckTimeout(int ackId, int timeoutSecs)
         {
             // +1, because it might be about to tick in a few miliseconds
-            _ackTimeoutQueue.Add(new[] { ackId, MsfTimer.Instance.CurrentTick + timeoutSecs + 1 });
+            ackTimeoutQueue.Add(new[] { ackId, MsfTimer.Instance.CurrentTick + timeoutSecs + 1 });
         }
 
         public virtual void HandleMessage(IIncommingMessage message)
@@ -505,18 +500,18 @@ namespace Barebones.Networking
         {
             get
             {
-                if (_id < 0)
+                if (id < 0)
                 {
-                    lock (_idGenerationLock)
+                    lock (idGenerationLock)
                     {
-                        if (_id < 0)
+                        if (id < 0)
                         {
-                            _id = _peerIdGenerator++;
+                            id = peerIdGenerator++;
                         }
                     }
                 }
 
-                return _id;
+                return id;
             }
         }
 
@@ -526,7 +521,7 @@ namespace Barebones.Networking
         private void HandleAckDisposalTick(long currentTick)
         {
             // TODO test with ordered queue, might be more performant
-            _ackTimeoutQueue.RemoveAll(a =>
+            ackTimeoutQueue.RemoveAll(a =>
             {
                 if (a[1] > currentTick)
                 {
@@ -549,18 +544,18 @@ namespace Barebones.Networking
         private void CancelAck(int ackId, ResponseStatus responseCode)
         {
             ResponseCallback ackCallback;
-            lock (_acks)
+            lock (acknowledgements)
             {
-                _acks.TryGetValue(ackId, out ackCallback);
+                acknowledgements.TryGetValue(ackId, out ackCallback);
 
                 if (ackCallback == null)
                 {
                     return;
                 }
 
-                _acks.Remove(ackId);
+                acknowledgements.Remove(ackId);
             }
-            ackCallback(responseCode, _timeoutMessage);
+            ackCallback(responseCode, timeoutMessage);
         }
 
         #endregion

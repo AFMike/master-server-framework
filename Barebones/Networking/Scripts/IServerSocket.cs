@@ -15,10 +15,17 @@
         event PeerActionHandler OnClientDisconnectedEvent;
 
         /// <summary>
-        /// Opens the socket and starts listening to a given port
+        /// Opens the socket and starts listening to a given port. IP is 127.0.0.1
         /// </summary>
         /// <param name="port"></param>
         void Listen(int port);
+
+        /// <summary>
+        /// Opens the socket and starts listening to a given port and IP
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        void Listen(string ip, int port);
 
         /// <summary>
         /// Stops listening

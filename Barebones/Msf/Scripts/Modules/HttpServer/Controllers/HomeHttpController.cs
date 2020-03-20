@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using UnityEngine;
 using WebSocketSharp.Net;
 
 namespace Barebones.MasterServer
@@ -14,6 +15,11 @@ namespace Barebones.MasterServer
 
         private void OnHomeHttpRequestHandler(HttpListenerRequest request, HttpListenerResponse response)
         {
+            Msf.Concurrency.RunInMainThread(() => {
+                // Here you can call unity API
+                
+            });
+
             byte[] contents = GetHtmlBytes();
 
             response.ContentType = "text/html";
