@@ -109,7 +109,8 @@ namespace Barebones.MasterServer
             {
                 if (status != ResponseStatus.Success)
                 {
-                    callback?.Invoke(null, response.AsString("Unknown error"));
+                    Logs.Error($"An error occurred when spawn request [{response.AsString()}]");
+                    callback?.Invoke(null, response.AsString());
                     return;
                 }
 
@@ -153,10 +154,13 @@ namespace Barebones.MasterServer
                 return;
             }
 
+            Logs.Debug($"Aborting process [{spawnId}]");
+
             connection.SendMessage((short)MsfMessageCodes.AbortSpawnRequest, spawnId, (status, response) =>
             {
                 if (status != ResponseStatus.Success)
                 {
+                    Logs.Error($"An error occurred when abort request [{response.AsString()}]");
                     callback?.Invoke(false, response.AsString("Unknown error"));
                     return;
                 }

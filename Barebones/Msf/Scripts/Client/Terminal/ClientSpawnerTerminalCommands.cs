@@ -7,7 +7,7 @@ namespace Barebones.Client.Utilities
 {
     public class ClientSpawnerTerminalCommands
     {
-        [RegisterCommand(Name = "client.spawner.start", Help = "Send request to start room. 1 Room Name, 2 Max Connections", MinArgCount = 1)]
+        [RegisterCommand(Name = "css", Help = "Send request to start room. 1 Room Name, 2 Max Connections", MinArgCount = 1)]
         private static void SendRequestSpawn(CommandArg[] args)
         {
             var settings = new Dictionary<string, string>
@@ -26,10 +26,10 @@ namespace Barebones.Client.Utilities
                 { "-myAge", "45" }
             };
 
-            Msf.Client.Spawners.RequestSpawn(settings);
+            Msf.Client.Spawners.RequestSpawn(settings, customArgs, string.Empty, null);
         }
 
-        [RegisterCommand(Name = "client.spawner.abort", Help = "Send request to start room. 1 Process Id", MinArgCount = 1, MaxArgCount = 1)]
+        [RegisterCommand(Name = "csa", Help = "Send request to start room. 1 Process Id", MinArgCount = 1, MaxArgCount = 1)]
         private static void SendAbortSpawn(CommandArg[] args)
         {
             Msf.Client.Spawners.AbortSpawn(args[0].Int);

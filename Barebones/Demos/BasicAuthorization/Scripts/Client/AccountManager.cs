@@ -312,6 +312,7 @@ namespace Barebones.MasterServer.Examples
             }
             else
             {
+                Debug.LogError("Hello");
                 signinView.Show();
             }
         }

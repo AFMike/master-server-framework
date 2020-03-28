@@ -114,7 +114,7 @@ namespace Barebones.MasterServer
             DestroyUi = IsProvided(Names.DestroyUi);
 
             MasterPort = ExtractValueInt(Names.MasterPort, 5000);
-            MasterIp = ExtractValue(Names.MasterIp);
+            MasterIp = ExtractValue(Names.MasterIp, "127.0.0.1");
 
             RoomIp = ExtractValue(Names.RoomIp, "127.0.0.1");
             RoomPort = ExtractValueInt(Names.RoomPort, 7777);

@@ -21,17 +21,22 @@ namespace Barebones.MasterServer
         private static Dictionary<int, Process> processes = new Dictionary<int, Process>();
 
         public IClientSocket Connection { get; private set; }
+
         public int SpawnerId { get; set; }
+
         public SpawnerOptions Options { get; private set; }
+
         /// <summary>
         /// Settings, which are used by the default spawn handler
         /// </summary>
         public DefaultSpawnerConfig DefaultSpawnerSettings { get; private set; }
 
-        public Logger Logger => Msf.Create.Logger(typeof(SpawnerController).Name, LogLevel.Warn);
+        public static Logger Logger { get; private set; }
 
         public SpawnerController(int spawnerId, IClientSocket connection, SpawnerOptions options)
         {
+            Logger = Msf.Create.Logger(typeof(SpawnerController).Name, LogLevel.Info);
+
             Connection = connection;
             SpawnerId = spawnerId;
             Options = options;
@@ -85,17 +90,6 @@ namespace Barebones.MasterServer
             spawnRequestHandler.Invoke(packet, message);
         }
 
-        private void HandleKillSpawnedProcessRequest(int spawnId)
-        {
-            if (killRequestHandler == null)
-            {
-                DefaultKillSpawnedProcessRequestHandler(spawnId);
-                return;
-            }
-
-            killRequestHandler.Invoke(spawnId);
-        }
-
         private void SpawnProcessRequestHandler(IIncommingMessage message)
         {
             var data = message.Deserialize(new SpawnRequestPacket());
@@ -118,7 +112,9 @@ namespace Barebones.MasterServer
 
         private static void KillProcessRequestHandler(IIncommingMessage message)
         {
-            var data = message.Deserialize(new KillSpawnedProcessPacket());
+            Logger.Debug($"Kill process requested");
+
+            var data = message.Deserialize(new KillSpawnedProcessRequestPacket());
 
             var controller = Msf.Server.Spawners.GetController(data.SpawnerId);
 
@@ -132,7 +128,16 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            controller.HandleKillSpawnedProcessRequest(data.SpawnId);
+            if (controller.killRequestHandler == null)
+            {
+                controller.DefaultKillSpawnedProcessRequestHandler(data.SpawnId);
+            }
+            else
+            {
+                controller.killRequestHandler.Invoke(data.SpawnId);
+            }
+
+            message.Respond(ResponseStatus.Success);
         }
 
         #region Default handlers
@@ -182,7 +187,7 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Check if we're overriding an IP to master server
-            var masterIpArgument = string.IsNullOrEmpty(controller.DefaultSpawnerSettings.MasterIp) ? 
+            var masterIpArgument = string.IsNullOrEmpty(controller.DefaultSpawnerSettings.MasterIp) ?
                 controller.Connection.ConnectionIp : controller.DefaultSpawnerSettings.MasterIp;
 
             ////////////////////////////////////////////
@@ -340,7 +345,6 @@ namespace Barebones.MasterServer
                         {
                             // Release the port number
                             Msf.Server.Spawners.ReleasePort(machinePortArgument);
-
                             Logger.Debug("Notifying about killed process with spawn id: " + packet.SpawnerId);
                             controller.NotifyProcessKilled(packet.SpawnId);
                         });

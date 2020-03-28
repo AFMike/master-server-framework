@@ -5216,6 +5216,11 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 73095322634468185, guid: c18a24815c369844aacb726c250af499,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2426080898787992644, guid: c18a24815c369844aacb726c250af499,
         type: 3}
       propertyPath: helpText
@@ -7466,6 +7471,8 @@ MonoBehaviour:
   permissions: []
   targetFrameRate: 60
   logLevel: 0
+  usePublicIp: 0
+  ip: 127.0.0.1
   port: 5000
   autoStartInEditor: 1
 --- !u!4 &1005001217
@@ -13347,8 +13354,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logLevel: 3
   readMasterServerAddressFromCmd: 1
-  serverIp: 127.0.0.1
-  serverPort: 5000
+  masterIp: 127.0.0.1
+  masterPort: 5000
   connectOnStart: 1
   minTimeToConnect: 0.5
   maxTimeToConnect: 4
