@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Barebones.MasterServer
 {
-    public partial class MsfArgs
+    public class MsfArgs
     {
         private readonly string[] _args;
 
@@ -121,7 +121,7 @@ namespace Barebones.MasterServer
             RoomExecutablePath = ExtractValue(Names.RoomExecutablePath);
             RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 1000);
 
-            SpawnId = ExtractValueInt(Names.SpawnId);
+            SpawnId = ExtractValueInt(Names.SpawnId, -1);
             SpawnCode = ExtractValue(Names.SpawnCode);
             DontSpawnInBatchmode = IsProvided(Names.DontSpawnInBatchmode);
             MaxProcesses = ExtractValueInt(Names.MaxProcesses, 0);

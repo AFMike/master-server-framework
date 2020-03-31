@@ -266,7 +266,14 @@ namespace Barebones.MasterServer
             var data = message.Deserialize(new ClientsSpawnRequestPacket());
             var peer = message.Peer;
 
-            logger.Info($"Client {peer.Id} requested to spawn room {data.Options[MsfDictKeys.roomName]}");
+            if (data.Options.ContainsKey(MsfDictKeys.roomName))
+            {
+                logger.Info($"Client {peer.Id} requested to spawn room with the name {data.Options[MsfDictKeys.roomName]}");
+            }
+            else
+            {
+                logger.Info($"Client {peer.Id} requested to spawn room");
+            }
 
             if (spawnersList.Count == 0)
             {

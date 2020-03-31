@@ -5,12 +5,10 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
+
 namespace Barebones.MasterServer
 {
-    /// <summary>
-    /// Automatically connects to master server
-    /// </summary>
-    public class ConnectionToMaster : Singleton<ConnectionToMaster>
+    public abstract class ConnectionHelper : Singleton<ConnectionHelper>
     {
         protected int currentAttemptToConnect = 0;
         protected Logging.Logger logger;
@@ -18,21 +16,18 @@ namespace Barebones.MasterServer
         [SerializeField]
         protected HelpBox header = new HelpBox()
         {
-            Text = "This script automatically connects to master server. Is is just a helper",
+            Text = "This script connects client to server. Is is just a helper",
             Type = HelpBoxType.Info
         };
 
         [Tooltip("Log level of this script"), SerializeField]
         protected LogLevel logLevel = LogLevel.Info;
 
-        [Tooltip("If true, ip and port will be read from cmd args"), SerializeField]
-        protected bool readMasterServerAddressFromCmd = true;
-
         [Tooltip("Address to the server"), SerializeField]
-        protected string masterIp = "127.0.0.1";
+        protected string serverIp = "127.0.0.1";
 
         [Tooltip("Port of the server"), SerializeField]
-        protected int masterPort = 5000;
+        protected int serverPort = 5000;
 
         [Header("Automation"), Tooltip("If true, will try to connect on the Start()"), SerializeField]
         protected bool connectOnStart = false;
@@ -48,25 +43,25 @@ namespace Barebones.MasterServer
 
         [Header("Events")]
         /// <summary>
-        /// Triggers when connected to master server
+        /// Triggers when connected to server
         /// </summary>
         public UnityEvent OnConnectedEvent;
 
         /// <summary>
-        /// triggers when disconnected from master server
+        /// triggers when disconnected from server
         /// </summary>
         public UnityEvent OnDisconnectedEvent;
 
         /// <summary>
-        /// Main connection to master server
+        /// Main connection to server
         /// </summary>
-        public IClientSocket Connection => Msf.Connection;
+        public IClientSocket Connection { get; protected set; }
 
         protected override void Awake()
         {
             base.Awake();
 
-            logger = Msf.Create.Logger(typeof(ConnectionToMaster).Name);
+            logger = Msf.Create.Logger(typeof(ClientToMasterConnector).Name);
             logger.LogLevel = logLevel;
 
             // In case this object is not at the root level of hierarchy
@@ -74,26 +69,6 @@ namespace Barebones.MasterServer
             if (transform.parent != null)
             {
                 transform.SetParent(null, false);
-            }
-
-            if (readMasterServerAddressFromCmd)
-            {
-                // If master IP is provided via cmd arguments
-                if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
-                {
-                    masterIp = Msf.Args.MasterIp;
-                }
-
-                // If master port is provided via cmd arguments
-                if (Msf.Args.IsProvided(Msf.Args.Names.MasterPort))
-                {
-                    masterPort = Msf.Args.MasterPort;
-                }
-            }
-
-            if (Msf.Args.AutoConnectClient)
-            {
-                connectOnStart = true;
             }
         }
 
@@ -116,7 +91,7 @@ namespace Barebones.MasterServer
         /// <param name="masterIp"></param>
         public void SetIpAddress(string masterIp)
         {
-            this.masterIp = masterIp;
+            this.serverIp = masterIp;
         }
 
         /// <summary>
@@ -125,7 +100,7 @@ namespace Barebones.MasterServer
         /// <param name="masterPort"></param>
         public void SetPort(int masterPort)
         {
-            this.masterPort = masterPort;
+            this.serverPort = masterPort;
         }
 
         /// <summary>
@@ -133,12 +108,12 @@ namespace Barebones.MasterServer
         /// </summary>
         public void StartConnection()
         {
-            StartCoroutine(StartConnectionProcess(masterIp, masterPort, maxAttemptsToConnect));
+            StartCoroutine(StartConnectionProcess(serverIp, serverPort, maxAttemptsToConnect));
         }
 
         public void StartConnection(int numberOfAttempts)
         {
-            StartCoroutine(StartConnectionProcess(masterIp, masterPort, numberOfAttempts));
+            StartCoroutine(StartConnectionProcess(serverIp, serverPort, numberOfAttempts));
         }
 
         public void StartConnection(string serverIp, int serverPort, int numberOfAttempts = 5)
@@ -219,7 +194,7 @@ namespace Barebones.MasterServer
 
         protected virtual void OnConnectedEventHandler()
         {
-            logger.Info($"Connected to MSF server at: {masterIp}:{masterPort}");
+            logger.Info($"Connected to MSF server at: {serverIp}:{serverPort}");
 
             timeToConnect = minTimeToConnect;
 

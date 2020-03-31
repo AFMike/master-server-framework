@@ -213,6 +213,66 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1066974332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1066974334}
+  - component: {fileID: 1066974333}
+  m_Layer: 0
+  m_Name: --TERMINAL
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1066974333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1066974332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7c6ece3147f0984e8f2adb725fe7382, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHeight: 1
+  smallTerminalRatio: 1
+  toggleSpeed: 1000
+  toggleHotkey: '`'
+  toggleFullHotkey: '#`'
+  bufferSize: 512
+  consoleFont: {fileID: 12800000, guid: a474c48f7bc57d74baa156b40027cbbd, type: 3}
+  inputCaret: '>'
+  showGUIButtons: 0
+  rightAlignButtons: 0
+  inputContrast: 0
+  backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+  foregroundColor: {r: 1, g: 1, b: 1, a: 1}
+  shellColor: {r: 1, g: 1, b: 1, a: 1}
+  inputColor: {r: 0, g: 1, b: 1, a: 1}
+  warningColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  errorColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!4 &1066974334
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1066974332}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2099.5234, y: 355.56158, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1542734556
 GameObject:
   m_ObjectHideFlags: 0
@@ -223,7 +283,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1542734558}
   - component: {fileID: 1542734557}
-  - component: {fileID: 1542734559}
   m_Layer: 0
   m_Name: --ROOM_SERVER
   m_TagString: Untagged
@@ -238,7 +297,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1542734556}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c5d1013a674fc284ab7e97e1f43d37f1, type: 3}
   m_Name: 
@@ -250,8 +309,9 @@ MonoBehaviour:
   logLevel: 0
   usePublicIp: 0
   serverIP: 127.0.0.1
-  serverPort: 55000
+  serverPort: 5001
   autoStartInEditor: 1
+  startRoomAsProcess: 1
   masterIp: 127.0.0.1
   masterPort: 5000
   OnRoomServerRegisteredEvent:
@@ -271,18 +331,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1542734559
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1542734556}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5f8d43ea891f6b499a25cdeab4d40f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2080273033
 GameObject:
   m_ObjectHideFlags: 0

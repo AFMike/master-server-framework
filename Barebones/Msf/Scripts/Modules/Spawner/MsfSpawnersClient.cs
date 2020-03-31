@@ -38,42 +38,42 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="options"></param>
-        public void RequestSpawn(Dictionary<string, string> options, string region)
+        /// <param name="properties"></param>
+        public void RequestSpawn(Dictionary<string, string> properties, string region)
         {
-            RequestSpawn(options, new Dictionary<string, string>(), region, null, Connection);
+            RequestSpawn(properties, new Dictionary<string, string>(), region, null, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="properties"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> options, string region, ClientSpawnRequestCallback callback)
+        public void RequestSpawn(Dictionary<string, string> properties, string region, ClientSpawnRequestCallback callback)
         {
-            RequestSpawn(options, new Dictionary<string, string>(), region, callback, Connection);
+            RequestSpawn(properties, new Dictionary<string, string>(), region, callback, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="properties"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> options, Dictionary<string, string> customArgs, string region, ClientSpawnRequestCallback callback)
+        public void RequestSpawn(Dictionary<string, string> properties, Dictionary<string, string> customArgs, string region, ClientSpawnRequestCallback callback)
         {
-            RequestSpawn(options, customArgs, region, callback, Connection);
+            RequestSpawn(properties, customArgs, region, callback, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="properties"></param>
         /// <param name="customArgs"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> options, Dictionary<string, string> customArgs, string region, ClientSpawnRequestCallback callback, IClientSocket connection)
+        public void RequestSpawn(Dictionary<string, string> properties, Dictionary<string, string> customArgs, string region, ClientSpawnRequestCallback callback, IClientSocket connection)
         {
             if (!connection.IsConnected)
             {
@@ -84,7 +84,7 @@ namespace Barebones.MasterServer
             // Create spawn request message packet
             var packet = new ClientsSpawnRequestPacket()
             {
-                Options = options,
+                Options = properties,
                 Region = region
             };
 
@@ -114,11 +114,11 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                Logs.Debug($"Room [{options[MsfDictKeys.roomName]}] was successfuly started");
+                Logs.Debug($"Room [{properties[MsfDictKeys.roomName]}] was successfuly started");
 
                 // Spawn id
                 var spawnId = response.AsInt();
-                var controller = new SpawnRequestController(spawnId, connection, options);
+                var controller = new SpawnRequestController(spawnId, connection, properties);
 
                 _localSpawnRequests[controller.SpawnId] = controller;
 

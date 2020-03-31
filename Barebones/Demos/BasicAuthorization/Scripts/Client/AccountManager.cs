@@ -329,7 +329,7 @@ namespace Barebones.MasterServer.Examples
                 {
                     ViewsManager.HideAllViews();
                     Initialize();
-                    ConnectionToMaster.Instance.StartConnection();
+                    ClientToMasterConnector.Instance.StartConnection();
                 }));
         }
     }

@@ -23,13 +23,15 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
         /// </summary>
         private RoomOptions roomOptions;
 
-        [SerializeField]
+        [Header("Room Settings"), SerializeField]
         private HelpBox roomServerInfo = new HelpBox()
         {
-            Text = "This component is responsible for starting a Room server. It starts to connect to Master as clien and if connection is successful"
-            + " it start Room as server and register this room in master server",
+            Text = "Room server component is responsable for connection to master server and starting room server",
             Type = HelpBoxType.Info
         };
+
+        [SerializeField, Tooltip("If true, room can only run as spawned process. If you wish to run room server without spawner just check this box to false")]
+        private bool startRoomAsProcess = true;
 
         [Header("Master Connection Settings")]
         [SerializeField]
@@ -67,18 +69,47 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
                 masterPort = Msf.Args.MasterPort;
             }
 
+            // Read room options
+            roomOptions = new RoomOptions
+            {
+                IsPublic = !Msf.Args.IsProvided(Msf.Args.Names.RoomIsPrivate),
+                MaxConnections = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomMaxConnections, 0),
+                Name = Msf.Args.ExtractValue(Msf.Args.Names.RoomName, "Room_" + Msf.Helper.CreateRandomString(5)),
+                Password = Msf.Args.ExtractValue(Msf.Args.Names.RoomPassword, string.Empty),
+                RoomIp = Msf.Args.ExtractValue(Msf.Args.Names.RoomIp, serverIP),
+                RoomPort = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomPort, serverPort)
+            };
+
             // Create instance of the client socket
             msfConnection = Msf.Create.ClientSocket();
 
             // Override connection of rooms server
             Msf.Server.Rooms.ChangeConnection(msfConnection);
+            Msf.Server.Spawners.ChangeConnection(msfConnection);
         }
 
         protected override void Start()
         {
+            base.Start();
+
+            // Start room server at start
+            if (Msf.Args.AutoConnectClient && !Msf.Runtime.IsEditor)
+            {
+                // Start the server on next frame
+                MsfTimer.WaitForEndOfFrame(() => {
+                    StartServer();
+                });
+            }
+        }
+
+        public override void StartServer()
+        {
+            if (Msf.Client.Rooms.ForceClientMode) return;
+
             msfConnection.AddConnectionListener(OnConnectedToMasterHandler);
 
-            logger.Info($"Starting Room Server... {Msf.Version}");
+            logger.Info($"Starting Room Server... {Msf.Version}. Multithreading is: {(Msf.Runtime.SupportsThreads ? "On" : "Off")}");
+            logger.Info($"Start parameters are: {Msf.Args}");
 
             StartConnectionToMaster();
         }
@@ -118,20 +149,17 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
             // Start the server on next frame
             MsfTimer.WaitForEndOfFrame(() =>
             {
-                StartServer();
+                StartServer(roomOptions.RoomIp, roomOptions.RoomPort);
             });
 
             // Remove listener after successful connection
             msfConnection.RemoveConnectionListener(OnConnectedToMasterHandler);
 
-            // Before we register our room we need to setup everything
-            BeforeRoomServerRegistering();
-
-            // Then start registering our room server
-            RegisterRoomServer();
-
             // Register disconnection listener
             msfConnection.AddDisconnectionListener(OnDisconnectedFromMasterHandler);
+
+            // Before we register our room we need to setup everything
+            BeforeRoomServerRegistering();
         }
 
         private void OnDisconnectedFromMasterHandler()
@@ -148,21 +176,48 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
         /// </summary>
         private void BeforeRoomServerRegistering()
         {
-            roomOptions = new RoomOptions
+            if (startRoomAsProcess)
             {
-                IsPublic = !Msf.Args.IsProvided(Msf.Args.Names.RoomIsPrivate),
-                MaxConnections = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomMaxConnections, 0),
-                Name = Msf.Args.ExtractValue(Msf.Args.Names.RoomName, "Room_" + Msf.Helper.CreateRandomString(5)),
-                Password = Msf.Args.ExtractValue(Msf.Args.Names.RoomPassword, string.Empty),
-                RoomIp = Msf.Args.ExtractValue(Msf.Args.Names.RoomIp, serverIP),
-                RoomPort = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomPort, serverPort)
-            };
+                if (!Msf.Server.Spawners.IsSpawnedProccess)
+                {
+                    logger.Error("Room server process cannot be registered because it is not a spawned process");
+                    return;
+                }
+
+                Msf.Server.Spawners.RegisterSpawnedProcess(Msf.Args.SpawnId, Msf.Args.SpawnCode, (taskController, error) =>
+                {
+                    if (taskController == null)
+                    {
+                        logger.Error($"Room server process cannot be registered. The reason is: {error}");
+                        return;
+                    }
+
+                    // Then start registering our room server
+                    RegisterRoomServer(() =>
+                    {
+                        logger.Info("Finalizing registration task");
+                        taskController.FinalizeTask(new Dictionary<string, string>(), () =>
+                        {
+                            logger.Info("Ok!");
+                            OnRoomServerRegisteredEvent?.Invoke();
+                        });
+                    });
+                });
+            }
+            else
+            {
+                RegisterRoomServer(() =>
+                {
+                    logger.Info("Ok!");
+                    OnRoomServerRegisteredEvent?.Invoke();
+                });
+            }
         }
 
         /// <summary>
         /// Start registering our room server
         /// </summary>
-        private void RegisterRoomServer()
+        private void RegisterRoomServer(UnityAction successCallback = null)
         {
             Msf.Server.Rooms.RegisterRoom(roomOptions, (controller, error) =>
             {
@@ -172,10 +227,11 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
                     return;
                 }
 
+                CurrentRoomController = controller;
+
                 logger.Info($"Room Created successfully. Room ID: {controller.RoomId}, Room Name: {roomOptions.Name}");
 
-                CurrentRoomController = controller;
-                OnRoomServerRegisteredEvent?.Invoke();
+                successCallback?.Invoke();
             });
         }
 

@@ -13,15 +13,29 @@ namespace Barebones.MasterServer
 
         [Header("Permissions")]
         [Tooltip("Minimal permission level, necessary to register a room")]
-        public int RegisterRoomPermissionLevel = 0;
+        [SerializeField]
+        protected int registerRoomPermissionLevel = 0;
 
         #endregion
 
-        private int _nextRoomId = 0;
+        /// <summary>
+        /// Next room id
+        /// </summary>
+        private int nextRoomId = 0;
 
+        /// <summary>
+        /// Registered rooms list
+        /// </summary>
         protected Dictionary<int, RegisteredRoom> roomsList;
 
+        /// <summary>
+        /// Fired when new room is registered
+        /// </summary>
         public event Action<RegisteredRoom> OnRoomRegisteredEvent;
+
+        /// <summary>
+        /// Fired when existing room is destroyed
+        /// </summary>
         public event Action<RegisteredRoom> OnRoomDestroyedEvent;
 
         protected override void Awake()
@@ -42,7 +56,18 @@ namespace Barebones.MasterServer
             server.SetHandler((short)MsfMessageCodes.PlayerLeftRoomRequest, PlayerLeftRoomRequestHandler);
 
             // Maintain unconfirmed accesses
-            StartCoroutine(CleanUnconfirmedAccesses());
+            InvokeRepeating(nameof(CleanUnconfirmedAccesses), 1f, 1f);
+        }
+
+        /// <summary>
+        /// Cleans up the list of unconfirmed accesses
+        /// </summary>
+        private void CleanUnconfirmedAccesses()
+        {
+            foreach (var registeredRoom in roomsList.Values)
+            {
+                registeredRoom.ClearTimedOutAccesses();
+            }
         }
 
         /// <summary>
@@ -53,13 +78,40 @@ namespace Barebones.MasterServer
         protected virtual bool HasRoomRegistrationPermissions(IPeer peer)
         {
             var extension = peer.GetExtension<SecurityInfoPeerExtension>();
-
-            return extension.PermissionLevel >= RegisterRoomPermissionLevel;
+            return extension.PermissionLevel >= registerRoomPermissionLevel;
         }
 
+        /// <summary>
+        /// Fired when registered room peer disconnected from master
+        /// </summary>
+        /// <param name="peer"></param>
+        private void OnRegisteredPeerDisconnect(IPeer peer)
+        {
+            Dictionary<int, RegisteredRoom> peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
+
+            if (peerRooms == null)
+            {
+                return;
+            }
+
+            logger.Debug($"Client {peer.Id} was disconnected from server and it has registered rooms that also must be destroyed");
+
+            // Create a copy so that we can iterate safely
+            var registeredRooms = peerRooms.Values.ToList();
+
+            foreach (var registeredRoom in registeredRooms)
+            {
+                DestroyRoom(registeredRoom);
+            }
+        }
+
+        /// <summary>
+        /// Get next room id
+        /// </summary>
+        /// <returns></returns>
         public int GenerateRoomId()
         {
-            return _nextRoomId++;
+            return nextRoomId++;
         }
 
         /// <summary>
@@ -120,52 +172,30 @@ namespace Barebones.MasterServer
 
             // Remove the room from all rooms
             roomsList.Remove(room.RoomId);
-
             room.Destroy();
 
+            logger.Debug($"Room {room.RoomId} has been successfully destroyed");
+
             // Invoke the event
-            if (OnRoomDestroyedEvent != null)
-            {
-                OnRoomDestroyedEvent.Invoke(room);
-            }
+            OnRoomDestroyedEvent?.Invoke(room);
         }
 
-        private void OnRegisteredPeerDisconnect(IPeer peer)
-        {
-            Dictionary<int, RegisteredRoom> peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
-
-            if (peerRooms == null)
-            {
-                return;
-            }
-
-            // Create a copy so that we can iterate safely
-            var registeredRooms = peerRooms.Values.ToList();
-
-            foreach (var registeredRoom in registeredRooms)
-            {
-                DestroyRoom(registeredRoom);
-            }
-        }
-
+        /// <summary>
+        /// There are times when you need to change registered room options. This method will help you :)
+        /// </summary>
+        /// <param name="room"></param>
+        /// <param name="options"></param>
         public virtual void ChangeRoomOptions(RegisteredRoom room, RoomOptions options)
         {
             room.ChangeOptions(options);
         }
 
-        private IEnumerator CleanUnconfirmedAccesses()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(1f);
-
-                foreach (var registeredRoom in roomsList.Values)
-                {
-                    registeredRoom.ClearTimedOutAccesses();
-                }
-            }
-        }
-
+        /// <summary>
+        /// Returns list of all public rooms by given filter
+        /// </summary>
+        /// <param name="peer"></param>
+        /// <param name="filters"></param>
+        /// <returns></returns>
         public IEnumerable<GameInfoPacket> GetPublicGames(IPeer peer, Dictionary<string, string> filters)
         {
             return roomsList.Values.Where(r => r.Options.IsPublic).Select(r => new GameInfoPacket()
@@ -181,16 +211,32 @@ namespace Barebones.MasterServer
             });
         }
 
+        /// <summary>
+        /// Returns list of properties of public room
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="room"></param>
+        /// <param name="playerFilters"></param>
+        /// <returns></returns>
         public virtual Dictionary<string, string> GetPublicRoomProperties(IPeer player, RegisteredRoom room, Dictionary<string, string> playerFilters)
         {
             return room.Options.Properties;
         }
 
+        /// <summary>
+        /// Returns room by given id
+        /// </summary>
+        /// <param name="roomId"></param>
+        /// <returns></returns>
         public RegisteredRoom GetRoom(int roomId)
         {
             return roomsList[roomId];
         }
 
+        /// <summary>
+        /// Returns the list of all registered rooms
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<RegisteredRoom> GetAllRooms()
         {
             return roomsList.Values;
@@ -200,15 +246,19 @@ namespace Barebones.MasterServer
 
         private void RegisterRoomRequestHandler(IIncommingMessage message)
         {
+            logger.Debug($"Client {message.Peer.Id} requested to register new room server");
+
             if (!HasRoomRegistrationPermissions(message.Peer))
             {
+                logger.Debug($"But it has no permission");
                 message.Respond("Insufficient permissions", ResponseStatus.Unauthorized);
                 return;
             }
 
             var options = message.Deserialize(new RoomOptions());
-
             var room = RegisterRoom(message.Peer, options);
+
+            logger.Debug($"Room {room.RoomId} has been successfully registered");
 
             // Respond with a room id
             message.Respond(room.RoomId, ResponseStatus.Success);
@@ -218,20 +268,25 @@ namespace Barebones.MasterServer
         {
             var roomId = message.AsInt();
 
+            logger.Debug($"Client {message.Peer.Id} requested to destroy room server with id {roomId}");
+
             if (!roomsList.TryGetValue(roomId, out RegisteredRoom room))
             {
+                logger.Debug($"But this room does not exist");
                 message.Respond("Room does not exist", ResponseStatus.Failed);
                 return;
             }
 
             if (message.Peer != room.Peer)
             {
-                // Wrong peer unregistering the room
+                logger.Debug($"But it is not the creator of the room");
                 message.Respond("You're not the creator of the room", ResponseStatus.Unauthorized);
                 return;
             }
 
             DestroyRoom(room);
+
+            logger.Debug($"Room {roomId} has been successfully destroyed");
 
             message.Respond(ResponseStatus.Success);
         }
@@ -349,8 +404,6 @@ namespace Barebones.MasterServer
         }
 
         #endregion
-
-
     }
 }
 
