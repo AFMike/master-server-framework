@@ -1,6 +1,6 @@
 ﻿namespace Barebones.MasterServer
 {
-    public class DefaultSpawnerConfig
+    public class SpawnerConfig
     {
         public string MachineIp { get; set; } = "127.0.0.1";
         public bool SpawnInBatchmode { get; set; } = Msf.Args.IsProvided("-batchmode");

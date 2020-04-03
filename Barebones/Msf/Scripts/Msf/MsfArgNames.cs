@@ -73,6 +73,11 @@
         public string RoomExecutablePath { get { return "-msfRoomExe"; } }
 
         /// <summary>
+        /// Use this cmd to setup the region, to which the spawner belongs
+        /// </summary>
+        public string RoomRegion { get { return "-msfRoomRegion"; } }
+
+        /// <summary>
         /// Use this cmd to setup WebSockets mode on room server if you use WebGL version of client
         /// this feature works only is you server supports web sockets
         /// </summary>

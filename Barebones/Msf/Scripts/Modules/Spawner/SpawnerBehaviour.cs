@@ -12,7 +12,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Current spawner controller assigned to this behaviour
         /// </summary>
-        protected SpawnerController spawnerController;
+        protected ISpawnerController spawnerController;
 
         /// <summary>
         /// Just logger :)
@@ -39,8 +39,11 @@ namespace Barebones.MasterServer
         [SerializeField, Tooltip("Log level of internal SpawnerController logger")]
         protected LogLevel spawnerLogLevel = LogLevel.Warn;
 
-        [Header("Spawner Default Options"), SerializeField, Tooltip("Default IP address")]
+        [Header("Spawner Default Options")]
+        [SerializeField, Tooltip("Default IP address")]
         protected string machineIp = "127.0.0.1";
+        [SerializeField, Tooltip("If true server will try to listen to your public IP address")]
+        protected bool usePublicIp = false;
         [SerializeField, Tooltip("Default path to executable file")]
         protected string executableFilePath = "";
         [SerializeField, Tooltip("Use this to set whether or not to spawn room/server in headless mode.")]
@@ -49,6 +52,8 @@ namespace Barebones.MasterServer
         protected int maxProcesses = 5;
         [SerializeField, Tooltip("Use this to set whether or not to spawn room/server for browser games. This feature works only if game server uses websocket transport for connections")]
         protected bool spawnWebSocketServers = false;
+        [SerializeField, Tooltip("Spawner region used when you are trying to start rooms by given region. International is by default")]
+        protected string region = "International";
 
         [Header("Runtime Settings"), SerializeField, Tooltip("If true, kills all spawned processes when master server quits")]
         protected bool killProcessesWhenAppQuits = true;
@@ -103,13 +108,21 @@ namespace Barebones.MasterServer
         protected virtual void OnConnectedToMasterEventHandler()
         {
             // If we want to start a spawner (cmd argument was found)
-            if (Msf.Args.IsProvided(Msf.Args.Names.StartSpawner))
+            if (Msf.Args.StartSpawner || (autoStartInEditor && Msf.Runtime.IsEditor))
             {
-                StartSpawner();
-            }
-            else if (autoStartInEditor && Msf.Runtime.IsEditor)
-            {
-                StartSpawner();
+                // if you want to use your public IP address
+                if (usePublicIp)
+                {
+                    Msf.Helper.GetPublicIp(myPublicIP =>
+                    {
+                        machineIp = myPublicIP;
+                        StartSpawner();
+                    });
+                }
+                else
+                {
+                    StartSpawner();
+                }
             }
         }
 
@@ -121,6 +134,9 @@ namespace Barebones.MasterServer
             spawnerController?.KillProcesses();
         }
 
+        /// <summary>
+        /// Start spawner. But before start we are required to be connected
+        /// </summary>
         public virtual void StartSpawner()
         {
             if (!Msf.Connection.IsConnected)
@@ -135,12 +151,25 @@ namespace Barebones.MasterServer
                 return;
             }
 
+            // We do not want to use public IP
+            if (!usePublicIp)
+            {
+                // If machine IP is defined in cmd
+                machineIp = Msf.Args.ExtractValue(Msf.Args.Names.RoomIp, machineIp);
+            }
+
+            // If room region is defined in cmd
+            region = Msf.Args.ExtractValue(Msf.Args.Names.RoomRegion, region);
+
             IsSpawnerStarted = true;
 
+            // Create spawner options
             var spawnerOptions = new SpawnerOptions
             {
                 // If MaxProcesses count defined in cmd args
-                MaxProcesses = Msf.Args.IsProvided(Msf.Args.Names.MaxProcesses) ? Msf.Args.MaxProcesses : maxProcesses
+                MaxProcesses = Msf.Args.ExtractValueInt(Msf.Args.Names.MaxProcesses, maxProcesses),
+                MachineIp = machineIp,
+                Region = region
             };
 
             // If we're running in editor, and we want to override the executable path
@@ -152,7 +181,7 @@ namespace Barebones.MasterServer
             logger.Info("Registering as a spawner with options: \n" + spawnerOptions);
 
             // 1. Register the spawner
-            Msf.Server.Spawners.RegisterSpawner(spawnerOptions, (spawnerController, error) =>
+            Msf.Server.Spawners.RegisterSpawner(spawnerOptions, (controller, error) =>
             {
                 if (!string.IsNullOrEmpty(error))
                 {
@@ -160,53 +189,27 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                this.spawnerController = spawnerController;
-                this.spawnerController.Logger.LogLevel = spawnerLogLevel;
+                spawnerController = controller as SpawnerController;
+                spawnerController.Logger.LogLevel = spawnerLogLevel;
 
-                spawnerController.DefaultSpawnerSettings.UseWebSockets = Msf.Args.IsProvided(Msf.Args.Names.UseWebSockets)
+                spawnerController.SpawnSettings.UseWebSockets = Msf.Args.IsProvided(Msf.Args.Names.UseWebSockets)
                     ? Msf.Args.WebGl
                     : spawnWebSocketServers;
 
                 // Set to run in batchmode
                 if (spawnInBatchmode && !Msf.Args.DontSpawnInBatchmode)
                 {
-                    spawnerController.DefaultSpawnerSettings.SpawnInBatchmode = true;
+                    spawnerController.SpawnSettings.SpawnInBatchmode = true;
                 }
 
                 // 2. Set the default executable path
-                spawnerController.DefaultSpawnerSettings.ExecutablePath = Msf.Args.ExtractValue(Msf.Args.Names.RoomExecutablePath, executableFilePath);
+                spawnerController.SpawnSettings.ExecutablePath = Msf.Args.ExtractValue(Msf.Args.Names.RoomExecutablePath, executableFilePath);
 
                 // 3. Set the machine IP
-                spawnerController.DefaultSpawnerSettings.MachineIp = Msf.Args.ExtractValue(Msf.Args.Names.RoomIp, machineIp);
+                spawnerController.SpawnSettings.MachineIp = machineIp;
 
-                // 4. (Optional) Set the method which does the spawning, if you want to
-                // fully control how processes are spawned
-                spawnerController.SetSpawnRequestHandler(SpawnRequestHandler);
-
-                // 5. (Optional) Set the method, which kills processes when kill request is received
-                spawnerController.SetKillRequestHandler(KillRequestHandler);
-
-                logger.Info("Spawner successfully created. Id: " + spawnerController.SpawnerId);
+                logger.Info("Spawner successfully created. Id: " + controller.SpawnerId);
             });
-        }
-
-        /// <summary>
-        /// This is just an example of using custom spawn request handler
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="message"></param>
-        protected virtual void SpawnRequestHandler(SpawnRequestPacket packet, IIncommingMessage message)
-        {
-            spawnerController.DefaultSpawnRequestHandler(packet, message);
-        }
-
-        /// <summary>
-        /// This is just an example of using custom kill request handler
-        /// </summary>
-        /// <param name="spawnid"></param>
-        protected virtual void KillRequestHandler(int spawnid)
-        {
-            spawnerController.DefaultKillRequestHandler(spawnid);
         }
     }
 }

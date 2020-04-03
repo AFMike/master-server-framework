@@ -9,67 +9,63 @@ using System.Threading;
 
 namespace Barebones.MasterServer
 {
-    public class SpawnerController
+    public class SpawnerController : ISpawnerController
     {
-        public delegate void SpawnProcessHandler(SpawnRequestPacket packet, IIncommingMessage message);
-        public delegate void KillProcessHandler(int spawnId);
-
-        /// <summary>
-        /// Current spawn request handler. It can be overriden with your
-        /// </summary>
-        private SpawnProcessHandler spawnRequestHandler;
-
-        /// <summary>
-        /// Current kill request handle. It can be overriden with your
-        /// </summary>
-        private KillProcessHandler killRequestHandler;
-
         /// <summary>
         /// Just <see cref="Process"/> lock
         /// </summary>
-        private static object processLock = new object();
+        protected static object processLock = new object();
 
         /// <summary>
         /// List of spawned processes
         /// </summary>
-        private Dictionary<int, Process> processes = new Dictionary<int, Process>();
+        protected Dictionary<int, Process> processes = new Dictionary<int, Process>();
 
         /// <summary>
         /// Current connection
         /// </summary>
-        public IClientSocket Connection { get; private set; }
+        public IClientSocket Connection { get; protected set; }
 
         /// <summary>
         /// Id of this spawner controller that master server gives
         /// </summary>
-        public int SpawnerId { get; set; }
-
-        /// <summary>
-        /// Spawn options
-        /// </summary>
-        public SpawnerOptions Options { get; private set; }
+        public int SpawnerId { get; protected set; }
 
         /// <summary>
         /// Settings, which are used by the default spawn handler
         /// </summary>
-        public DefaultSpawnerConfig DefaultSpawnerSettings { get; private set; }
+        public SpawnerConfig SpawnSettings { get; protected set; }
 
-        public Logger Logger { get; set; }
+        public Logger Logger { get; protected set; }
 
-        public SpawnerController(int spawnerId, IClientSocket connection, SpawnerOptions options)
+        /// <summary>
+        /// Fired when process is started
+        /// </summary>
+        public event Action OnProcessStartedEvent;
+
+        /// <summary>
+        /// Fired when process is killed
+        /// </summary>
+        public event Action OnProcessKilledEvent;
+
+        /// <summary>
+        /// Create new instance of spawner controller
+        /// </summary>
+        /// <param name="spawnerId"></param>
+        /// <param name="connection"></param>
+        /// <param name="options"></param>
+        public SpawnerController(int spawnerId, IClientSocket connection)
         {
             Logger = Msf.Create.Logger(typeof(SpawnerController).Name, LogLevel.Info);
 
             Connection = connection;
             SpawnerId = spawnerId;
-            Options = options;
 
-            DefaultSpawnerSettings = new DefaultSpawnerConfig()
+            SpawnSettings = new SpawnerConfig()
             {
                 MasterIp = connection.ConnectionIp,
                 MasterPort = connection.ConnectionPort,
-                MachineIp = options.MachineIp,
-                SpawnInBatchmode = Msf.Args.IsProvided("-batchmode")
+                SpawnInBatchmode = false
             };
 
             // Add static handlers to listen one message for all controllers
@@ -84,8 +80,7 @@ namespace Barebones.MasterServer
         private static void SpawnProcessRequestHandler(IIncommingMessage message)
         {
             var data = message.Deserialize(new SpawnRequestPacket());
-
-            var controller = Msf.Server.Spawners.GetController(data.SpawnerId);
+            var controller = Msf.Server.Spawners.GetController(data.SpawnerId) as SpawnerController;
 
             if (controller == null)
             {
@@ -98,15 +93,7 @@ namespace Barebones.MasterServer
             }
 
             controller.Logger.Debug($"Spawn process requested for spawn controller [{controller.SpawnerId}]");
-
-            if (controller.spawnRequestHandler == null)
-            {
-                controller.DefaultSpawnRequestHandler(data, message);
-            }
-            else
-            {
-                controller.spawnRequestHandler.Invoke(data, message);
-            }
+            controller.SpawnRequestHandler(data, message);
         }
 
         /// <summary>
@@ -116,8 +103,7 @@ namespace Barebones.MasterServer
         private static void KillProcessRequestHandler(IIncommingMessage message)
         {
             var data = message.Deserialize(new KillSpawnedProcessRequestPacket());
-
-            var controller = Msf.Server.Spawners.GetController(data.SpawnerId);
+            var controller = Msf.Server.Spawners.GetController(data.SpawnerId) as SpawnerController;
 
             if (controller == null)
             {
@@ -130,35 +116,8 @@ namespace Barebones.MasterServer
             }
 
             controller.Logger.Debug($"Kill process requested for spawn controller [{controller.SpawnerId}]");
-
-            if (controller.killRequestHandler == null)
-            {
-                controller.DefaultKillRequestHandler(data.SpawnId);
-            }
-            else
-            {
-                controller.killRequestHandler.Invoke(data.SpawnId);
-            }
-
+            controller.KillRequestHandler(data.SpawnId);
             message.Respond(ResponseStatus.Success);
-        }
-
-        /// <summary>
-        /// Override spawn request handler
-        /// </summary>
-        /// <param name="handler"></param>
-        public void SetSpawnRequestHandler(SpawnProcessHandler handler)
-        {
-            spawnRequestHandler = handler;
-        }
-
-        /// <summary>
-        /// Override kill request handler
-        /// </summary>
-        /// <param name="handler"></param>
-        public void SetKillRequestHandler(KillProcessHandler handler)
-        {
-            killRequestHandler = handler;
         }
 
         /// <summary>
@@ -170,6 +129,7 @@ namespace Barebones.MasterServer
         public void NotifyProcessStarted(int spawnId, int processId, string cmdArgs)
         {
             Msf.Server.Spawners.NotifyProcessStarted(spawnId, processId, cmdArgs, Connection);
+            OnProcessStartedEvent?.Invoke();
         }
 
         /// <summary>
@@ -179,8 +139,13 @@ namespace Barebones.MasterServer
         public void NotifyProcessKilled(int spawnId)
         {
             Msf.Server.Spawners.NotifyProcessKilled(spawnId);
+            OnProcessKilledEvent?.Invoke();
         }
 
+        /// <summary>
+        /// Notifies master server, how many processes are running on a specified spawner
+        /// </summary>
+        /// <param name="count"></param>
         public void UpdateProcessesCount(int count)
         {
             Msf.Server.Spawners.UpdateProcessesCount(SpawnerId, count, Connection);
@@ -191,17 +156,9 @@ namespace Barebones.MasterServer
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="message"></param>
-        public void DefaultSpawnRequestHandler(SpawnRequestPacket packet, IIncommingMessage message)
+        public virtual void SpawnRequestHandler(SpawnRequestPacket packet, IIncommingMessage message)
         {
             Logger.Debug($"Default spawn handler started handling a request to spawn process for spawn controller [{SpawnerId}]");
-
-            var controller = Msf.Server.Spawners.GetController(packet.SpawnerId);
-
-            if (controller == null)
-            {
-                message.Respond("Failed to spawn a process. Spawner controller not found", ResponseStatus.Failed);
-                return;
-            }
 
             ////////////////////////////////////////////
             /// Create process args string
@@ -210,8 +167,8 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Check if we're overriding an IP to master server
-            var masterIpArgument = string.IsNullOrEmpty(controller.DefaultSpawnerSettings.MasterIp) ?
-                controller.Connection.ConnectionIp : controller.DefaultSpawnerSettings.MasterIp;
+            var masterIpArgument = string.IsNullOrEmpty(SpawnSettings.MasterIp) ?
+                Connection.ConnectionIp : SpawnSettings.MasterIp;
 
             ////////////////////////////////////////////
             /// Create msater IP arg
@@ -220,8 +177,8 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Check if we're overriding a port to master server
-            var masterPortArgument = controller.DefaultSpawnerSettings.MasterPort < 0 ?
-                controller.Connection.ConnectionPort : controller.DefaultSpawnerSettings.MasterPort;
+            var masterPortArgument = SpawnSettings.MasterPort < 0 ?
+                Connection.ConnectionPort : SpawnSettings.MasterPort;
 
             ////////////////////////////////////////////
             /// Create master port arg
@@ -239,7 +196,7 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Machine Ip
-            var machineIpArgument = controller.DefaultSpawnerSettings.MachineIp;
+            var machineIpArgument = SpawnSettings.MachineIp;
 
             /// Create room IP arg
             processArguments.Append($"{Msf.Args.Names.RoomIp} {machineIpArgument}");
@@ -262,13 +219,13 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// If spawn in batchmode was set and `DontSpawnInBatchmode` arg is not provided
-            var spawnInBatchmodeArgument = controller.DefaultSpawnerSettings.SpawnInBatchmode && !Msf.Args.DontSpawnInBatchmode;
+            var spawnInBatchmodeArgument = SpawnSettings.SpawnInBatchmode && !Msf.Args.DontSpawnInBatchmode;
             processArguments.Append((spawnInBatchmodeArgument ? "-batchmode -nographics" : string.Empty));
             processArguments.Append(" ");
 
             ////////////////////////////////////////////
             /// Create use websockets arg
-            processArguments.Append((controller.DefaultSpawnerSettings.UseWebSockets ? Msf.Args.Names.UseWebSockets + " " : string.Empty));
+            processArguments.Append((SpawnSettings.UseWebSockets ? Msf.Args.Names.UseWebSockets + " " : string.Empty));
             processArguments.Append(" ");
 
             ////////////////////////////////////////////
@@ -293,7 +250,7 @@ namespace Barebones.MasterServer
 
             ///////////////////////////////////////////
             /// Path to executable
-            var executablePath = controller.DefaultSpawnerSettings.ExecutablePath;
+            var executablePath = SpawnSettings.ExecutablePath;
 
             if (string.IsNullOrEmpty(executablePath))
             {
@@ -348,7 +305,7 @@ namespace Barebones.MasterServer
                             MsfTimer.RunInMainThread(() =>
                             {
                                 message.Respond(ResponseStatus.Success);
-                                controller.NotifyProcessStarted(packet.SpawnId, processId, startProcessInfo.Arguments);
+                                NotifyProcessStarted(packet.SpawnId, processId, startProcessInfo.Arguments);
                             });
 
                             process.WaitForExit();
@@ -378,7 +335,7 @@ namespace Barebones.MasterServer
                             // Release the port number
                             Msf.Server.Spawners.ReleasePort(machinePortArgument);
                             Logger.Debug($"Notifying about killed process with spawn id [{packet.SpawnId}]");
-                            controller.NotifyProcessKilled(packet.SpawnId);
+                            NotifyProcessKilled(packet.SpawnId);
                         });
                     }
 
@@ -395,7 +352,7 @@ namespace Barebones.MasterServer
         /// Default kill spawned process request handler that will be used by controller if <see cref="killRequestHandler"/> is not overriden
         /// </summary>
         /// <param name="spawnId"></param>
-        public void DefaultKillRequestHandler(int spawnId)
+        public virtual void KillRequestHandler(int spawnId)
         {
             Logger.Debug($"Default kill request handler started handling a request to kill a process with id [{spawnId}] for spawn controller with id [{SpawnerId}]");
 

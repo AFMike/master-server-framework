@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Barebones.MasterServer
 {
-    public delegate void RegisterSpawnerCallback(SpawnerController spawner, string error);
+    public delegate void RegisterSpawnerCallback(ISpawnerController spawner, string error);
     public delegate void RegisterSpawnedProcessCallback(SpawnTaskController taskController, string error);
     public delegate void CompleteSpawnedProcessCallback(bool isSuccessful, string error);
 
@@ -12,7 +12,7 @@ namespace Barebones.MasterServer
     {
         private Queue<int> _freePorts;
         private int _lastPortTaken = -1;
-        private Dictionary<int, SpawnerController> _locallyCreatedSpawners;
+        private Dictionary<int, ISpawnerController> _locallyCreatedSpawners;
 
         public int DefaultPort { get; set; } = 1500;
 
@@ -24,11 +24,11 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Invoked on "spawner server", when it successfully registers to master server
         /// </summary>
-        public event Action<SpawnerController> OnSpawnerRegisteredEvent;
+        public event Action<ISpawnerController> OnSpawnerRegisteredEvent;
 
         public MsfSpawnersServer(IClientSocket connection) : base(connection)
         {
-            _locallyCreatedSpawners = new Dictionary<int, SpawnerController>();
+            _locallyCreatedSpawners = new Dictionary<int, ISpawnerController>();
             _freePorts = new Queue<int>();
 
             IsSpawnedProccess = Msf.Args.IsProvided(Msf.Args.Names.SpawnCode);
@@ -64,7 +64,7 @@ namespace Barebones.MasterServer
                 }
 
                 var spawnerId = response.AsInt();
-                var controller = new SpawnerController(spawnerId, connection, options);
+                var controller = new SpawnerController(spawnerId, connection);
 
                 // Save reference
                 _locallyCreatedSpawners[spawnerId] = controller;
@@ -240,15 +240,15 @@ namespace Barebones.MasterServer
             connection.SendMessage((short)MsfMessageCodes.ProcessKilled, spawnId);
         }
 
-        public SpawnerController GetController(int spawnerId)
+        public ISpawnerController GetController(int spawnerId)
         {
-            SpawnerController controller;
+            ISpawnerController controller;
             _locallyCreatedSpawners.TryGetValue(spawnerId, out controller);
 
             return controller;
         }
 
-        public IEnumerable<SpawnerController> GetLocallyCreatedSpawners()
+        public IEnumerable<ISpawnerController> GetLocallyCreatedSpawners()
         {
             return _locallyCreatedSpawners.Values;
         }

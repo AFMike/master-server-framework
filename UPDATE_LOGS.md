@@ -1,5 +1,16 @@
 ## Updates Log
 
+### Msf 2.3.0 - Attention! Remove previous Barebones folder and than reimport new.
+
+- Added **ISpawnerController** interface
+- **SpawnerController** class is rewritten and now is extendable.
+- Made some changes to **SpawnerBehaviour** and added two fields
+ - **usePublicIp** - will help use use public IP address for your rooms
+ - **region** - now you can set region in inspector
+- **MsfArgs**
+ - Added **StartSpawner** that will help to start spawner automatically
+ - Added **RoomRegion** that will help you to set your spawner region from cmd
+
 ### Msf 2.2.4 - Attention! Remove previous Barebones folder and than reimport new.
 
 - **RoomServerBehaviour** can be started registered both with spawner and just as standalone application. Use **startRoomAsProcess** field to control this feature. For more info see its script.

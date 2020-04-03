@@ -13,6 +13,11 @@ namespace Barebones.MasterServer
         public bool StartMaster { get; private set; }
 
         /// <summary>
+        /// If true, spawner should be started
+        /// </summary>
+        public bool StartSpawner { get; private set; }
+
+        /// <summary>
         /// If true, client will try to connect to master at start
         /// </summary>
         public bool AutoConnectClient { get; private set; }
@@ -46,6 +51,11 @@ namespace Barebones.MasterServer
         /// Path to the executable (used by the spawner)
         /// </summary>
         public string RoomExecutablePath { get; private set; }
+
+        /// <summary>
+        /// Region, to which the spawner belongs
+        /// </summary>
+        public string RoomRegion { get; private set; }
 
         /// <summary>
         /// If true, some of the Ui game objects will be destroyed.
@@ -110,6 +120,7 @@ namespace Barebones.MasterServer
             Names = new MsfArgNames();
 
             StartMaster = IsProvided(Names.StartMaster);
+            StartSpawner = IsProvided(Names.StartSpawner);
             AutoConnectClient = IsProvided(Names.StartClientConnection);
             DestroyUi = IsProvided(Names.DestroyUi);
 
@@ -119,6 +130,7 @@ namespace Barebones.MasterServer
             RoomIp = ExtractValue(Names.RoomIp, "127.0.0.1");
             RoomPort = ExtractValueInt(Names.RoomPort, 7777);
             RoomExecutablePath = ExtractValue(Names.RoomExecutablePath);
+            RoomRegion = ExtractValue(Names.RoomRegion, "International");
             RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 1000);
 
             SpawnId = ExtractValueInt(Names.SpawnId, -1);

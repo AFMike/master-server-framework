@@ -81,8 +81,8 @@ namespace Barebones.MasterServer.Examples
                         {
                             OnSignedInEvent?.Invoke();
 
-                            Msf.Events.Invoke(EventKeys.showOkDialogBox,
-                            new OkDialogBoxViewEventMessage($"You have successfuly signed in as {Msf.Client.Auth.AccountInfo.Username} and now you can create another part of your cool game!"));
+                            //Msf.Events.Invoke(EventKeys.showOkDialogBox,
+                            //new OkDialogBoxViewEventMessage($"You have successfuly signed in as {Msf.Client.Auth.AccountInfo.Username} and now you can create another part of your cool game!"));
 
                             logger.Debug($"You are successfully logged in as {Msf.Client.Auth.AccountInfo.Username}");
                         }
@@ -156,8 +156,8 @@ namespace Barebones.MasterServer.Examples
 
                         OnSignedInEvent?.Invoke();
 
-                        Msf.Events.Invoke(EventKeys.showOkDialogBox,
-                        new OkDialogBoxViewEventMessage($"You have successfuly signed in as {Msf.Client.Auth.AccountInfo.Username} and now you can create another part of your cool game!"));
+                        //Msf.Events.Invoke(EventKeys.showOkDialogBox,
+                        //new OkDialogBoxViewEventMessage($"You have successfuly signed in as {Msf.Client.Auth.AccountInfo.Username} and now you can create another part of your cool game!"));
 
                         logger.Debug($"You are successfully logged in as {Msf.Client.Auth.AccountInfo.Username}");
                     }
@@ -312,7 +312,6 @@ namespace Barebones.MasterServer.Examples
             }
             else
             {
-                Debug.LogError("Hello");
                 signinView.Show();
             }
         }

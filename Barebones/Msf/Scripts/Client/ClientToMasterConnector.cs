@@ -12,7 +12,7 @@ namespace Barebones.MasterServer
     /// </summary>
     public class ClientToMasterConnector : ConnectionHelper
     {
-        [Header("sater Server Settings")]
+        [Header("Master Server Settings")]
         [Tooltip("If true, ip and port will be read from cmd args"), SerializeField]
         protected bool readMasterServerAddressFromCmd = true;
 
