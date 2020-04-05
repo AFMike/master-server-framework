@@ -195,11 +195,23 @@ namespace Barebones.MasterServer
             }
 
             ////////////////////////////////////////////
-            /// Machine Ip
-            var machineIpArgument = SpawnSettings.MachineIp;
+            /// Room Region
+            if (packet.Properties.ContainsKey(MsfDictKeys.region))
+            {
+                /// Create room name arg
+                processArguments.Append($"{Msf.Args.Names.RoomRegion} \"{packet.Properties[MsfDictKeys.region]}\"");
+                processArguments.Append(" ");
+            }
+            else
+            {
+                /// Create room name arg
+                processArguments.Append($"{Msf.Args.Names.RoomRegion} \"{SpawnSettings.Region}\"");
+                processArguments.Append(" ");
+            }
 
-            /// Create room IP arg
-            processArguments.Append($"{Msf.Args.Names.RoomIp} {machineIpArgument}");
+            ////////////////////////////////////////////
+            /// Machine Ip
+            processArguments.Append($"{Msf.Args.Names.RoomIp} {SpawnSettings.MachineIp}");
             processArguments.Append(" ");
 
             ////////////////////////////////////////////
@@ -397,6 +409,15 @@ namespace Barebones.MasterServer
             {
                 process.Kill();
             }
+        }
+
+        /// <summary>
+        /// Get the number of processes
+        /// </summary>
+        /// <returns></returns>
+        public int ProcessesCount()
+        {
+            return processes != null ? processes.Count : 0;
         }
     }
 }

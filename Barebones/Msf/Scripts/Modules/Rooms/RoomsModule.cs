@@ -124,7 +124,6 @@ namespace Barebones.MasterServer
         {
             // Create the object
             var room = new RegisteredRoom(GenerateRoomId(), peer, options);
-
             var peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
 
             if (peerRooms == null)
@@ -258,7 +257,7 @@ namespace Barebones.MasterServer
             var options = message.Deserialize(new RoomOptions());
             var room = RegisterRoom(message.Peer, options);
 
-            logger.Debug($"Room {room.RoomId} has been successfully registered");
+            logger.Debug($"Room {room.RoomId} has been successfully registered with options: {options}");
 
             // Respond with a room id
             message.Respond(room.RoomId, ResponseStatus.Success);

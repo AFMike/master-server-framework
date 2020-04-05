@@ -146,12 +146,38 @@ namespace Barebones.MasterServer
 
         protected virtual void Start()
         {
-            if(Msf.Runtime.IsEditor && autoStartInEditor)
+            if (Msf.Runtime.IsEditor && autoStartInEditor)
             {
                 // Start the server on next frame
-                MsfTimer.WaitForEndOfFrame(() => {
-                    StartServer();
+                MsfTimer.WaitForEndOfFrame(() =>
+                {
+                    WaitPublicIpIfRequired(() =>
+                    {
+                        StartServer();
+                    });
                 });
+            }
+        }
+
+        /// <summary>
+        /// If <see cref="usePublicIp"/> is set to true this method will wait before we get our IP. Otherwise method will be invoked immidiately
+        /// </summary>
+        protected virtual void WaitPublicIpIfRequired(Action callback)
+        {
+            if (usePublicIp)
+            {
+                logger.Info("Trying to get public IP...");
+
+                Msf.Helper.GetPublicIp((publicIp) =>
+                {
+                    logger.Info($"Our public IP is {publicIp}");
+                    SetIpAddress(publicIp);
+                    callback?.Invoke();
+                });
+            }
+            else
+            {
+                callback?.Invoke();
             }
         }
 
@@ -197,27 +223,11 @@ namespace Barebones.MasterServer
         /// <param name="listenToPort"></param>
         public virtual void StartServer(string listenToIp, int listenToPort)
         {
-            if (usePublicIp)
-            {
-                logger.Info("Trying to get public IP...");
-
-                Msf.Helper.GetPublicIp((publicIp) =>
-                {
-                    socket.Listen(publicIp, listenToPort);
-                    LookForModules();
-                    IsRunning = true;
-                    OnServerStartedEvent?.Invoke();
-                    OnStartedServer();
-                });
-            }
-            else
-            {
-                socket.Listen(listenToIp, listenToPort);
-                LookForModules();
-                IsRunning = true;
-                OnServerStartedEvent?.Invoke();
-                OnStartedServer();
-            }
+            socket.Listen(listenToIp, listenToPort);
+            LookForModules();
+            IsRunning = true;
+            OnServerStartedEvent?.Invoke();
+            OnStartedServer();
         }
 
         private void LookForModules()

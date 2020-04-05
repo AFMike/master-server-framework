@@ -1,5 +1,6 @@
 ﻿using Barebones.Networking;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Barebones.MasterServer
 {
@@ -54,6 +55,11 @@ namespace Barebones.MasterServer
         public bool AllowUsersRequestAccess { get; set; } = true;
 
         /// <summary>
+        /// Region, to which the spawned room belongs
+        /// </summary>
+        public string Region { get; set; } = "International";
+
+        /// <summary>
         /// Extra properties that you might want to send to master server
         /// </summary>
         public Dictionary<string, string> Properties { get; set; }
@@ -68,6 +74,7 @@ namespace Barebones.MasterServer
             writer.Write(Password);
             writer.Write(AccessTimeoutPeriod);
             writer.Write(AllowUsersRequestAccess);
+            writer.Write(Region);
             writer.Write(Properties);
         }
 
@@ -81,7 +88,31 @@ namespace Barebones.MasterServer
             Password = reader.ReadString();
             AccessTimeoutPeriod = reader.ReadSingle();
             AllowUsersRequestAccess = reader.ReadBoolean();
+            Region = reader.ReadString();
             Properties = reader.ReadDictionary();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder s = new StringBuilder();
+            s.Append($"Name: {Name}, ");
+            s.Append($"RoomIp: {RoomIp}, ");
+            s.Append($"RoomPort: {RoomPort}, ");
+            s.Append($"MaxConnections: {MaxConnections}, ");
+            s.Append($"Use Password: {!string.IsNullOrEmpty(Password)}, ");
+            s.Append($"AccessTimeoutPeriod: {AccessTimeoutPeriod} sec., ");
+            s.Append($"AllowUsersRequestAccess: {AllowUsersRequestAccess}, ");
+            s.Append($"Region: {Region}, ");
+
+            if(Properties != null && Properties.Count > 0)
+            {
+                foreach (var kvp in Properties)
+                {
+                    s.Append($"{kvp.Key}: {kvp.Value}, ");
+                }
+            }
+
+            return s.ToString();
         }
     }
 }

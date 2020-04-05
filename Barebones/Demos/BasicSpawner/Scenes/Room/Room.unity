@@ -311,7 +311,7 @@ MonoBehaviour:
   serverIP: 127.0.0.1
   serverPort: 5001
   autoStartInEditor: 1
-  startRoomAsProcess: 1
+  startRoomAsProcess: 0
   masterIp: 127.0.0.1
   masterPort: 5000
   OnRoomServerRegisteredEvent:

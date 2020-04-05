@@ -329,7 +329,10 @@ namespace Barebones.MasterServer
                     Status = status
                 });
 
-                message.Peer.SendMessage(msg);
+                if(task.Requester != null && task.Requester.IsConnected)
+                {
+                    message.Peer.SendMessage(msg);
+                }
             };
 
             message.Respond(task.SpawnId, ResponseStatus.Success);
@@ -392,6 +395,8 @@ namespace Barebones.MasterServer
 
         protected virtual void RegisterSpawnerRequestHandler(IIncommingMessage message)
         {
+            logger.Debug($"Client [{message.Peer.Id}] requested to be registered as spawner");
+
             if (!HasCreationPermissions(message.Peer))
             {
                 message.Respond("Insufficient permissions", ResponseStatus.Unauthorized);
@@ -399,8 +404,9 @@ namespace Barebones.MasterServer
             }
 
             var options = message.Deserialize(new SpawnerOptions());
-
             var spawner = CreateSpawner(message.Peer, options);
+
+            logger.Debug($"Client [{message.Peer.Id}] was successfully registered as spawner [{spawner.SpawnerId}] with options: {options}");
 
             // Respond with spawner id
             message.Respond(spawner.SpawnerId, ResponseStatus.Success);

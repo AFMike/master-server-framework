@@ -208,8 +208,15 @@ namespace Barebones.MasterServer
                 // 3. Set the machine IP
                 spawnerController.SpawnSettings.MachineIp = machineIp;
 
+                // 4. Set region
+                spawnerController.SpawnSettings.Region = spawnerOptions.Region;
+
                 logger.Info("Spawner successfully created. Id: " + controller.SpawnerId);
+
+                OnSpawnerRegistered();
             });
         }
+
+        protected virtual void OnSpawnerRegistered() { }
     }
 }

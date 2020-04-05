@@ -1,5 +1,12 @@
 ## Updates Log
 
+### Msf 2.3.1 - Attention! Remove previous Barebones folder and than reimport new.
+
+Simple bug fixes.
+
+- Room **region** is now created as parameter in **RoomOptions**
+- Fixed **"Error while handling a message from Client. OpCode: 30021, Error: System.InvalidOperationException: The current state of the connection is not Open"**
+
 ### Msf 2.3.0 - Attention! Remove previous Barebones folder and than reimport new.
 
 - Added **ISpawnerController** interface

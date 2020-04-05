@@ -363,10 +363,12 @@ MonoBehaviour:
   logLevel: 0
   spawnerLogLevel: 0
   machineIp: 127.0.0.1
+  usePublicIp: 0
   executableFilePath: 
   spawnInBatchmode: 0
   maxProcesses: 5
   spawnWebSocketServers: 0
+  region: Noland!
   killProcessesWhenAppQuits: 1
   autoStartInEditor: 1
   overrideExePathInEditor: 1

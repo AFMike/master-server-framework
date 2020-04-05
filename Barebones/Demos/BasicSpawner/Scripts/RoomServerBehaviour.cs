@@ -57,7 +57,6 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
             base.Awake();
 
             // If master IP is provided via cmd arguments
-            // This cmd is required if master server located on another machine than the Room server does
             if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
             {
                 masterIp = Msf.Args.MasterIp;
@@ -68,6 +67,34 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
             {
                 masterPort = Msf.Args.MasterPort;
             }
+        }
+
+        protected override void Start()
+        {
+            // Start room server at start
+            if ((Msf.Runtime.IsEditor && autoStartInEditor) || Msf.Args.AutoConnectClient)
+            {
+                // Start the server on next frame
+                MsfTimer.WaitForEndOfFrame(() =>
+                {
+                    WaitPublicIpIfRequired(() =>
+                    {
+                        StartServer();
+                    });
+                });
+            }
+        }
+
+        protected virtual void OnApplicationQuit()
+        {
+            if (msfConnection != null)
+                msfConnection.Disconnect();
+        }
+
+        public override void StartServer()
+        {
+            // If you have started this scene in client mode
+            if (Msf.Client.Rooms.ForceClientMode) return;
 
             // Read room options
             roomOptions = new RoomOptions
@@ -77,39 +104,21 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
                 Name = Msf.Args.ExtractValue(Msf.Args.Names.RoomName, "Room_" + Msf.Helper.CreateRandomString(5)),
                 Password = Msf.Args.ExtractValue(Msf.Args.Names.RoomPassword, string.Empty),
                 RoomIp = Msf.Args.ExtractValue(Msf.Args.Names.RoomIp, serverIP),
-                RoomPort = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomPort, serverPort)
+                RoomPort = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomPort, serverPort),
+                Region = Msf.Args.ExtractValue(Msf.Args.Names.RoomRegion, "International")
             };
+
+            logger.Info($"Starting Room Server... {Msf.Version}. Multithreading is: {(Msf.Runtime.SupportsThreads ? "On" : "Off")}");
+            logger.Info($"Start parameters are: {Msf.Args}");
 
             // Create instance of the client socket
             msfConnection = Msf.Create.ClientSocket();
 
-            // Override connection of rooms server
+            // Override connections
             Msf.Server.Rooms.ChangeConnection(msfConnection);
             Msf.Server.Spawners.ChangeConnection(msfConnection);
-        }
-
-        protected override void Start()
-        {
-            base.Start();
-
-            // Start room server at start
-            if (Msf.Args.AutoConnectClient && !Msf.Runtime.IsEditor)
-            {
-                // Start the server on next frame
-                MsfTimer.WaitForEndOfFrame(() => {
-                    StartServer();
-                });
-            }
-        }
-
-        public override void StartServer()
-        {
-            if (Msf.Client.Rooms.ForceClientMode) return;
 
             msfConnection.AddConnectionListener(OnConnectedToMasterHandler);
-
-            logger.Info($"Starting Room Server... {Msf.Version}. Multithreading is: {(Msf.Runtime.SupportsThreads ? "On" : "Off")}");
-            logger.Info($"Start parameters are: {Msf.Args}");
 
             StartConnectionToMaster();
         }
@@ -144,7 +153,10 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
             }, 2f);
         }
 
-        private void OnConnectedToMasterHandler()
+        /// <summary>
+        /// Fired when this room server is connected to master as client
+        /// </summary>
+        protected virtual void OnConnectedToMasterHandler()
         {
             // Start the server on next frame
             MsfTimer.WaitForEndOfFrame(() =>
@@ -162,7 +174,10 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
             BeforeRoomServerRegistering();
         }
 
-        private void OnDisconnectedFromMasterHandler()
+        /// <summary>
+        /// Fired when this room server is disconnected from master as client
+        /// </summary>
+        protected virtual void OnDisconnectedFromMasterHandler()
         {
             // Remove listener after disconnection
             msfConnection.RemoveDisconnectionListener(OnDisconnectedFromMasterHandler);
@@ -174,7 +189,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
         /// <summary>
         /// Before we register our room we need to setup everything
         /// </summary>
-        private void BeforeRoomServerRegistering()
+        protected virtual void BeforeRoomServerRegistering()
         {
             if (startRoomAsProcess)
             {
@@ -217,7 +232,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
         /// <summary>
         /// Start registering our room server
         /// </summary>
-        private void RegisterRoomServer(UnityAction successCallback = null)
+        protected virtual void RegisterRoomServer(UnityAction successCallback = null)
         {
             Msf.Server.Rooms.RegisterRoom(roomOptions, (controller, error) =>
             {
@@ -229,16 +244,10 @@ namespace Barebones.MasterServer.Examples.BasicSpawner
 
                 CurrentRoomController = controller;
 
-                logger.Info($"Room Created successfully. Room ID: {controller.RoomId}, Room Name: {roomOptions.Name}");
+                logger.Info($"Room Created successfully. Room ID: {controller.RoomId}, {roomOptions}");
 
                 successCallback?.Invoke();
             });
-        }
-
-        private void OnApplicationQuit()
-        {
-            if (msfConnection != null)
-                msfConnection.Disconnect();
         }
     }
 }
