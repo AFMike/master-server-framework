@@ -11,32 +11,31 @@ namespace Barebones.MasterServer
     /// </summary>
     public class SpawnTask
     {
-        private SpawnStatus _status;
+        private SpawnStatus status;
+        protected List<Action<SpawnTask>> whenDoneCallbacks;
 
-        public RegisteredSpawner Spawner { get; private set; }
-        public Dictionary<string, string> Properties { get; private set; }
-        public string CustomArgs { get; private set; }
-        public int SpawnId { get; private set; }
+        public int Id { get; private set; }
         public string UniqueCode { get; private set; }
+        public RegisteredSpawner Spawner { get; private set; }
+        public Dictionary<string, string> Options { get; private set; }
+        public Dictionary<string, string> CustomOptions { get; private set; }
         public SpawnFinalizationPacket FinalizationPacket { get; private set; }
 
         public event Action<SpawnStatus> OnStatusChangedEvent;
 
-        protected List<Action<SpawnTask>> WhenDoneCallbacks;
-
-        public SpawnTask(int spawnId, RegisteredSpawner spawner, Dictionary<string, string> properties, string customArgs)
+        public SpawnTask(int spawnTaskId, RegisteredSpawner spawner, Dictionary<string, string> properties, Dictionary<string, string> customOptions)
         {
-            SpawnId = spawnId;
+            Id = spawnTaskId;
 
             Spawner = spawner;
-            Properties = properties;
-            CustomArgs = customArgs;
+            Options = properties;
+            CustomOptions = customOptions;
 
             UniqueCode = Msf.Helper.CreateRandomString(6);
-            WhenDoneCallbacks = new List<Action<SpawnTask>>();
+            whenDoneCallbacks = new List<Action<SpawnTask>>();
         }
 
-        public bool IsAborted { get { return _status < SpawnStatus.None; } }
+        public bool IsAborted { get { return status < SpawnStatus.None; } }
 
         public bool IsDoneStartingProcess { get { return IsAborted || IsProcessStarted; } }
 
@@ -44,14 +43,14 @@ namespace Barebones.MasterServer
 
         public SpawnStatus Status
         {
-            get { return _status; }
+            get { return status; }
             set
             {
-                _status = value;
+                status = value;
 
-                OnStatusChangedEvent?.Invoke(_status);
+                OnStatusChangedEvent?.Invoke(status);
 
-                if (_status >= SpawnStatus.Finalized || _status < SpawnStatus.None)
+                if (status >= SpawnStatus.Finalized || status < SpawnStatus.None)
                 {
                     NotifyDoneListeners();
                 }
@@ -105,17 +104,17 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            return string.Format("[SpawnTask: id - {0}]", SpawnId);
+            return string.Format("[SpawnTask: id - {0}]", Id);
         }
 
         protected void NotifyDoneListeners()
         {
-            foreach (var callback in WhenDoneCallbacks)
+            foreach (var callback in whenDoneCallbacks)
             {
                 callback.Invoke(this);
             }
 
-            WhenDoneCallbacks.Clear();
+            whenDoneCallbacks.Clear();
         }
 
         /// <summary>
@@ -125,7 +124,7 @@ namespace Barebones.MasterServer
         /// <param name="callback"></param>
         public SpawnTask WhenDone(Action<SpawnTask> callback)
         {
-            WhenDoneCallbacks.Add(callback);
+            whenDoneCallbacks.Add(callback);
             return this;
         }
 
@@ -143,7 +142,7 @@ namespace Barebones.MasterServer
 
         public void KillSpawnedProcess()
         {
-            Spawner.SendKillRequest(SpawnId, killed =>
+            Spawner.SendKillRequest(Id, killed =>
             {
                 Status = SpawnStatus.Aborted;
 

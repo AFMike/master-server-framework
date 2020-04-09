@@ -135,23 +135,41 @@ namespace Barebones.MasterServer
             return _spawnTaskId++;
         }
 
-        public SpawnTask Spawn(Dictionary<string, string> properties)
+        /// <summary>
+        /// Start process on spawner side with given spawn options
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public SpawnTask Spawn(Dictionary<string, string> options)
         {
-            return Spawn(properties, "", "");
+            return Spawn(options, string.Empty, new Dictionary<string, string>());
         }
 
-        public SpawnTask Spawn(Dictionary<string, string> properties, string region)
+        /// <summary>
+        /// Start process on spawner side with given spawn <paramref name="options"/> and <paramref name="region"/>
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="region"></param>
+        /// <returns></returns>
+        public SpawnTask Spawn(Dictionary<string, string> options, string region)
         {
-            return Spawn(properties, region, "");
+            return Spawn(options, region, new Dictionary<string, string>());
         }
 
-        public virtual SpawnTask Spawn(Dictionary<string, string> properties, string region, string customArgs)
+        /// <summary>
+        /// Start process on spawner side with given spawn <paramref name="options"/>, <paramref name="region"/> and <paramref name="customOptions"/>
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="region"></param>
+        /// <param name="customOptions"></param>
+        /// <returns></returns>
+        public virtual SpawnTask Spawn(Dictionary<string, string> options, string region, Dictionary<string, string> customOptions)
         {
-            var spawners = GetFilteredSpawners(properties, region);
+            var spawners = GetFilteredSpawners(options, region);
 
             if (spawners.Count == 0)
             {
-                logger.Warn("No spawner was returned after filtering. " + (string.IsNullOrEmpty(region) ? "" : "Region: " + region));
+                logger.Warn("No spawner was returned after filtering. " + (string.IsNullOrEmpty(region) ? string.Empty : "Region: " + region));
                 return null;
             }
 
@@ -165,22 +183,20 @@ namespace Barebones.MasterServer
                 return null;
             }
 
-            return Spawn(properties, customArgs, availableSpawner);
+            return Spawn(options, customOptions, availableSpawner);
         }
 
         /// <summary>
-        /// Requests a specific spawner to spawn a process
+        /// Start process on spawner side with given spawn <paramref name="options"/>, <paramref name="customOptions"/> and <paramref name="spawner"/>
         /// </summary>
-        /// <param name="properties"></param>
-        /// <param name="customArgs"></param>
+        /// <param name="options"></param>
+        /// <param name="customOptions"></param>
         /// <param name="spawner"></param>
         /// <returns></returns>
-        public virtual SpawnTask Spawn(Dictionary<string, string> properties, string customArgs, RegisteredSpawner spawner)
+        public virtual SpawnTask Spawn(Dictionary<string, string> options, Dictionary<string, string> customOptions, RegisteredSpawner spawner)
         {
-            var task = new SpawnTask(GenerateSpawnTaskId(), spawner, properties, customArgs);
-
-            spawnTasksList[task.SpawnId] = task;
-
+            var task = new SpawnTask(GenerateSpawnTaskId(), spawner, options, customOptions);
+            spawnTasksList[task.Id] = task;
             spawner.AddTaskToQueue(task);
 
             logger.Debug("Spawner was found, and spawn task created: " + task);
@@ -261,19 +277,16 @@ namespace Barebones.MasterServer
 
         #region Message Handlers
 
+        /// <summary>
+        /// Fired whe connected client has made request to spawn process
+        /// </summary>
+        /// <param name="message"></param>
         protected virtual void ClientsSpawnRequestHandler(IIncommingMessage message)
         {
             var data = message.Deserialize(new ClientsSpawnRequestPacket());
             var peer = message.Peer;
 
-            if (data.Options.ContainsKey(MsfDictKeys.roomName))
-            {
-                logger.Info($"Client {peer.Id} requested to spawn room with the name {data.Options[MsfDictKeys.roomName]}");
-            }
-            else
-            {
-                logger.Info($"Client {peer.Id} requested to spawn room");
-            }
+            logger.Info($"Client {peer.Id} requested to spawn room with options: {data}");
 
             if (spawnersList.Count == 0)
             {
@@ -302,8 +315,15 @@ namespace Barebones.MasterServer
                 return;
             }
 
+            string region = string.Empty;
+
+            if (data.Options.ContainsKey(MsfDictKeys.region))
+            {
+                region = data.Options[MsfDictKeys.region];
+            }
+
             // Create a new spawn task
-            var task = Spawn(data.Options, data.Region, data.CustomArgs);
+            var task = Spawn(data.Options, region, data.CustomOptions);
 
             // If spawn task is not created
             if (task == null)
@@ -325,7 +345,7 @@ namespace Barebones.MasterServer
                 // Send status update
                 var msg = Msf.Create.Message((short)MsfMessageCodes.SpawnRequestStatusChange, new SpawnStatusUpdatePacket()
                 {
-                    SpawnId = task.SpawnId,
+                    SpawnId = task.Id,
                     Status = status
                 });
 
@@ -335,7 +355,7 @@ namespace Barebones.MasterServer
                 }
             };
 
-            message.Respond(task.SpawnId, ResponseStatus.Success);
+            message.Respond(task.Id, ResponseStatus.Success);
         }
 
         private void AbortSpawnRequestHandler(IIncommingMessage message)
@@ -360,7 +380,7 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            logger.Debug($"Client [{message.Peer.Id}] requested to terminate process [{prevRequest.SpawnId}]");
+            logger.Debug($"Client [{message.Peer.Id}] requested to terminate process [{prevRequest.Id}]");
 
             prevRequest.Abort();
 
@@ -439,7 +459,7 @@ namespace Barebones.MasterServer
 
             OnSpawnedProcessRegisteredEvent?.Invoke(task, message.Peer);
 
-            message.Respond(task.Properties.ToBytes(), ResponseStatus.Success);
+            message.Respond(task.Options.ToBytes(), ResponseStatus.Success);
         }
 
         protected virtual void CompleteSpawnProcessRequestHandler(IIncommingMessage message)

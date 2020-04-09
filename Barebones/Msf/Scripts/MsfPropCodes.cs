@@ -9,7 +9,6 @@
 
         // Spawners
         RegisteredSpawners,
-        ClientSpawnRequest,
-
+        ClientSpawnRequest
     }
 }

@@ -9,7 +9,7 @@ using UnityEngine.Events;
 
 namespace Barebones.MasterServer.Examples.BasicProfile
 {
-    public class ProfilesManager : BaseClientModule
+    public class ProfilesManager : MsfBaseClientModule
     {
         public ObservableProfile Profile { get; private set; }
 

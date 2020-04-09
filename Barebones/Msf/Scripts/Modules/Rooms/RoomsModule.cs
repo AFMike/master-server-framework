@@ -206,7 +206,8 @@ namespace Barebones.MasterServer
                 OnlinePlayers = r.OnlineCount,
                 Properties = GetPublicRoomProperties(peer, r, filters),
                 IsPasswordProtected = !string.IsNullOrEmpty(r.Options.Password),
-                Type = GameInfoType.Room
+                Type = GameInfoType.Room,
+                Region = "SuperPuper"
             });
         }
 

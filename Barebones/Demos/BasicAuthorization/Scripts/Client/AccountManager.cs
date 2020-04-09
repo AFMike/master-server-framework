@@ -9,7 +9,7 @@ using UnityEngine.Events;
 
 namespace Barebones.MasterServer.Examples
 {
-    public class AccountManager : BaseClientModule
+    public class AccountManager : MsfBaseClientModule
     {
         private string outputMessage = string.Empty;
 
@@ -302,7 +302,7 @@ namespace Barebones.MasterServer.Examples
             });
         }
 
-        protected override void OnConnectedToMaster()
+        protected override void OnClientConnectedToServer()
         {
             Msf.Events.Invoke(EventKeys.hideLoadingInfo);
 
@@ -316,7 +316,7 @@ namespace Barebones.MasterServer.Examples
             }
         }
 
-        protected override void OnDisconnectedFromMaster()
+        protected override void OnClientDisconnectedFromServer()
         {
             // Logout after diconnection
             Msf.Client.Auth.SignOut();

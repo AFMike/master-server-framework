@@ -28,14 +28,14 @@
         public string MasterIp { get { return "-msfMasterIp"; } }
 
         /// <summary>
-        /// Use this cmd to setup spawned process ID
+        /// Use this cmd to setup spawned process task ID
         /// </summary>
-        public string SpawnId { get { return "-msfSpawnId"; } }
+        public string SpawnTaskId { get { return "-msfSpawnTaskId"; } }
 
         /// <summary>
         /// Use this cmd to check if there's no tampering with spawned processes
         /// </summary>
-        public string SpawnCode { get { return "-msfSpawnCode"; } }
+        public string SpawnTaskUniqueCode { get { return "-msfSpawnTaskUniqueCode"; } }
 
         /// <summary>
         /// Use this cmd to setup IP address of the spawned room server

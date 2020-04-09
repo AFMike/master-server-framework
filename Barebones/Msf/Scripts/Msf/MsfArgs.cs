@@ -66,13 +66,13 @@ namespace Barebones.MasterServer
         /// <summary>
         /// SpawnId of the spawned process
         /// </summary>
-        public int SpawnId { get; private set; }
+        public int SpawnTaskId { get; private set; }
 
         /// <summary>
         /// Code, which is used to ensure that there's no tampering with 
         /// spawned processes
         /// </summary>
-        public string SpawnCode { get; private set; }
+        public string SpawnTaskUniqueCode { get; private set; }
 
         /// <summary>
         /// If true, will make sure that spawned processes are not spawned in batchmode
@@ -133,8 +133,8 @@ namespace Barebones.MasterServer
             RoomRegion = ExtractValue(Names.RoomRegion, "International");
             RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 1000);
 
-            SpawnId = ExtractValueInt(Names.SpawnId, -1);
-            SpawnCode = ExtractValue(Names.SpawnCode);
+            SpawnTaskId = ExtractValueInt(Names.SpawnTaskId, -1);
+            SpawnTaskUniqueCode = ExtractValue(Names.SpawnTaskUniqueCode);
             DontSpawnInBatchmode = IsProvided(Names.DontSpawnInBatchmode);
             MaxProcesses = ExtractValueInt(Names.MaxProcesses, 0);
 

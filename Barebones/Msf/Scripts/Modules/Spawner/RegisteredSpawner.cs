@@ -100,10 +100,10 @@ namespace Barebones.MasterServer
             var data = new SpawnRequestPacket()
             {
                 SpawnerId = SpawnerId,
-                CustomArgs = task.CustomArgs,
-                Properties = task.Properties,
-                SpawnId = task.SpawnId,
-                SpawnCode = task.UniqueCode
+                CustomOptions = task.CustomOptions,
+                Options = task.Options,
+                SpawnTaskId = task.Id,
+                SpawnTaskUniqueCode = task.UniqueCode
             };
 
             var msg = Msf.Create.Message((short)MsfMessageCodes.SpawnProcessRequest, data);

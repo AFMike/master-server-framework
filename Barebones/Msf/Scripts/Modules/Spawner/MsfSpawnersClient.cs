@@ -38,42 +38,42 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="properties"></param>
-        public void RequestSpawn(Dictionary<string, string> properties, string region)
+        /// <param name="options"></param>
+        public void RequestSpawn(Dictionary<string, string> options, string region)
         {
-            RequestSpawn(properties, new Dictionary<string, string>(), region, null, Connection);
+            RequestSpawn(options, new Dictionary<string, string>(), region, null, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="properties"></param>
+        /// <param name="options"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> properties, string region, ClientSpawnRequestCallback callback)
+        public void RequestSpawn(Dictionary<string, string> options, string region, ClientSpawnRequestCallback callback)
         {
-            RequestSpawn(properties, new Dictionary<string, string>(), region, callback, Connection);
+            RequestSpawn(options, new Dictionary<string, string>(), region, callback, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="properties"></param>
+        /// <param name="options"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> properties, Dictionary<string, string> customArgs, string region, ClientSpawnRequestCallback callback)
+        public void RequestSpawn(Dictionary<string, string> options, Dictionary<string, string> customOptions, string region, ClientSpawnRequestCallback callback)
         {
-            RequestSpawn(properties, customArgs, region, callback, Connection);
+            RequestSpawn(options, customOptions, region, callback, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
-        /// <param name="properties"></param>
-        /// <param name="customArgs"></param>
+        /// <param name="options"></param>
+        /// <param name="customOptions"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> properties, Dictionary<string, string> customArgs, string region, ClientSpawnRequestCallback callback, IClientSocket connection)
+        public void RequestSpawn(Dictionary<string, string> options, Dictionary<string, string> customOptions, string region, ClientSpawnRequestCallback callback, IClientSocket connection)
         {
             if (!connection.IsConnected)
             {
@@ -81,31 +81,17 @@ namespace Barebones.MasterServer
                 return;
             }
 
+            options[MsfDictKeys.region] = string.IsNullOrEmpty(region) ? string.Empty : region;
+
             // Create spawn request message packet
-            var packet = new ClientsSpawnRequestPacket()
+            var data = new ClientsSpawnRequestPacket()
             {
-                Options = properties,
-                Region = region
+                Options = options,
+                CustomOptions = customOptions ?? new Dictionary<string, string>()
             };
 
-            if (customArgs != null && customArgs.Count > 0)
-            {
-                var customArgsSb = new StringBuilder();
-
-                foreach (var kvp in customArgs)
-                {
-                    customArgsSb.Append($"{kvp.Key} {kvp.Value} ");
-                }
-
-                packet.CustomArgs = customArgsSb.ToString();
-            }
-            else
-            {
-                packet.CustomArgs = string.Empty;
-            }
-
             // Send request to Master Server SpawnerModule
-            connection.SendMessage((short)MsfMessageCodes.ClientsSpawnRequest, packet, (status, response) =>
+            connection.SendMessage((short)MsfMessageCodes.ClientsSpawnRequest, data, (status, response) =>
             {
                 if (status != ResponseStatus.Success)
                 {
@@ -114,13 +100,11 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                Logs.Debug($"Room [{properties[MsfDictKeys.roomName]}] was successfuly started");
-
-                // Spawn id
-                var spawnId = response.AsInt();
-                var controller = new SpawnRequestController(spawnId, connection, properties);
+                var controller = new SpawnRequestController(response.AsInt(), connection, options);
 
                 _localSpawnRequests[controller.SpawnId] = controller;
+
+                Logs.Debug($"Room [{options[MsfDictKeys.roomName]}] was successfuly started");
 
                 callback?.Invoke(controller, null);
             });

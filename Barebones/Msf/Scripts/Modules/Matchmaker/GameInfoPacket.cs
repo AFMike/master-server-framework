@@ -9,6 +9,7 @@ namespace Barebones.MasterServer
         public string Address { get; set; }
         public GameInfoType Type { get; set; }
         public string Name { get; set; }
+        public string Region { get; set; }
         public bool IsPasswordProtected { get; set; }
         public int MaxPlayers { get; set; }
         public int OnlinePlayers { get; set; }
@@ -19,6 +20,7 @@ namespace Barebones.MasterServer
             Id = 0;
             Address = string.Empty;
             Name = string.Empty;
+            Region = string.Empty;
             Type = GameInfoType.Unknown;
             IsPasswordProtected = false;
             MaxPlayers = 0;
@@ -32,6 +34,7 @@ namespace Barebones.MasterServer
             writer.Write(Address);
             writer.Write((int)Type);
             writer.Write(Name);
+            writer.Write(Region);
 
             writer.Write(IsPasswordProtected);
             writer.Write(MaxPlayers);
@@ -45,6 +48,7 @@ namespace Barebones.MasterServer
             Address = reader.ReadString();
             Type = (GameInfoType)reader.ReadInt32();
             Name = reader.ReadString();
+            Region = reader.ReadString();
 
             IsPasswordProtected = reader.ReadBoolean();
             MaxPlayers = reader.ReadInt32();
@@ -54,7 +58,7 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            return string.Format($"[GameInfo: id: {Id}, address: {Address}, players: {OnlinePlayers}/{MaxPlayers}, type: {Type}]");
+            return string.Format($"[GameInfo: id: {Id}, address: {Address}, players: {OnlinePlayers}/{MaxPlayers}, type: {Type}], password: {IsPasswordProtected}, region: {Region}");
         }
     }
 }

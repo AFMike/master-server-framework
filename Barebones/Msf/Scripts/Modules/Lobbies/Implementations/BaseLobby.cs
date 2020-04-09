@@ -497,7 +497,7 @@ namespace Barebones.MasterServer
                 region = propertiesList[MsfDictKeys.region];
             }
 
-            var task = Module.SpawnersModule.Spawn(propertiesList, region, GenerateCmdArgs());
+            var task = Module.SpawnersModule.Spawn(propertiesList, region, GenerateOptions());
 
             if (task == null)
             {
@@ -539,9 +539,14 @@ namespace Barebones.MasterServer
             }
         }
 
-        protected virtual string GenerateCmdArgs()
+        protected virtual Dictionary<string, string> GenerateOptions()
         {
-            return Msf.Args.Names.LobbyId + " " + Id;
+            var options = new Dictionary<string, string>
+            {
+                { Msf.Args.Names.LobbyId, Id.ToString() }
+            };
+
+            return options;
         }
 
         public void SetGameSpawnTask(SpawnTask task)

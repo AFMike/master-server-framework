@@ -1,26 +1,30 @@
 ﻿using Barebones.Networking;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Barebones.MasterServer
 {
     public class ClientsSpawnRequestPacket : SerializablePacket
     {
-        public string Region { get; set; } = string.Empty;
         public Dictionary<string, string> Options { get; set; }
-        public string CustomArgs { get; set; }
+        public Dictionary<string, string> CustomOptions { get; set; }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
-            writer.Write(Region);
             writer.Write(Options);
-            writer.Write(CustomArgs);
+            writer.WriteDictionary(CustomOptions);
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
         {
-            Region = reader.ReadString();
             Options = reader.ReadDictionary();
-            CustomArgs = reader.ReadString();
+            CustomOptions = reader.ReadDictionary();
+        }
+
+        public override string ToString()
+        {
+            return string.Join(" ", Options.Select(opt => $"{opt.Key} {opt.Value}")) + " " + string.Join(" ", CustomOptions.Select(opt => $"{opt.Key} {opt.Value}"));
         }
     }
 }

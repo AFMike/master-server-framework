@@ -31,7 +31,7 @@ namespace Barebones.MasterServer
             _locallyCreatedSpawners = new Dictionary<int, ISpawnerController>();
             _freePorts = new Queue<int>();
 
-            IsSpawnedProccess = Msf.Args.IsProvided(Msf.Args.Names.SpawnCode);
+            IsSpawnedProccess = Msf.Args.IsProvided(Msf.Args.Names.SpawnTaskUniqueCode);
         }
 
         /// <summary>

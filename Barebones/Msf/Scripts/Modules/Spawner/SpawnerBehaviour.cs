@@ -52,8 +52,8 @@ namespace Barebones.MasterServer
         protected int maxProcesses = 5;
         [SerializeField, Tooltip("Use this to set whether or not to spawn room/server for browser games. This feature works only if game server uses websocket transport for connections")]
         protected bool spawnWebSocketServers = false;
-        [SerializeField, Tooltip("Spawner region used when you are trying to start rooms by given region. International is by default")]
-        protected string region = "International";
+        [SerializeField, Tooltip("Spawner region used when you are trying to start rooms by given region. Empty means International")]
+        protected string region = "";
 
         [Header("Runtime Settings"), SerializeField, Tooltip("If true, kills all spawned processes when master server quits")]
         protected bool killProcessesWhenAppQuits = true;

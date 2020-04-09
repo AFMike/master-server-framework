@@ -1,5 +1,22 @@
 ## Updates Log
 
+### Msf 2.3.2 - Attention! Remove previous Barebones folder and than reimport new.
+
+- MsfArgNames
+ - SpawnId (-msfSpawnId) is renamed to SpawnTaskId (-msfSpawnTaskId)
+ - SpawnCode(-msfSpawnCode) is renamed to SpawnTaskUniqueCode (-msfSpawnTaskUniqueCode)
+- ClientsSpawnRequestPacket
+ - CustomArgs is renamed to CustomOptions
+ - Region is removed
+- SpawnRequestPacket
+ - CustomArgs is renamed to CustomOptions
+ - SpawnId is renamed to SpawnTaskId
+ - SpawnCode is renamed to SpawnTaskUniqueCode
+ - Properties is renamed to Options
+- Fixed bug with Region. Now if you set region as empty all rooms created with this region will be International
+- BaseClientModule is renamed to MsfBaseClientModule
+ - Now this class can listen to network messages
+
 ### Msf 2.3.1 - Attention! Remove previous Barebones folder and than reimport new.
 
 Simple bug fixes.

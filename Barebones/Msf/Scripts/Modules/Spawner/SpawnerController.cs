@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -152,11 +153,11 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
-        /// Default kill spawned process request handler that will be used by controller if <see cref="spawnRequestHandler"/> is not overriden
+        /// Default spawn spawned process request handler that will be used by controller if <see cref="spawnRequestHandler"/> is not overriden
         /// </summary>
-        /// <param name="packet"></param>
+        /// <param name="data"></param>
         /// <param name="message"></param>
-        public virtual void SpawnRequestHandler(SpawnRequestPacket packet, IIncommingMessage message)
+        public virtual void SpawnRequestHandler(SpawnRequestPacket data, IIncommingMessage message)
         {
             Logger.Debug($"Default spawn handler started handling a request to spawn process for spawn controller [{SpawnerId}]");
 
@@ -187,19 +188,19 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Room Name
-            if (packet.Properties.ContainsKey(MsfDictKeys.roomName))
+            if (data.Options.ContainsKey(MsfDictKeys.roomName))
             {
                 /// Create room name arg
-                processArguments.Append($"{Msf.Args.Names.RoomName} \"{packet.Properties[MsfDictKeys.roomName]}\"");
+                processArguments.Append($"{Msf.Args.Names.RoomName} \"{data.Options[MsfDictKeys.roomName]}\"");
                 processArguments.Append(" ");
             }
 
             ////////////////////////////////////////////
             /// Room Region
-            if (packet.Properties.ContainsKey(MsfDictKeys.region))
+            if (data.Options.ContainsKey(MsfDictKeys.region))
             {
                 /// Create room name arg
-                processArguments.Append($"{Msf.Args.Names.RoomRegion} \"{packet.Properties[MsfDictKeys.region]}\"");
+                processArguments.Append($"{Msf.Args.Names.RoomRegion} \"{data.Options[MsfDictKeys.region]}\"");
                 processArguments.Append(" ");
             }
             else
@@ -222,8 +223,8 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Get the scene name
-            var sceneNameArgument = packet.Properties.ContainsKey(MsfDictKeys.sceneName)
-                ? $"{Msf.Args.Names.LoadScene} {packet.Properties[MsfDictKeys.sceneName]}" : string.Empty;
+            var sceneNameArgument = data.Options.ContainsKey(MsfDictKeys.sceneName)
+                ? $"{Msf.Args.Names.LoadScene} {data.Options[MsfDictKeys.sceneName]}" : string.Empty;
 
             /// Create scene name arg
             processArguments.Append(sceneNameArgument);
@@ -242,12 +243,12 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Create spawn id arg
-            processArguments.Append($"{Msf.Args.Names.SpawnId} {packet.SpawnId}");
+            processArguments.Append($"{Msf.Args.Names.SpawnTaskId} {data.SpawnTaskId}");
             processArguments.Append(" ");
 
             ////////////////////////////////////////////
             /// Create spawn code arg
-            processArguments.Append($"{Msf.Args.Names.SpawnCode} \"{packet.SpawnCode}\"");
+            processArguments.Append($"{Msf.Args.Names.SpawnTaskUniqueCode} \"{data.SpawnTaskUniqueCode}\"");
             processArguments.Append(" ");
 
             ////////////////////////////////////////////
@@ -257,7 +258,7 @@ namespace Barebones.MasterServer
 
             ////////////////////////////////////////////
             /// Create custom args
-            processArguments.Append(packet.CustomArgs);
+            processArguments.Append(string.Join(" ", data.CustomOptions.Select(opt => $"{opt.Key} {opt.Value}")));
             processArguments.Append(" ");
 
             ///////////////////////////////////////////
@@ -272,14 +273,14 @@ namespace Barebones.MasterServer
             }
 
             // In case a path is provided with the request
-            if (packet.Properties.ContainsKey(MsfDictKeys.executablePath))
+            if (data.Options.ContainsKey(MsfDictKeys.executablePath))
             {
-                executablePath = packet.Properties[MsfDictKeys.executablePath];
+                executablePath = data.Options[MsfDictKeys.executablePath];
             }
 
-            if (!string.IsNullOrEmpty(packet.OverrideExePath))
+            if (!string.IsNullOrEmpty(data.OverrideExePath))
             {
-                executablePath = packet.OverrideExePath;
+                executablePath = data.OverrideExePath;
             }
 
             /// Create info about starting process
@@ -302,13 +303,13 @@ namespace Barebones.MasterServer
                     {
                         using (var process = Process.Start(startProcessInfo))
                         {
-                            Logger.Debug("Process started. Spawn Id: " + packet.SpawnId + ", pid: " + process.Id);
+                            Logger.Debug("Process started. Spawn Id: " + data.SpawnTaskId + ", pid: " + process.Id);
                             processStarted = true;
 
                             lock (processLock)
                             {
                                 // Save the process
-                                processes[packet.SpawnId] = process;
+                                processes[data.SpawnTaskId] = process;
                             }
 
                             var processId = process.Id;
@@ -317,7 +318,7 @@ namespace Barebones.MasterServer
                             MsfTimer.RunInMainThread(() =>
                             {
                                 message.Respond(ResponseStatus.Success);
-                                NotifyProcessStarted(packet.SpawnId, processId, startProcessInfo.Arguments);
+                                NotifyProcessStarted(data.SpawnTaskId, processId, startProcessInfo.Arguments);
                             });
 
                             process.WaitForExit();
@@ -339,15 +340,15 @@ namespace Barebones.MasterServer
                         lock (processLock)
                         {
                             // Remove the process
-                            processes.Remove(packet.SpawnId);
+                            processes.Remove(data.SpawnTaskId);
                         }
 
                         MsfTimer.RunInMainThread(() =>
                         {
                             // Release the port number
                             Msf.Server.Spawners.ReleasePort(machinePortArgument);
-                            Logger.Debug($"Notifying about killed process with spawn id [{packet.SpawnId}]");
-                            NotifyProcessKilled(packet.SpawnId);
+                            Logger.Debug($"Notifying about killed process with spawn id [{data.SpawnTaskId}]");
+                            NotifyProcessKilled(data.SpawnTaskId);
                         });
                     }
 
