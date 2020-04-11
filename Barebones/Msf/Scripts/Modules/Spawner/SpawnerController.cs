@@ -55,7 +55,7 @@ namespace Barebones.MasterServer
         /// <param name="spawnerId"></param>
         /// <param name="connection"></param>
         /// <param name="options"></param>
-        public SpawnerController(int spawnerId, IClientSocket connection)
+        public SpawnerController(int spawnerId, IClientSocket connection, SpawnerOptions spawnerOptions)
         {
             Logger = Msf.Create.Logger(typeof(SpawnerController).Name, LogLevel.Info);
 
@@ -66,7 +66,9 @@ namespace Barebones.MasterServer
             {
                 MasterIp = connection.ConnectionIp,
                 MasterPort = connection.ConnectionPort,
-                SpawnInBatchmode = false
+                SpawnInBatchmode = false,
+                MachineIp = spawnerOptions.MachineIp,
+                Region = string.IsNullOrEmpty(spawnerOptions.Region) ? "International" : spawnerOptions.Region
             };
 
             // Add static handlers to listen one message for all controllers
@@ -161,108 +163,85 @@ namespace Barebones.MasterServer
         {
             Logger.Debug($"Default spawn handler started handling a request to spawn process for spawn controller [{SpawnerId}]");
 
-            ////////////////////////////////////////////
-            /// Create process args string
-            var processArguments = new StringBuilder();
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Create process args string
+            var processArguments = new DictionaryOptions();
 
-            ////////////////////////////////////////////
-            /// Check if we're overriding an IP to master server
+            /************************************************************************/
+            // Check if we're overriding an IP to master server
             var masterIpArgument = string.IsNullOrEmpty(SpawnSettings.MasterIp) ?
                 Connection.ConnectionIp : SpawnSettings.MasterIp;
 
-            ////////////////////////////////////////////
-            /// Create msater IP arg
-            processArguments.Append($"{Msf.Args.Names.MasterIp} {masterIpArgument}");
-            processArguments.Append(" ");
+            // Create msater IP arg
+            processArguments.Set(Msf.Args.Names.MasterIp, masterIpArgument);
 
-            ////////////////////////////////////////////
+            /************************************************************************/
             /// Check if we're overriding a port to master server
             var masterPortArgument = SpawnSettings.MasterPort < 0 ?
                 Connection.ConnectionPort : SpawnSettings.MasterPort;
 
-            ////////////////////////////////////////////
-            /// Create master port arg
-            processArguments.Append($"{Msf.Args.Names.MasterPort} {masterPortArgument}");
-            processArguments.Append(" ");
+            // Create master port arg
+            processArguments.Set(Msf.Args.Names.MasterPort, masterPortArgument);
 
-            ////////////////////////////////////////////
-            /// Room Name
-            if (data.Options.ContainsKey(MsfDictKeys.roomName))
-            {
-                /// Create room name arg
-                processArguments.Append($"{Msf.Args.Names.RoomName} \"{data.Options[MsfDictKeys.roomName]}\"");
-                processArguments.Append(" ");
-            }
+            /************************************************************************/
+            // Room Name
+            processArguments.Set(Msf.Args.Names.RoomName, $"\"{data.Options.AsString(MsfDictKeys.roomName, "Room_" + Msf.Helper.CreateRandomString(6))}\"");
 
-            ////////////////////////////////////////////
-            /// Room Region
-            if (data.Options.ContainsKey(MsfDictKeys.region))
-            {
-                /// Create room name arg
-                processArguments.Append($"{Msf.Args.Names.RoomRegion} \"{data.Options[MsfDictKeys.region]}\"");
-                processArguments.Append(" ");
-            }
-            else
-            {
-                /// Create room name arg
-                processArguments.Append($"{Msf.Args.Names.RoomRegion} \"{SpawnSettings.Region}\"");
-                processArguments.Append(" ");
-            }
+            /************************************************************************/
+            // Room Region
+            processArguments.Set(Msf.Args.Names.RoomRegion, $"\"{SpawnSettings.Region}\"");
 
-            ////////////////////////////////////////////
-            /// Machine Ip
-            processArguments.Append($"{Msf.Args.Names.RoomIp} {SpawnSettings.MachineIp}");
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Machine Ip
+            processArguments.Set(Msf.Args.Names.RoomIp, SpawnSettings.MachineIp);
 
-            ////////////////////////////////////////////
-            /// Create port for room arg
+            /************************************************************************/
+            // Create port for room arg
             int machinePortArgument = Msf.Server.Spawners.GetAvailablePort();
-            processArguments.Append($"{Msf.Args.Names.RoomPort} {machinePortArgument}");
-            processArguments.Append(" ");
+            processArguments.Set(Msf.Args.Names.RoomPort, machinePortArgument);
 
-            ////////////////////////////////////////////
-            /// Get the scene name
-            var sceneNameArgument = data.Options.ContainsKey(MsfDictKeys.sceneName)
-                ? $"{Msf.Args.Names.LoadScene} {data.Options[MsfDictKeys.sceneName]}" : string.Empty;
+            /************************************************************************/
+            // Get the scene name
+            if (data.Options.Has(MsfDictKeys.sceneName))
+            {
+                processArguments.Set(Msf.Args.Names.LoadScene, data.Options.AsString(MsfDictKeys.sceneName));
+            }
 
-            /// Create scene name arg
-            processArguments.Append(sceneNameArgument);
-            processArguments.Append(" ");
+            /************************************************************************/
+            // If spawn in batchmode was set and DontSpawnInBatchmode arg is not provided
+            if (SpawnSettings.SpawnInBatchmode && !Msf.Args.DontSpawnInBatchmode)
+            {
+                processArguments.Set("-batchmode -nographics", string.Empty);
+            }
 
-            ////////////////////////////////////////////
-            /// If spawn in batchmode was set and `DontSpawnInBatchmode` arg is not provided
-            var spawnInBatchmodeArgument = SpawnSettings.SpawnInBatchmode && !Msf.Args.DontSpawnInBatchmode;
-            processArguments.Append((spawnInBatchmodeArgument ? "-batchmode -nographics" : string.Empty));
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Create use websockets arg
+            if (SpawnSettings.UseWebSockets)
+            {
+                processArguments.Set(Msf.Args.Names.UseWebSockets, string.Empty);
+            }
 
-            ////////////////////////////////////////////
-            /// Create use websockets arg
-            processArguments.Append((SpawnSettings.UseWebSockets ? Msf.Args.Names.UseWebSockets + " " : string.Empty));
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Create spawn id arg
+            processArguments.Set(Msf.Args.Names.SpawnTaskId, data.SpawnTaskId);
 
-            ////////////////////////////////////////////
-            /// Create spawn id arg
-            processArguments.Append($"{Msf.Args.Names.SpawnTaskId} {data.SpawnTaskId}");
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Create spawn code arg
+            processArguments.Set(Msf.Args.Names.SpawnTaskUniqueCode, data.SpawnTaskUniqueCode);
 
-            ////////////////////////////////////////////
-            /// Create spawn code arg
-            processArguments.Append($"{Msf.Args.Names.SpawnTaskUniqueCode} \"{data.SpawnTaskUniqueCode}\"");
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Create destroy ui arg
+            if (Msf.Args.DestroyUi)
+            {
+                processArguments.Set(Msf.Args.Names.DestroyUi, string.Empty);
+            }
 
-            ////////////////////////////////////////////
-            /// Create destroy ui arg
-            processArguments.Append((Msf.Args.DestroyUi ? Msf.Args.Names.DestroyUi + " " : string.Empty));
-            processArguments.Append(" ");
+            /************************************************************************/
+            // Create custom args
+            processArguments.Append(data.CustomOptions);
 
-            ////////////////////////////////////////////
-            /// Create custom args
-            processArguments.Append(string.Join(" ", data.CustomOptions.Select(opt => $"{opt.Key} {opt.Value}")));
-            processArguments.Append(" ");
-
-            ///////////////////////////////////////////
-            /// Path to executable
+            /************************************************************************/
+            // Path to executable
             var executablePath = SpawnSettings.ExecutablePath;
 
             if (string.IsNullOrEmpty(executablePath))
@@ -273,9 +252,9 @@ namespace Barebones.MasterServer
             }
 
             // In case a path is provided with the request
-            if (data.Options.ContainsKey(MsfDictKeys.executablePath))
+            if (data.Options.Has(MsfDictKeys.executablePath))
             {
-                executablePath = data.Options[MsfDictKeys.executablePath];
+                executablePath = data.Options.AsString(MsfDictKeys.executablePath);
             }
 
             if (!string.IsNullOrEmpty(data.OverrideExePath))
@@ -288,7 +267,7 @@ namespace Barebones.MasterServer
             {
                 CreateNoWindow = false,
                 UseShellExecute = false,
-                Arguments = processArguments.ToString()
+                Arguments = processArguments.ToReadableString(" ", " ")
             };
 
             Logger.Debug("Starting process with args: " + startProcessInfo.Arguments);

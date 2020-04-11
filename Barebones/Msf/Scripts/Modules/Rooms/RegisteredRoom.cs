@@ -80,11 +80,9 @@ namespace Barebones.MasterServer
 
         public void OverrideOptionsWithProperties()
         {
-            if (Options.Properties.ContainsKey(MsfDictKeys.isPublic))
+            if (Options.CustomOptions.Has(MsfDictKeys.isPublic))
             {
-                bool isPublic;
-                bool.TryParse(Options.Properties[MsfDictKeys.isPublic], out isPublic);
-                Options.IsPublic = isPublic;
+                Options.IsPublic = Options.CustomOptions.AsBool(MsfDictKeys.isPublic);
             }
         }
 

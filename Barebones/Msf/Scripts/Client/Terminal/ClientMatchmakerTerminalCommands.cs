@@ -12,24 +12,20 @@ namespace Barebones.Client.Utilities
         [RegisterCommand(Name = "client.spawner.start", Help = "Send request to start room. 1 Room Name, 2 Max Connections", MinArgCount = 1)]
         private static void SendRequestSpawn(CommandArg[] args)
         {
-            var settings = new Dictionary<string, string>
-            {
-                { MsfDictKeys.roomName, args[0].String.Replace('+', ' ') }
-            };
+            var options = new DictionaryOptions();
+            options.Add(MsfDictKeys.roomName, args[0].String.Replace('+', ' '));
 
             if(args.Length > 1)
             {
-                settings.Add(MsfDictKeys.maxPlayers, args[1].String);
+                options.Add(MsfDictKeys.maxPlayers, args[1].String);
             }
 
-            var customArgs = new Dictionary<string, string>
-            {
-                { "-myName", "\"John Adams\"" },
-                { "-myAge", "45" },
-                { "-msfStartClientConnection", ""}
-            };
+            var customOptions = new DictionaryOptions();
+            customOptions.Add("-myName", "\"John Adams\"");
+            customOptions.Add("-myAge", 45);
+            customOptions.Add("-msfStartClientConnection", string.Empty);
 
-            Msf.Client.Spawners.RequestSpawn(settings, customArgs, string.Empty, (controller, error) => {
+            Msf.Client.Spawners.RequestSpawn(options, customOptions, string.Empty, (controller, error) => {
                 if (controller == null) return;
 
                 MsfTimer.WaitWhile(() => {
@@ -38,7 +34,7 @@ namespace Barebones.Client.Utilities
 
                     if (!isSuccess)
                     {
-                        Msf.Client.Spawners.AbortSpawn(controller.SpawnId);
+                        Msf.Client.Spawners.AbortSpawn(controller.SpawnTaskId);
                         Logs.Error("You have failed to spawn new room");
                     }
 

@@ -13,7 +13,7 @@ namespace Barebones.MasterServer
         int MaxPlayers { get; }
         string Name { get; set; }
         int PlayerCount { get; }
-        Dictionary<string, string> GetPublicProperties(IPeer peer);
+        DictionaryOptions GetPublicProperties(IPeer peer);
 
         event Action<ILobby> OnDestroyedEvent;
         bool AddPlayer(LobbyUserPeerExtension playerExt, out string error);

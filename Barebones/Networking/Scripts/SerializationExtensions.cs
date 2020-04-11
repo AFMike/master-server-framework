@@ -306,22 +306,11 @@ namespace Barebones.Networking
         public static void Write(this EndianBinaryWriter writer, ISerializablePacket packet)
         {
             packet.ToBinaryWriter(writer);
-            //var bytes = packet != null ? packet.ToBytes() : new byte[0];
-            //writer.Write(bytes.Length);
-            //writer.Write(bytes);
         }
 
         public static T ReadPacket<T>(this EndianBinaryReader reader, T packet) where T : ISerializablePacket, new()
         {
             packet.FromBinaryReader(reader);
-
-            //var length = reader.ReadInt32();
-
-            //if (length > 0)
-            //    return packet;
-
-            //packet.FromBinaryReader(reader);
-
             return packet;
         }
 
@@ -340,28 +329,25 @@ namespace Barebones.Networking
 
         public static Dictionary<string, string> ReadDictionary(this EndianBinaryReader reader)
         {
-            // Additional dictionary
             var length = reader.ReadInt32();
 
             if (length > 0)
             {
-                return new Dictionary<string, string>()
-                    .FromBytes(reader.ReadBytes(length));
+                return new Dictionary<string, string>().FromBytes(reader.ReadBytes(length));
             }
 
             return new Dictionary<string, string>();
         }
 
-        public static string ToReadableString(this Dictionary<string, string> dictionary)
+        public static string ToReadableString(this Dictionary<string, string> dictionary, string itemsSeparator = "; ", string kvpSeparator = " : ")
         {
             var readableString = "none";
 
             if (dictionary != null && dictionary.Count > 0)
             {
-                readableString = string.Join("; ", dictionary.Select(p => p.Key + " : " + p.Value).ToArray());
+                readableString = string.Join(itemsSeparator, dictionary.Select(p => p.Key + $"{kvpSeparator}" + p.Value).ToArray());
             }
 
-            readableString = "[" + readableString + "]";
             return readableString;
         }
     }

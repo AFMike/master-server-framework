@@ -152,7 +152,7 @@ namespace Barebones.MasterServer
             {
                 RoomIp = Options.RoomIp,
                 RoomPort = Options.RoomPort,
-                Properties = Options.Properties,
+                CustomOptions = Options.CustomOptions,
                 RoomId = RoomId,
                 Token = Msf.Helper.CreateGuidString(),
                 SceneName = SceneManager.GetActiveScene().name

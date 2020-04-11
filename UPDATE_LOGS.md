@@ -1,5 +1,11 @@
 ## Updates Log
 
+### Msf 3.1.0 - Attention! Significant changes! This version is not compatible with earlier ones. Before update test it in new project.
+
+- Created new cass **DictionaryOptions**. It is implemented in many classes  derived from **ISerializablePacket**. There are 65 positions this class is used in. This class helps easily you work with custom options data. In this regard, many changes were made in source code.
+- Made some documentation for methods right in source code. This approach of documenting the scripts will be used further as well.
+- I nearly have finished **SpawnersDemo** scene, but you can see it right now in package.
+
 ### Msf 2.3.2 - Attention! Remove previous Barebones folder and than reimport new.
 
 - MsfArgNames

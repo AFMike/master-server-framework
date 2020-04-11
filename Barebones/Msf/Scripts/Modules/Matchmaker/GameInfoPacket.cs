@@ -13,7 +13,7 @@ namespace Barebones.MasterServer
         public bool IsPasswordProtected { get; set; }
         public int MaxPlayers { get; set; }
         public int OnlinePlayers { get; set; }
-        public Dictionary<string, string> Properties { get; set; }
+        public DictionaryOptions CustomOptions { get; set; }
 
         public GameInfoPacket()
         {
@@ -25,7 +25,7 @@ namespace Barebones.MasterServer
             IsPasswordProtected = false;
             MaxPlayers = 0;
             OnlinePlayers = 0;
-            Properties = new Dictionary<string, string>();
+            CustomOptions = new DictionaryOptions();
         }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
@@ -39,7 +39,7 @@ namespace Barebones.MasterServer
             writer.Write(IsPasswordProtected);
             writer.Write(MaxPlayers);
             writer.Write(OnlinePlayers);
-            writer.Write(Properties);
+            writer.Write(CustomOptions.ToDictionary());
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
@@ -53,12 +53,12 @@ namespace Barebones.MasterServer
             IsPasswordProtected = reader.ReadBoolean();
             MaxPlayers = reader.ReadInt32();
             OnlinePlayers = reader.ReadInt32();
-            Properties = reader.ReadDictionary();
+            CustomOptions = new DictionaryOptions(reader.ReadDictionary());
         }
 
         public override string ToString()
         {
-            return string.Format($"[GameInfo: id: {Id}, address: {Address}, players: {OnlinePlayers}/{MaxPlayers}, type: {Type}], password: {IsPasswordProtected}, region: {Region}");
+            return $"[GameInfo: id: {Id}, address: {Address}, players: {OnlinePlayers}/{MaxPlayers}, type: {Type}], password: {IsPasswordProtected}, region: {Region}, customOptions : [{CustomOptions.ToReadableString(", ")}]";
         }
     }
 }

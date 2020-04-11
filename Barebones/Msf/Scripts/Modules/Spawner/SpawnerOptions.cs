@@ -17,43 +17,39 @@ namespace Barebones.MasterServer
         public int MaxProcesses { get; set; } = 0;
 
         /// <summary>
-        /// Spawner properties
-        /// </summary>
-        public Dictionary<string, string> Properties { get; set; }
-
-        /// <summary>
         /// Region, to which the spawner belongs
         /// </summary>
         public string Region { get; set; } = "International";
+
+        /// <summary>
+        /// Spawner properties
+        /// </summary>
+        public DictionaryOptions CustomOptions { get; set; }
+
+        public SpawnerOptions()
+        {
+            CustomOptions = new DictionaryOptions();
+        }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
             writer.Write(MachineIp);
             writer.Write(MaxProcesses);
-            writer.Write(Properties);
             writer.Write(Region);
+            writer.Write(CustomOptions.ToDictionary());
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
         {
             MachineIp = reader.ReadString();
             MaxProcesses = reader.ReadInt32();
-            Properties = reader.ReadDictionary();
             Region = reader.ReadString();
+            CustomOptions = new DictionaryOptions(reader.ReadDictionary());
         }
 
         public override string ToString()
         {
-            var properties = "none";
-
-            if (Properties != null && Properties.Count > 0)
-            {
-                properties = string.Join("; ", Properties.Select(p => p.Key + " : " + p.Value).ToArray());
-            }
-
-            properties = "[" + properties + "]";
-
-            return $"MachineIp: {MachineIp}, MaxProcesses: {MaxProcesses}, Region: {Region}, Properties: {properties}";
+            return $"MachineIp: {MachineIp}, MaxProcesses: {MaxProcesses}, Region: {Region}, Properties: {CustomOptions.ToDictionary().ToReadableString(", ", ": ")}";
         }
     }
 }

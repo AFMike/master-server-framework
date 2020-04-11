@@ -21,7 +21,7 @@ namespace Barebones.MasterServer
 
         protected Dictionary<string, LobbyMember> membersList;
         protected Dictionary<int, LobbyMember> membersByPeerIdList;
-        protected Dictionary<string, string> propertiesList;
+        protected DictionaryOptions propertiesList;
         protected Dictionary<string, LobbyTeam> teamsList;
         protected HashSet<IPeer> subscribersList;
 
@@ -43,7 +43,7 @@ namespace Barebones.MasterServer
             Controls = new List<LobbyPropertyData>();
             membersList = new Dictionary<string, LobbyMember>();
             membersByPeerIdList = new Dictionary<int, LobbyMember>();
-            propertiesList = new Dictionary<string, string>();
+            propertiesList = new DictionaryOptions();
             teamsList = teams.ToDictionary(t => t.Name, t => t);
             subscribersList = new HashSet<IPeer>();
 
@@ -278,14 +278,7 @@ namespace Barebones.MasterServer
 
         public bool SetProperty(string key, string value)
         {
-            if (propertiesList.ContainsKey(key))
-            {
-                propertiesList[key] = value;
-            }
-            else
-            {
-                propertiesList.Add(key, value);
-            }
+            propertiesList.Set(key, value);
 
             OnLobbyPropertyChange(key);
             return true;
@@ -338,10 +331,7 @@ namespace Barebones.MasterServer
 
         public void SetLobbyProperties(Dictionary<string, string> properties)
         {
-            foreach (var property in properties)
-            {
-                propertiesList[property.Key] = property.Value;
-            }
+            propertiesList.Append(properties);
         }
 
         public void SetReadyState(LobbyMember member, bool state)
@@ -489,12 +479,12 @@ namespace Barebones.MasterServer
 
             var region = "";
 
-            propertiesList[MsfDictKeys.isPublic] = "false";
+            propertiesList.Set(MsfDictKeys.isPublic, "false");
 
             // Extract the region if available
-            if (propertiesList.ContainsKey(MsfDictKeys.region))
+            if (propertiesList.Has(MsfDictKeys.region))
             {
-                region = propertiesList[MsfDictKeys.region];
+                region = propertiesList.AsString(MsfDictKeys.region);
             }
 
             var task = Module.SpawnersModule.Spawn(propertiesList, region, GenerateOptions());
@@ -539,12 +529,10 @@ namespace Barebones.MasterServer
             }
         }
 
-        protected virtual Dictionary<string, string> GenerateOptions()
+        protected virtual DictionaryOptions GenerateOptions()
         {
-            var options = new Dictionary<string, string>
-            {
-                { Msf.Args.Names.LobbyId, Id.ToString() }
-            };
+            var options = new DictionaryOptions();
+            options.Set(Msf.Args.Names.LobbyId, Id.ToString());
 
             return options;
         }
@@ -652,7 +640,7 @@ namespace Barebones.MasterServer
             State = Config.PlayAgainEnabled ? LobbyState.Preparations : LobbyState.GameOver;
         }
 
-        public Dictionary<string, string> GetPublicProperties(IPeer peer)
+        public DictionaryOptions GetPublicProperties(IPeer peer)
         {
             return propertiesList;
         }
@@ -667,7 +655,7 @@ namespace Barebones.MasterServer
                 GameMaster = GameMaster != null ? GameMaster.Username : "",
                 LobbyName = Name,
                 LobbyId = Id,
-                LobbyProperties = propertiesList,
+                LobbyProperties = propertiesList.ToDictionary(),
                 Players = membersList.Values
                     .ToDictionary(m => m.Username, GenerateMemberData),
                 Teams = teamsList.Values.ToDictionary(t => t.Name, t => t.GenerateData()),
@@ -691,7 +679,7 @@ namespace Barebones.MasterServer
                 GameMaster = GameMaster != null ? GameMaster.Username : "",
                 LobbyName = Name,
                 LobbyId = Id,
-                LobbyProperties = propertiesList,
+                LobbyProperties = propertiesList.ToDictionary(),
                 Players = membersList.Values
                     .ToDictionary(m => m.Username, GenerateMemberData),
                 Teams = teamsList.Values.ToDictionary(t => t.Name, t => t.GenerateData()),
@@ -930,7 +918,7 @@ namespace Barebones.MasterServer
             var packet = new StringPairPacket()
             {
                 A = propertyKey,
-                B = propertiesList[propertyKey]
+                B = propertiesList.AsString(propertyKey)
             };
 
             // Broadcast new properties

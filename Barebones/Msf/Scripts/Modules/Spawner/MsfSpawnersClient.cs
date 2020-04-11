@@ -30,29 +30,18 @@ namespace Barebones.MasterServer
         /// Sends a request to master server, to spawn a process with given options
         /// </summary>
         /// <param name="options"></param>
-        public void RequestSpawn(Dictionary<string, string> options)
+        public void RequestSpawn(DictionaryOptions options)
         {
-            RequestSpawn(options, new Dictionary<string, string>(), string.Empty, null, Connection);
+            RequestSpawn(options, new DictionaryOptions(), string.Empty, null, Connection);
         }
 
         /// <summary>
         /// Sends a request to master server, to spawn a process in a given region, and with given options
         /// </summary>
         /// <param name="options"></param>
-        public void RequestSpawn(Dictionary<string, string> options, string region)
+        public void RequestSpawn(DictionaryOptions options, string region)
         {
-            RequestSpawn(options, new Dictionary<string, string>(), region, null, Connection);
-        }
-
-        /// <summary>
-        /// Sends a request to master server, to spawn a process in a given region, and with given options
-        /// </summary>
-        /// <param name="options"></param>
-        /// <param name="region"></param>
-        /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> options, string region, ClientSpawnRequestCallback callback)
-        {
-            RequestSpawn(options, new Dictionary<string, string>(), region, callback, Connection);
+            RequestSpawn(options, new DictionaryOptions(), region, null, Connection);
         }
 
         /// <summary>
@@ -61,7 +50,18 @@ namespace Barebones.MasterServer
         /// <param name="options"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> options, Dictionary<string, string> customOptions, string region, ClientSpawnRequestCallback callback)
+        public void RequestSpawn(DictionaryOptions options, string region, ClientSpawnRequestCallback callback)
+        {
+            RequestSpawn(options, new DictionaryOptions(), region, callback, Connection);
+        }
+
+        /// <summary>
+        /// Sends a request to master server, to spawn a process in a given region, and with given options
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="region"></param>
+        /// <param name="callback"></param>
+        public void RequestSpawn(DictionaryOptions options, DictionaryOptions customOptions, string region, ClientSpawnRequestCallback callback)
         {
             RequestSpawn(options, customOptions, region, callback, Connection);
         }
@@ -73,26 +73,32 @@ namespace Barebones.MasterServer
         /// <param name="customOptions"></param>
         /// <param name="region"></param>
         /// <param name="callback"></param>
-        public void RequestSpawn(Dictionary<string, string> options, Dictionary<string, string> customOptions, string region, ClientSpawnRequestCallback callback, IClientSocket connection)
+        public void RequestSpawn(DictionaryOptions options, DictionaryOptions customOptions, string region, ClientSpawnRequestCallback callback, IClientSocket connection)
         {
+            // If we are not connected
             if (!connection.IsConnected)
             {
                 callback?.Invoke(null, "Not connected");
                 return;
             }
 
-            options[MsfDictKeys.region] = string.IsNullOrEmpty(region) ? string.Empty : region;
+            // Set region to room by filter. If region is empty the room will be international
+            options.Set(MsfDictKeys.region, string.IsNullOrEmpty(region) ? string.Empty : region);
 
             // Create spawn request message packet
             var data = new ClientsSpawnRequestPacket()
             {
+                // Options for spawners module
                 Options = options,
-                CustomOptions = customOptions ?? new Dictionary<string, string>()
+
+                // Options that will be send to room
+                CustomOptions = customOptions
             };
 
             // Send request to Master Server SpawnerModule
             connection.SendMessage((short)MsfMessageCodes.ClientsSpawnRequest, data, (status, response) =>
             {
+                // If spawn request failed
                 if (status != ResponseStatus.Success)
                 {
                     Logs.Error($"An error occurred when spawn request [{response.AsString()}]");
@@ -100,11 +106,13 @@ namespace Barebones.MasterServer
                     return;
                 }
 
+                // Create new spawn request controller
                 var controller = new SpawnRequestController(response.AsInt(), connection, options);
 
-                _localSpawnRequests[controller.SpawnId] = controller;
+                // List controler by spawn task id
+                _localSpawnRequests[controller.SpawnTaskId] = controller;
 
-                Logs.Debug($"Room [{options[MsfDictKeys.roomName]}] was successfuly started");
+                Logs.Debug($"Room was successfuly started with client options: {data.Options.ToReadableString()}, {data.CustomOptions.ToReadableString()}");
 
                 callback?.Invoke(controller, null);
             });
@@ -113,24 +121,27 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Sends a request to abort spawn request, which was not yet finalized
         /// </summary>
-        /// <param name="spawnId"></param>
-        public void AbortSpawn(int spawnId)
+        /// <param name="spawnTaskId"></param>
+        public void AbortSpawn(int spawnTaskId)
         {
-            AbortSpawn(spawnId, null, Connection);
+            AbortSpawn(spawnTaskId, null, Connection);
         }
 
         /// <summary>
         /// Sends a request to abort spawn request, which was not yet finalized
         /// </summary>
-        public void AbortSpawn(int spawnId, AbortSpawnHandler callback)
+        public void AbortSpawn(int spawnTaskId, AbortSpawnHandler callback)
         {
-            AbortSpawn(spawnId, callback, Connection);
+            AbortSpawn(spawnTaskId, callback, Connection);
         }
 
         /// <summary>
         /// Sends a request to abort spawn request, which was not yet finalized
         /// </summary>
-        public void AbortSpawn(int spawnId, AbortSpawnHandler callback, IClientSocket connection)
+        /// <param name="spawnTaskId"></param>
+        /// <param name="callback"></param>
+        /// <param name="connection"></param>
+        public void AbortSpawn(int spawnTaskId, AbortSpawnHandler callback, IClientSocket connection)
         {
             if (!connection.IsConnected)
             {
@@ -138,9 +149,9 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            Logs.Debug($"Aborting process [{spawnId}]");
+            Logs.Debug($"Aborting process [{spawnTaskId}]");
 
-            connection.SendMessage((short)MsfMessageCodes.AbortSpawnRequest, spawnId, (status, response) =>
+            connection.SendMessage((short)MsfMessageCodes.AbortSpawnRequest, spawnTaskId, (status, response) =>
             {
                 if (status != ResponseStatus.Success)
                 {
@@ -149,7 +160,7 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                Logs.Debug($"Room process [{spawnId}] was successfuly aborted");
+                Logs.Debug($"Room process [{spawnTaskId}] was successfuly aborted");
 
                 callback?.Invoke(true, null);
             });

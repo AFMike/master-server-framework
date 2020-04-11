@@ -438,13 +438,12 @@ namespace Barebones.MasterServer
                 MaxPlayers = lobby.MaxPlayers,
                 Name = lobby.Name,
                 OnlinePlayers = lobby.PlayerCount,
-                Properties = GetPublicLobbyProperties(peer, lobby, filters),
+                CustomOptions = GetPublicLobbyProperties(peer, lobby, filters),
                 Type = GameInfoType.Lobby
             });
         }
 
-        public virtual Dictionary<string, string> GetPublicLobbyProperties(IPeer peer, ILobby lobby,
-            Dictionary<string, string> playerFilters)
+        public virtual DictionaryOptions GetPublicLobbyProperties(IPeer peer, ILobby lobby,  Dictionary<string, string> playerFilters)
         {
             return lobby.GetPublicProperties(peer);
         }

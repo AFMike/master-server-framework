@@ -139,6 +139,7 @@ namespace Barebones.MasterServer
         /// </summary>
         public virtual void StartSpawner()
         {
+            // Stop if no connection
             if (!Msf.Connection.IsConnected)
             {
                 logger.Error("Spawner cannot be started because of the lack of connection to the master.");

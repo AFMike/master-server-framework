@@ -15,7 +15,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Current spawn id
         /// </summary>
-        public int SpawnId { get; private set; }
+        public int SpawnTaskId { get; private set; }
 
         /// <summary>
         /// Current spawn status
@@ -26,7 +26,7 @@ namespace Barebones.MasterServer
         /// A dictionary of options that user provided when requesting a 
         /// process to be spawned
         /// </summary>
-        public Dictionary<string, string> SpawnOptions { get; private set; }
+        public DictionaryOptions SpawnOptions { get; private set; }
 
         /// <summary>
         /// Fires when spawn status changed
@@ -39,10 +39,10 @@ namespace Barebones.MasterServer
         /// <param name="spawnId"></param>
         /// <param name="connection"></param>
         /// <param name="spawnOptions"></param>
-        public SpawnRequestController(int spawnId, IClientSocket connection, Dictionary<string, string> spawnOptions)
+        public SpawnRequestController(int spawnId, IClientSocket connection, DictionaryOptions spawnOptions)
         {
             this.connection = connection;
-            SpawnId = spawnId;
+            SpawnTaskId = spawnId;
             SpawnOptions = spawnOptions;
 
             // Set handlers
@@ -71,7 +71,7 @@ namespace Barebones.MasterServer
         /// </summary>
         public void Abort()
         {
-            Msf.Client.Spawners.AbortSpawn(SpawnId);
+            Msf.Client.Spawners.AbortSpawn(SpawnTaskId);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Barebones.MasterServer
         /// <param name="handler"></param>
         public void Abort(MsfSpawnersClient.AbortSpawnHandler handler)
         {
-            Msf.Client.Spawners.AbortSpawn(SpawnId, handler);
+            Msf.Client.Spawners.AbortSpawn(SpawnTaskId, handler);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Barebones.MasterServer
         /// </summary>
         public void GetFinalizationData(MsfSpawnersClient.FinalizationDataHandler handler)
         {
-            Msf.Client.Spawners.GetFinalizationData(SpawnId, handler, connection);
+            Msf.Client.Spawners.GetFinalizationData(SpawnTaskId, handler, connection);
         }
     }
 }

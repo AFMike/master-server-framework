@@ -14,33 +14,54 @@ namespace Barebones.MasterServer
         private SpawnStatus status;
         protected List<Action<SpawnTask>> whenDoneCallbacks;
 
+        /// <summary>
+        /// Id of current task
+        /// </summary>
         public int Id { get; private set; }
+
+        /// <summary>
+        /// Unique symbol code of current task
+        /// </summary>
         public string UniqueCode { get; private set; }
+
+        /// <summary>
+        /// Spawner assigned to current task
+        /// </summary>
         public RegisteredSpawner Spawner { get; private set; }
-        public Dictionary<string, string> Options { get; private set; }
-        public Dictionary<string, string> CustomOptions { get; private set; }
+
+        /// <summary>
+        /// Options assigned to current task
+        /// </summary>
+        public DictionaryOptions Options { get; private set; }
+
+        /// <summary>
+        /// Custom options assigned to current task
+        /// </summary>
+        public DictionaryOptions CustomOptions { get; private set; }
+
+        /// <summary>
+        /// Packet that has finalization info for current task
+        /// </summary>
         public SpawnFinalizationPacket FinalizationPacket { get; private set; }
 
-        public event Action<SpawnStatus> OnStatusChangedEvent;
-
-        public SpawnTask(int spawnTaskId, RegisteredSpawner spawner, Dictionary<string, string> properties, Dictionary<string, string> customOptions)
-        {
-            Id = spawnTaskId;
-
-            Spawner = spawner;
-            Options = properties;
-            CustomOptions = customOptions;
-
-            UniqueCode = Msf.Helper.CreateRandomString(6);
-            whenDoneCallbacks = new List<Action<SpawnTask>>();
-        }
-
+        /// <summary>
+        /// Check if current task is aborted
+        /// </summary>
         public bool IsAborted { get { return status < SpawnStatus.None; } }
 
-        public bool IsDoneStartingProcess { get { return IsAborted || IsProcessStarted; } }
-
+        /// <summary>
+        /// Check if spawn process is started
+        /// </summary>
         public bool IsProcessStarted { get { return Status >= SpawnStatus.WaitingForProcess; } }
 
+        /// <summary>
+        /// Check is spawn start process is finished
+        /// </summary>
+        public bool IsDoneStartingProcess { get { return IsAborted || IsProcessStarted; } }
+
+        /// <summary>
+        /// Current spawn task status
+        /// </summary>
         public SpawnStatus Status
         {
             get { return status; }
@@ -70,6 +91,26 @@ namespace Barebones.MasterServer
         /// </summary>
         public IPeer Requester { get; set; }
 
+        /// <summary>
+        /// Fired when spawn task status changed
+        /// </summary>
+        public event Action<SpawnStatus> OnStatusChangedEvent;
+
+        public SpawnTask(int spawnTaskId, RegisteredSpawner spawner, DictionaryOptions properties, DictionaryOptions customOptions)
+        {
+            Id = spawnTaskId;
+
+            Spawner = spawner;
+            Options = properties;
+            CustomOptions = customOptions;
+
+            UniqueCode = Msf.Helper.CreateRandomString(6);
+            whenDoneCallbacks = new List<Action<SpawnTask>>();
+        }
+
+        /// <summary>
+        /// Call when process is siarted
+        /// </summary>
         public void OnProcessStarted()
         {
             if (!IsAborted && Status < SpawnStatus.WaitingForProcess)
@@ -78,11 +119,18 @@ namespace Barebones.MasterServer
             }
         }
 
+        /// <summary>
+        /// Call when process is killed
+        /// </summary>
         public void OnProcessKilled()
         {
             Status = SpawnStatus.Killed;
         }
 
+        /// <summary>
+        /// Call when process is registered
+        /// </summary>
+        /// <param name="peerWhoRegistered"></param>
         public void OnRegistered(IPeer peerWhoRegistered)
         {
             RegisteredPeer = peerWhoRegistered;
@@ -93,6 +141,10 @@ namespace Barebones.MasterServer
             }
         }
 
+        /// <summary>
+        /// Call when processis finalized
+        /// </summary>
+        /// <param name="finalizationPacket"></param>
         public void OnFinalized(SpawnFinalizationPacket finalizationPacket)
         {
             FinalizationPacket = finalizationPacket;
@@ -100,11 +152,6 @@ namespace Barebones.MasterServer
             {
                 Status = SpawnStatus.Finalized;
             }
-        }
-
-        public override string ToString()
-        {
-            return string.Format("[SpawnTask: id - {0}]", Id);
         }
 
         protected void NotifyDoneListeners()
@@ -128,6 +175,9 @@ namespace Barebones.MasterServer
             return this;
         }
 
+        /// <summary>
+        /// Call to abort spawned process that is not finalized
+        /// </summary>
         public void Abort()
         {
             if (Status >= SpawnStatus.Finalized)
@@ -140,6 +190,9 @@ namespace Barebones.MasterServer
             KillSpawnedProcess();
         }
 
+        /// <summary>
+        /// Call to kill spawned process
+        /// </summary>
         public void KillSpawnedProcess()
         {
             Spawner.SendKillRequest(Id, killed =>
@@ -153,5 +206,9 @@ namespace Barebones.MasterServer
             });
         }
 
+        public override string ToString()
+        {
+            return $"[SpawnTask: id - {Id}]";
+        }
     }
 }

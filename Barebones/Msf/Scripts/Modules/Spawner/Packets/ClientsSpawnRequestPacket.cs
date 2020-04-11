@@ -7,24 +7,37 @@ namespace Barebones.MasterServer
 {
     public class ClientsSpawnRequestPacket : SerializablePacket
     {
-        public Dictionary<string, string> Options { get; set; }
-        public Dictionary<string, string> CustomOptions { get; set; }
+        public DictionaryOptions Options { get; set; }
+        public DictionaryOptions CustomOptions { get; set; }
+
+        public ClientsSpawnRequestPacket()
+        {
+            Options = new DictionaryOptions();
+            CustomOptions = new DictionaryOptions();
+        }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
-            writer.Write(Options);
-            writer.WriteDictionary(CustomOptions);
+            writer.Write(Options.ToDictionary());
+            writer.WriteDictionary(CustomOptions.ToDictionary());
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
         {
-            Options = reader.ReadDictionary();
-            CustomOptions = reader.ReadDictionary();
+            Options = new DictionaryOptions(reader.ReadDictionary());
+            CustomOptions = new DictionaryOptions(reader.ReadDictionary());
         }
 
         public override string ToString()
         {
-            return string.Join(" ", Options.Select(opt => $"{opt.Key} {opt.Value}")) + " " + string.Join(" ", CustomOptions.Select(opt => $"{opt.Key} {opt.Value}"));
+            var options = new DictionaryOptions(Options);
+
+            if (options.IsValueEmpty(MsfDictKeys.region))
+            {
+                options.Set(MsfDictKeys.region, "International");
+            }
+
+            return options.ToReadableString() + " " + CustomOptions.ToReadableString();
         }
     }
 }

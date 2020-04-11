@@ -5,18 +5,18 @@ namespace Barebones.MasterServer
 {
     public class SpawnFinalizationPacket : SerializablePacket
     {
-        public int SpawnId { get; set; }
+        public int SpawnTaskId { get; set; }
         public Dictionary<string, string> FinalizationData { get; set; }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
-            writer.Write(SpawnId);
+            writer.Write(SpawnTaskId);
             writer.Write(FinalizationData);
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
         {
-            SpawnId = reader.ReadInt32();
+            SpawnTaskId = reader.ReadInt32();
             FinalizationData = reader.ReadDictionary();
         }
     }

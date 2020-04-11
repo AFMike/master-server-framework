@@ -8,18 +8,24 @@ namespace Barebones.MasterServer
         public int SpawnerId { get; set; }
         public int SpawnTaskId { get; set; }
         public string SpawnTaskUniqueCode { get; set; } = string.Empty;
-        public Dictionary<string, string> CustomOptions { get; set; }
         public string OverrideExePath { get; set; } = string.Empty;
-        public Dictionary<string, string> Options { get; set; }
+        public DictionaryOptions Options { get; set; }
+        public DictionaryOptions CustomOptions { get; set; }
+
+        public SpawnRequestPacket()
+        {
+            Options = new DictionaryOptions();
+            CustomOptions = new DictionaryOptions();
+        }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
             writer.Write(SpawnerId);
             writer.Write(SpawnTaskId);
             writer.Write(SpawnTaskUniqueCode);
-            writer.WriteDictionary(CustomOptions);
             writer.Write(OverrideExePath);
-            writer.Write(Options);
+            writer.Write(Options.ToDictionary());
+            writer.Write(CustomOptions.ToDictionary());
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
@@ -27,9 +33,9 @@ namespace Barebones.MasterServer
             SpawnerId = reader.ReadInt32();
             SpawnTaskId = reader.ReadInt32();
             SpawnTaskUniqueCode = reader.ReadString();
-            CustomOptions = reader.ReadDictionary();
             OverrideExePath = reader.ReadString();
-            Options = reader.ReadDictionary();
+            Options = new DictionaryOptions(reader.ReadDictionary());
+            CustomOptions = new DictionaryOptions(reader.ReadDictionary());
         }
     }
 }

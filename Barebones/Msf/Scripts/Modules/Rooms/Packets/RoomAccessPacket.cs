@@ -10,7 +10,7 @@ namespace Barebones.MasterServer
         public string Token { get; set; }
         public int RoomId { get; set; }
         public string SceneName { get; set; } = string.Empty;
-        public Dictionary<string, string> Properties { get; set; }
+        public DictionaryOptions CustomOptions { get; set; }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
@@ -19,7 +19,7 @@ namespace Barebones.MasterServer
             writer.Write(RoomPort);
             writer.Write(RoomId);
             writer.Write(SceneName);
-            writer.Write(Properties);
+            writer.Write(CustomOptions.ToDictionary());
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
@@ -29,12 +29,12 @@ namespace Barebones.MasterServer
             RoomPort = reader.ReadInt32();
             RoomId = reader.ReadInt32();
             SceneName = reader.ReadString();
-            Properties = reader.ReadDictionary();
+            CustomOptions = new DictionaryOptions(reader.ReadDictionary());
         }
 
         public override string ToString()
         {
-            return $"[RoomAccessPacket| PublicAddress: {RoomIp}:{RoomPort}, RoomId: {RoomId}, Token: {Token}, Properties: {Properties.ToReadableString()}]";
+            return $"[RoomAccessPacket| PublicAddress: {RoomIp}:{RoomPort}, RoomId: {RoomId}, Token: {Token}, Properties: {CustomOptions.ToReadableString()}]";
         }
     }
 }

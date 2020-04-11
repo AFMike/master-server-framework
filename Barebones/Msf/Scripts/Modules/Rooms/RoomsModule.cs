@@ -204,10 +204,10 @@ namespace Barebones.MasterServer
                 MaxPlayers = r.Options.MaxConnections,
                 Name = r.Options.Name,
                 OnlinePlayers = r.OnlineCount,
-                Properties = GetPublicRoomProperties(peer, r, filters),
+                CustomOptions = GetPublicRoomOptions(peer, r, filters),
                 IsPasswordProtected = !string.IsNullOrEmpty(r.Options.Password),
                 Type = GameInfoType.Room,
-                Region = "SuperPuper"
+                Region = r.Options.Region
             });
         }
 
@@ -218,9 +218,9 @@ namespace Barebones.MasterServer
         /// <param name="room"></param>
         /// <param name="playerFilters"></param>
         /// <returns></returns>
-        public virtual Dictionary<string, string> GetPublicRoomProperties(IPeer player, RegisteredRoom room, Dictionary<string, string> playerFilters)
+        public virtual DictionaryOptions GetPublicRoomOptions(IPeer player, RegisteredRoom room, Dictionary<string, string> playerFilters)
         {
-            return room.Options.Properties;
+            return room.Options.CustomOptions;
         }
 
         /// <summary>

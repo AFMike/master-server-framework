@@ -140,9 +140,9 @@ namespace Barebones.MasterServer
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public SpawnTask Spawn(Dictionary<string, string> options)
+        public SpawnTask Spawn(DictionaryOptions options)
         {
-            return Spawn(options, string.Empty, new Dictionary<string, string>());
+            return Spawn(options, string.Empty, new DictionaryOptions());
         }
 
         /// <summary>
@@ -151,9 +151,9 @@ namespace Barebones.MasterServer
         /// <param name="options"></param>
         /// <param name="region"></param>
         /// <returns></returns>
-        public SpawnTask Spawn(Dictionary<string, string> options, string region)
+        public SpawnTask Spawn(DictionaryOptions options, string region)
         {
-            return Spawn(options, region, new Dictionary<string, string>());
+            return Spawn(options, region, new DictionaryOptions());
         }
 
         /// <summary>
@@ -163,13 +163,14 @@ namespace Barebones.MasterServer
         /// <param name="region"></param>
         /// <param name="customOptions"></param>
         /// <returns></returns>
-        public virtual SpawnTask Spawn(Dictionary<string, string> options, string region, Dictionary<string, string> customOptions)
+        public virtual SpawnTask Spawn(DictionaryOptions options, string region, DictionaryOptions customOptions)
         {
+            // Get registered spawner by options and region
             var spawners = GetFilteredSpawners(options, region);
 
             if (spawners.Count == 0)
             {
-                logger.Warn("No spawner was returned after filtering. " + (string.IsNullOrEmpty(region) ? string.Empty : "Region: " + region));
+                logger.Warn($"No spawner was returned after filtering. Region: {options.AsString(MsfDictKeys.region, "International")}");
                 return null;
             }
 
@@ -193,10 +194,15 @@ namespace Barebones.MasterServer
         /// <param name="customOptions"></param>
         /// <param name="spawner"></param>
         /// <returns></returns>
-        public virtual SpawnTask Spawn(Dictionary<string, string> options, Dictionary<string, string> customOptions, RegisteredSpawner spawner)
+        public virtual SpawnTask Spawn(DictionaryOptions options, DictionaryOptions customOptions, RegisteredSpawner spawner)
         {
+            // Create new spawn task
             var task = new SpawnTask(GenerateSpawnTaskId(), spawner, options, customOptions);
+
+            // List this task
             spawnTasksList[task.Id] = task;
+
+            // Add this task to queue
             spawner.AddTaskToQueue(task);
 
             logger.Debug("Spawner was found, and spawn task created: " + task);
@@ -210,7 +216,7 @@ namespace Barebones.MasterServer
         /// <param name="properties"></param>
         /// <param name="region"></param>
         /// <returns></returns>
-        public virtual List<RegisteredSpawner> GetFilteredSpawners(Dictionary<string, string> properties, string region)
+        public virtual List<RegisteredSpawner> GetFilteredSpawners(DictionaryOptions properties, string region)
         {
             return GetSpawners(region);
         }
@@ -283,10 +289,11 @@ namespace Barebones.MasterServer
         /// <param name="message"></param>
         protected virtual void ClientsSpawnRequestHandler(IIncommingMessage message)
         {
-            var data = message.Deserialize(new ClientsSpawnRequestPacket());
+            // Parse data from message
+            var spawnRequestData = message.Deserialize(new ClientsSpawnRequestPacket());
             var peer = message.Peer;
 
-            logger.Info($"Client {peer.Id} requested to spawn room with options: {data}");
+            logger.Info($"Client {peer.Id} requested to spawn room with options: {spawnRequestData}");
 
             if (spawnersList.Count == 0)
             {
@@ -296,7 +303,7 @@ namespace Barebones.MasterServer
             }
 
             // Check if current request is authorized
-            if (!CanClientSpawn(peer, data))
+            if (!CanClientSpawn(peer, spawnRequestData))
             {
                 logger.Error("Unauthorized request");
                 // Client can't spawn
@@ -315,15 +322,8 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            string region = string.Empty;
-
-            if (data.Options.ContainsKey(MsfDictKeys.region))
-            {
-                region = data.Options[MsfDictKeys.region];
-            }
-
             // Create a new spawn task
-            var task = Spawn(data.Options, region, data.CustomOptions);
+            var task = Spawn(spawnRequestData.Options, spawnRequestData.Options.AsString(MsfDictKeys.region), spawnRequestData.CustomOptions);
 
             // If spawn task is not created
             if (task == null)
@@ -349,7 +349,7 @@ namespace Barebones.MasterServer
                     Status = status
                 });
 
-                if(task.Requester != null && task.Requester.IsConnected)
+                if (task.Requester != null && task.Requester.IsConnected)
                 {
                     message.Peer.SendMessage(msg);
                 }
@@ -459,14 +459,14 @@ namespace Barebones.MasterServer
 
             OnSpawnedProcessRegisteredEvent?.Invoke(task, message.Peer);
 
-            message.Respond(task.Options.ToBytes(), ResponseStatus.Success);
+            message.Respond(task.Options.ToDictionary().ToBytes(), ResponseStatus.Success);
         }
 
         protected virtual void CompleteSpawnProcessRequestHandler(IIncommingMessage message)
         {
             var data = message.Deserialize(new SpawnFinalizationPacket());
 
-            if (spawnTasksList.TryGetValue(data.SpawnId, out SpawnTask task))
+            if (spawnTasksList.TryGetValue(data.SpawnTaskId, out SpawnTask task))
             {
                 if (task.RegisteredPeer != message.Peer)
                 {
@@ -501,7 +501,7 @@ namespace Barebones.MasterServer
         {
             var spawnId = message.AsInt();
 
-            if(spawnTasksList.TryGetValue(spawnId, out SpawnTask task))
+            if (spawnTasksList.TryGetValue(spawnId, out SpawnTask task))
             {
                 task.OnProcessStarted();
                 task.Spawner.OnProcessStarted();

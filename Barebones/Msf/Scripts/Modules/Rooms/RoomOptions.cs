@@ -62,7 +62,12 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Extra properties that you might want to send to master server
         /// </summary>
-        public Dictionary<string, string> Properties { get; set; }
+        public DictionaryOptions CustomOptions { get; set; }
+
+        public RoomOptions()
+        {
+            CustomOptions = new DictionaryOptions();
+        }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {
@@ -75,7 +80,7 @@ namespace Barebones.MasterServer
             writer.Write(AccessTimeoutPeriod);
             writer.Write(AllowUsersRequestAccess);
             writer.Write(Region);
-            writer.Write(Properties);
+            writer.Write(CustomOptions.ToDictionary());
         }
 
         public override void FromBinaryReader(EndianBinaryReader reader)
@@ -89,7 +94,7 @@ namespace Barebones.MasterServer
             AccessTimeoutPeriod = reader.ReadSingle();
             AllowUsersRequestAccess = reader.ReadBoolean();
             Region = reader.ReadString();
-            Properties = reader.ReadDictionary();
+            CustomOptions = new DictionaryOptions(reader.ReadDictionary());
         }
 
         public override string ToString()
@@ -103,14 +108,7 @@ namespace Barebones.MasterServer
             s.Append($"AccessTimeoutPeriod: {AccessTimeoutPeriod} sec., ");
             s.Append($"AllowUsersRequestAccess: {AllowUsersRequestAccess}, ");
             s.Append($"Region: {Region}, ");
-
-            if(Properties != null && Properties.Count > 0)
-            {
-                foreach (var kvp in Properties)
-                {
-                    s.Append($"{kvp.Key}: {kvp.Value}, ");
-                }
-            }
+            s.Append($"{CustomOptions.ToReadableString(", ")}");
 
             return s.ToString();
         }

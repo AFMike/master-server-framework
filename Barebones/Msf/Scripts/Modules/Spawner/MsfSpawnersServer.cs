@@ -64,7 +64,7 @@ namespace Barebones.MasterServer
                 }
 
                 var spawnerId = response.AsInt();
-                var controller = new SpawnerController(spawnerId, connection);
+                var controller = new SpawnerController(spawnerId, connection, options);
 
                 // Save reference
                 _locallyCreatedSpawners[spawnerId] = controller;
@@ -110,7 +110,7 @@ namespace Barebones.MasterServer
 
             var packet = new SpawnFinalizationPacket()
             {
-                SpawnId = spawnId,
+                SpawnTaskId = spawnId,
                 FinalizationData = finalizationData
             };
 
