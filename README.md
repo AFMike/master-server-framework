@@ -2,7 +2,9 @@
 
 [![](http://i.imgur.com/9SrutM0.png)](https://www.assetstore.unity3d.com/#!/content/71391)
 
-[Asset Store Link](https://www.assetstore.unity3d.com/#!/content/71391)
+Old [Asset Store Link](https://www.assetstore.unity3d.com/#!/content/71391) v2.0.4
+
+### [Download latest version package](https://aevien.itch.io/master-server-framework)
 
 ## What Is This?
 
