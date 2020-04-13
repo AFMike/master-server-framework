@@ -152,6 +152,16 @@ namespace Barebones.MasterServer.Examples.BasicAuthorization
             {
                 OnChangedEvent?.Invoke(this);
             }
+
+            public bool HasToken()
+            {
+                return !string.IsNullOrEmpty(Token);
+            }
+
+            public bool IsTokenExpired()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

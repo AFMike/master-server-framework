@@ -237,6 +237,11 @@ namespace Barebones.MasterServer
             return options;
         }
 
+        public byte[] ToBytes()
+        {
+            return options.ToBytes();
+        }
+
         public string ToReadableString(string itemsSeparator = "; ", string kvpSeparator = " : ")
         {
             return ToDictionary().ToReadableString(itemsSeparator, kvpSeparator);

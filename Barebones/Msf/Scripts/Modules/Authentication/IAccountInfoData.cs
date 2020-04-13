@@ -20,5 +20,7 @@ namespace Barebones.MasterServer
 
         event Action<IAccountInfoData> OnChangedEvent;
         void MarkAsDirty();
+        bool HasToken();
+        bool IsTokenExpired();
     }
 }

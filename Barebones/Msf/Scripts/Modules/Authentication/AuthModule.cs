@@ -549,14 +549,14 @@ namespace Barebones.MasterServer
             }
 
             var decryptedBytesData = Msf.Security.DecryptAES(encryptedData, aesKey);
-            var userCredentials = new Dictionary<string, string>().FromBytes(decryptedBytesData);
+            var userCredentials = new DictionaryOptions(new Dictionary<string, string>().FromBytes(decryptedBytesData));
             var authDbAccessor = Msf.Server.DbAccessors.GetAccessor<IAccountsDatabaseAccessor>();
 
             IAccountInfoData userAccount = null;
 
             // ---------------------------------------------
             // Guest Authentication
-            if (userCredentials.ContainsKey("guest") && enableGuestLogin)
+            if (userCredentials.Has("guest") && enableGuestLogin)
             {
                 userAccount = authDbAccessor.CreateAccountInstance();
                 userAccount.Username = GenerateGuestUsername();
@@ -566,9 +566,10 @@ namespace Barebones.MasterServer
 
             // ----------------------------------------------
             // Token Authentication
-            if (userCredentials.ContainsKey("token") && userAccount == null)
+            if (userCredentials.Has("token") && userAccount == null)
             {
-                userAccount = authDbAccessor.GetAccountByToken(userCredentials["token"]);
+                userAccount = authDbAccessor.GetAccountByToken(userCredentials.AsString("token"));
+
                 if (userAccount == null)
                 {
                     message.Respond("Invalid Credentials".ToBytes(), ResponseStatus.Unauthorized);
@@ -584,15 +585,29 @@ namespace Barebones.MasterServer
                     message.Respond("This account is already logged in".ToBytes(), ResponseStatus.Unauthorized);
                     return;
                 }
+
+                if (userAccount.Properties.ContainsKey("expires"))
+                {
+                    long filetime = Convert.ToInt64(userAccount.Properties["expires"]);
+                    
+                    if(DateTime.FromFileTime(filetime) <= DateTime.Now)
+                    {
+                        message.Respond("Your session token has expired".ToBytes(), ResponseStatus.Unauthorized);
+                        return;
+                    }
+                }
+
+                userAccount.Properties["expires"] = DateTime.Now.AddDays(7).ToFileTime().ToString();
+                authDbAccessor.UpdateAccount(userAccount);
             }
 
             // ----------------------------------------------
             // Username / Password authentication
 
-            if (userCredentials.ContainsKey("username") && userCredentials.ContainsKey("password") && userAccount == null)
+            if (userCredentials.Has("username") && userCredentials.Has("password") && userAccount == null)
             {
-                var userName = userCredentials["username"];
-                var userPassword = userCredentials["password"];
+                var userName = userCredentials.AsString("username");
+                var userPassword = userCredentials.AsString("password");
 
                 userAccount = authDbAccessor.GetAccountByUsername(userName);
 
@@ -609,6 +624,10 @@ namespace Barebones.MasterServer
                     message.Respond("Invalid Credentials".ToBytes(), ResponseStatus.Unauthorized);
                     return;
                 }
+
+                userAccount.Token = Msf.Helper.CreateRandomString(64);
+                userAccount.Properties["expires"] = DateTime.Now.AddDays(7).ToFileTime().ToString();
+                authDbAccessor.UpdateAccount(userAccount);
             }
 
             if (userAccount == null)

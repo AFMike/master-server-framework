@@ -339,7 +339,7 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
-        ///     Creates a salted PBKDF2 hash of the password.
+        /// Creates a salted PBKDF2 hash of the password.
         /// </summary>
         /// <param name="password">The password to hash.</param>
         /// <returns>The hash of the password.</returns>
@@ -352,13 +352,11 @@ namespace Barebones.MasterServer
 
             // Hash the password and encode the parameters
             var hash = PBKDF2(password, salt, PBKDF2_ITERATIONS, HASH_BYTE_SIZE);
-            return PBKDF2_ITERATIONS + ":" +
-                   Convert.ToBase64String(salt) + ":" +
-                   Convert.ToBase64String(hash);
+            return PBKDF2_ITERATIONS + ":" + Convert.ToBase64String(salt) + ":" + Convert.ToBase64String(hash);
         }
 
         /// <summary>
-        ///     Validates a password given a hash of the correct one.
+        /// Validates a password given a hash of the correct one.
         /// </summary>
         /// <param name="password">The password to check.</param>
         /// <param name="correctHash">A hash of the correct password.</param>
@@ -377,9 +375,9 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
-        ///     Compares two byte arrays in length-constant time. This comparison
-        ///     method is used so that password hashes cannot be extracted from
-        ///     on-line systems using a timing attack and then attacked off-line.
+        /// Compares two byte arrays in length-constant time. This comparison
+        /// method is used so that password hashes cannot be extracted from
+        /// on-line systems using a timing attack and then attacked off-line.
         /// </summary>
         /// <param name="a">The first byte array.</param>
         /// <param name="b">The second byte array.</param>
@@ -396,7 +394,7 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
-        ///     Computes the PBKDF2-SHA1 hash of a password.
+        /// Computes the PBKDF2-SHA1 hash of a password.
         /// </summary>
         /// <param name="password">The password to hash.</param>
         /// <param name="salt">The salt.</param>
@@ -405,8 +403,11 @@ namespace Barebones.MasterServer
         /// <returns>A hash of the password.</returns>
         private static byte[] PBKDF2(string password, byte[] salt, int iterations, int outputBytes)
         {
-            var pbkdf2 = new Rfc2898DeriveBytes(password, salt);
-            pbkdf2.IterationCount = iterations;
+            var pbkdf2 = new Rfc2898DeriveBytes(password, salt)
+            {
+                IterationCount = iterations
+            };
+
             return pbkdf2.GetBytes(outputBytes);
         }
 

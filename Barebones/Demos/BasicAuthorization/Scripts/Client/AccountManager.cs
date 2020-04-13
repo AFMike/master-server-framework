@@ -27,6 +27,8 @@ namespace Barebones.MasterServer.Examples
         private string defaultPassword = "qwerty123!@#";
         [SerializeField]
         private bool useDefaultCredentials = false;
+        [SerializeField]
+        private bool rememberUser = true;
 
         public UnityEvent OnSignedInEvent;
         public UnityEvent OnSignedOutEvent;
@@ -41,6 +43,8 @@ namespace Barebones.MasterServer.Examples
             passwordResetCodeView = ViewsManager.GetView<PasswordResetCodeView>("PasswordResetCodeView");
             emailConfirmationView = ViewsManager.GetView<EmailConfirmationView>("EmailConfirmationView");
 
+            Msf.Client.Auth.RememberMe = rememberUser;
+
             MsfTimer.WaitForEndOfFrame(() =>
             {
                 if (useDefaultCredentials && Application.isEditor)
@@ -49,15 +53,15 @@ namespace Barebones.MasterServer.Examples
                     signupView.SetInputFieldsValues(defaultUsername, defaultEmail, defaultPassword);
                 }
 
-                if (IsConnected)
-                {
-                    Msf.Events.Invoke(EventKeys.hideLoadingInfo);
-                    signinView.Show();
-                }
-                else
-                {
-                    Msf.Events.Invoke(EventKeys.showLoadingInfo, "Connecting to master server... Please wait!");
-                }
+                //if (IsConnected)
+                //{
+                //    Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+                //    signinView.Show();
+                //}
+                //else
+                //{
+                //    Msf.Events.Invoke(EventKeys.showLoadingInfo, "Connecting to master server... Please wait!");
+                //}
             });
         }
 
@@ -84,7 +88,47 @@ namespace Barebones.MasterServer.Examples
                             //Msf.Events.Invoke(EventKeys.showOkDialogBox,
                             //new OkDialogBoxViewEventMessage($"You have successfuly signed in as {Msf.Client.Auth.AccountInfo.Username} and now you can create another part of your cool game!"));
 
-                            logger.Debug($"You are successfully logged in as {Msf.Client.Auth.AccountInfo.Username}");
+                            logger.Debug($"You are successfully logged in as {Msf.Client.Auth.AccountInfo}");
+                        }
+                        else
+                        {
+                            emailConfirmationView.Show();
+                        }
+                    }
+                    else
+                    {
+                        outputMessage = $"An error occurred while signing in: {error}";
+                        Msf.Events.Invoke(EventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        logger.Error(outputMessage);
+                    }
+                });
+            });
+        }
+
+        public void SignInWithToken()
+        {
+            Msf.Events.Invoke(EventKeys.showLoadingInfo, "Signing in... Please wait!");
+
+            logger.Debug("Signing in... Please wait!");
+
+            MsfTimer.WaitForSeconds(1f, () =>
+            {
+                Msf.Client.Auth.SignInWithToken((accountInfo, error) =>
+                {
+                    Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+
+                    if (accountInfo != null)
+                    {
+                        signinView.Hide();
+
+                        if (accountInfo.IsEmailConfirmed)
+                        {
+                            OnSignedInEvent?.Invoke();
+
+                            //Msf.Events.Invoke(EventKeys.showOkDialogBox,
+                            //new OkDialogBoxViewEventMessage($"You have successfuly signed in as {Msf.Client.Auth.AccountInfo.Username} and now you can create another part of your cool game!"));
+
+                            logger.Debug($"You are successfully logged in. {Msf.Client.Auth.AccountInfo}");
                         }
                         else
                         {
@@ -174,12 +218,8 @@ namespace Barebones.MasterServer.Examples
         public void SignOut()
         {
             OnSignedOutEvent?.Invoke();
-
-            // Logout after diconnection
-            Msf.Client.Auth.SignOut();
-
+            Msf.Client.Auth.SignOut(true);
             ViewsManager.HideAllViews();
-
             Initialize();
         }
 
@@ -312,7 +352,14 @@ namespace Barebones.MasterServer.Examples
             }
             else
             {
-                signinView.Show();
+                if (Msf.Client.Auth.HasAuthToken)
+                {
+                    SignInWithToken();
+                }
+                else
+                {
+                    signinView.Show();
+                }
             }
         }
 

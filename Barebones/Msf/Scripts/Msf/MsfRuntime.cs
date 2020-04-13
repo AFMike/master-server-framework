@@ -12,6 +12,8 @@ namespace Barebones.MasterServer
 
         public bool IsEditor => Application.isEditor;
 
+        public string ProductKey => Application.companyName.Replace(" ", string.Empty) + "_" + Application.productName.Replace(" ", string.Empty);
+
         public bool SupportsThreads { get; private set; }
 
 #if UNITY_WEBGL && !UNITY_EDITOR

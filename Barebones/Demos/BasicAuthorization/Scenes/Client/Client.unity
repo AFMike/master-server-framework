@@ -7110,11 +7110,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 411674cdf2e52784d8da190c4717c700, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  logLevel: 3
+  logLevel: 0
   defaultUsername: qwerty
   defaultEmail: qwerty@mail.com
   defaultPassword: qazwsxedc123!@#
   useDefaultCredentials: 1
+  rememberUser: 1
   OnSignedInEvent:
     m_PersistentCalls:
       m_Calls:
@@ -11090,9 +11091,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logLevel: 3
-  readMasterServerAddressFromCmd: 1
   serverIp: 127.0.0.1
-  serverPort: 5000
+  serverPort: 55000
   connectOnStart: 1
   minTimeToConnect: 0.5
   maxTimeToConnect: 4
@@ -11104,6 +11104,7 @@ MonoBehaviour:
   OnDisconnectedEvent:
     m_PersistentCalls:
       m_Calls: []
+  readMasterServerAddressFromCmd: 1
 --- !u!4 &1946718842
 Transform:
   m_ObjectHideFlags: 0

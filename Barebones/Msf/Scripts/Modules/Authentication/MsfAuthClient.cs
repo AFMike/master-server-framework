@@ -2,11 +2,14 @@
 using Barebones.Networking;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Barebones.MasterServer
 {
     public class MsfAuthClient : MsfBaseClient
     {
+        private string authTokenKey = string.Empty;
+
         public delegate void SignInCallback(AccountInfoPacket accountInfo, string error);
 
         /// <summary>
@@ -20,6 +23,17 @@ namespace Barebones.MasterServer
         public bool IsNowSigningIn { get; protected set; }
 
         /// <summary>
+        /// Check if we have auth token after last login
+        /// </summary>
+        /// <returns></returns>
+        public bool HasAuthToken => PlayerPrefs.HasKey(authTokenKey);
+
+        /// <summary>
+        /// Remember user after he logged in
+        /// </summary>
+        public bool RememberMe { get; set; } = false;
+
+        /// <summary>
         /// Current useraccount info
         /// </summary>
         public AccountInfoPacket AccountInfo { get; protected set; }
@@ -28,7 +42,10 @@ namespace Barebones.MasterServer
         public event Action OnSignedUpEvent;
         public event Action OnSignedOutEvent;
 
-        public MsfAuthClient(IClientSocket connection) : base(connection) { }
+        public MsfAuthClient(IClientSocket connection) : base(connection)
+        {
+            authTokenKey = Msf.Runtime.ProductKey + "_token";
+        }
 
         /// <summary>
         /// Sends a registration request to server
@@ -94,16 +111,17 @@ namespace Barebones.MasterServer
         /// Initiates a log out. In the process, disconnects and connects
         /// back to the server to ensure no state data is left on the server.
         /// </summary>
-        public void SignOut()
+        /// <param name="permanent">If you wish to delete auth token</param>
+        public void SignOut(bool permanent = false)
         {
-            SignOut(Connection);
+            SignOut(Connection, permanent);
         }
 
         /// <summary>
         /// Initiates a log out. In the process, disconnects and connects
         /// back to the server to ensure no state data is left on the server.
         /// </summary>
-        public void SignOut(IClientSocket connection)
+        public void SignOut(IClientSocket connection, bool permanent = false)
         {
             if (!IsSignedIn)
             {
@@ -112,6 +130,9 @@ namespace Barebones.MasterServer
 
             IsSignedIn = false;
             AccountInfo = null;
+
+            if (permanent)
+                ClearAuthToken();
 
             if ((connection != null) && connection.IsConnected)
             {
@@ -127,12 +148,7 @@ namespace Barebones.MasterServer
         /// <param name="callback"></param>
         public void SignInAsGuest(SignInCallback callback)
         {
-            Logs.Debug("Signing in as Guest...");
-
-            SignIn(new Dictionary<string, string>()
-            {
-                {"guest", string.Empty }
-            }, callback, Connection);
+            SignInAsGuest(callback, Connection);
         }
 
         /// <summary>
@@ -140,10 +156,24 @@ namespace Barebones.MasterServer
         /// </summary>
         public void SignInAsGuest(SignInCallback callback, IClientSocket connection)
         {
-            SignIn(new Dictionary<string, string>()
+            var credentials = new DictionaryOptions();
+            credentials.Add("guest", string.Empty);
+
+            SignIn(credentials, callback, connection);
+        }
+
+        /// <summary>
+        /// Sends a request to server, to log in with auth token
+        /// </summary>
+        /// <param name="callback"></param>
+        public void SignInWithToken(SignInCallback callback)
+        {
+            if (!HasAuthToken)
             {
-                {"guest", string.Empty }
-            }, callback, connection);
+                throw new Exception("You have no auth token!");
+            }
+
+            SignIn(PlayerPrefs.GetString(authTokenKey), callback);
         }
 
         /// <summary>
@@ -151,11 +181,11 @@ namespace Barebones.MasterServer
         /// </summary>
         public void SignIn(string username, string password, SignInCallback callback, IClientSocket connection)
         {
-            SignIn(new Dictionary<string, string>
-            {
-                {"username", username},
-                {"password", password}
-            }, callback, connection);
+            var credentials = new DictionaryOptions();
+            credentials.Add("username", username);
+            credentials.Add("password", password);
+
+            SignIn(credentials, callback, connection);
         }
 
         /// <summary>
@@ -167,11 +197,30 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
+        /// Sends a login request, using given token
+        /// </summary>
+        public void SignIn(string token, SignInCallback callback, IClientSocket connection)
+        {
+            var credentials = new DictionaryOptions();
+            credentials.Add("token", token);
+
+            SignIn(credentials, callback, connection);
+        }
+
+        /// <summary>
+        /// Sends a login request, using given token
+        /// </summary>
+        public void SignIn(string token, SignInCallback callback)
+        {
+            SignIn(token, callback, Connection);
+        }
+
+        /// <summary>
         /// Sends a generic login request
         /// </summary>
         /// <param name="data"></param>
         /// <param name="callback"></param>
-        public void SignIn(Dictionary<string, string> data, SignInCallback callback)
+        public void SignIn(DictionaryOptions data, SignInCallback callback)
         {
             SignIn(data, callback, Connection);
         }
@@ -179,8 +228,10 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Sends a generic login request
         /// </summary>
-        public void SignIn(Dictionary<string, string> data, SignInCallback callback, IClientSocket connection)
+        public void SignIn(DictionaryOptions data, SignInCallback callback, IClientSocket connection)
         {
+            Logs.Debug("Signing in...");
+
             if (!connection.IsConnected)
             {
                 callback.Invoke(null, "Not connected to server");
@@ -208,19 +259,51 @@ namespace Barebones.MasterServer
 
                     if (status != ResponseStatus.Success)
                     {
+                        ClearAuthToken();
+
                         callback.Invoke(null, response.AsString("Unknown error"));
                         return;
                     }
 
+                    AccountInfo = response.Deserialize(new AccountInfoPacket());
+
                     IsSignedIn = true;
 
-                    AccountInfo = response.Deserialize(new AccountInfoPacket());
+                    if (RememberMe)
+                    {
+                        SaveAuthToken(AccountInfo.Token);
+                    }
+                    else
+                    {
+                        ClearAuthToken();
+                    }
 
                     callback.Invoke(AccountInfo, null);
 
                     OnSignedInEvent?.Invoke();
                 });
             }, connection);
+        }
+
+        /// <summary>
+        /// Save authentication token
+        /// </summary>
+        private void SaveAuthToken(string token)
+        {
+            PlayerPrefs.SetString(authTokenKey, token);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// Clear authentication token
+        /// </summary>
+        private void ClearAuthToken()
+        {
+            if (PlayerPrefs.HasKey(authTokenKey))
+            {
+                PlayerPrefs.DeleteKey(authTokenKey);
+                PlayerPrefs.Save();
+            }
         }
 
         /// <summary>
