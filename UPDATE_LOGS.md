@@ -6,6 +6,8 @@ One time login feature is here!
 
 Now you can sign in just once and get a unique token to use it as authentication id next time you signing in again. This feature is useful  to prevent input of username and password eachtime you are trying to sign in.
 
+To see how this feature is working open scene **BasicAuthorization** client and take a look at **​AccountManager** class. You can also see some changes in **MsfAuthClient** and **AuthModule​** classes.
+
 ### Msf 3.1.0 - Attention! Significant changes! This version is not compatible with earlier ones. Before update test it in new project.
 
 - Created new cass **DictionaryOptions**. It is implemented in many classes  derived from **ISerializablePacket**. There are 65 positions this class is used in. This class helps easily you work with custom options data. In this regard, many changes were made in source code.
