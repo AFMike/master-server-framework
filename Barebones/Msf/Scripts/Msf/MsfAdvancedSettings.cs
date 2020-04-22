@@ -27,7 +27,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Global logging settings
         /// </summary>
-        public MsfLogController Logging { get; set; }
+        public MsfLogController Logging { get; private set; }
 
         public MsfAdvancedSettings()
         {

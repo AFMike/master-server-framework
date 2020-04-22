@@ -54,6 +54,7 @@ namespace Barebones.MasterServer
         {
             Connection.OnStatusChangedEvent -= OnConnectionStatusChanged;
             Connection.RemoveConnectionListener(ConnectedToMaster);
+            Connection.RemoveDisconnectionListener(DisconnectedToMaster);
         }
 
         /// <summary>
@@ -64,11 +65,7 @@ namespace Barebones.MasterServer
         public void SetHandler(IPacketHandler handler)
         {
             _handlers[handler.OpCode] = handler;
-
-            if (Connection != null)
-            {
-                Connection.SetHandler(handler);
-            }
+            Connection?.SetHandler(handler);
         }
 
         /// <summary>
@@ -80,6 +77,16 @@ namespace Barebones.MasterServer
         public void SetHandler(short opCode, IncommingMessageHandler handler)
         {
             SetHandler(new PacketHandler(opCode, handler));
+        }
+
+        /// <summary>
+        /// Removes the packet handler, but only if this exact handler
+        /// was used
+        /// </summary>
+        /// <param name="handler"></param>
+        public void RemoveHandler(IPacketHandler handler)
+        {
+            Connection?.RemoveHandler(handler);
         }
 
         /// <summary>

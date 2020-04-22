@@ -1,4 +1,5 @@
 ﻿using Barebones.Networking;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Text;
@@ -45,19 +46,19 @@ namespace Barebones.MasterServer
         /// Retrieves current public IP
         /// </summary>
         /// <param name="callback"></param>
-        public void GetPublicIp(Action<string> callback)
+        public void GetPublicIp(Action<MsfIpInfo> callback)
         {
             MsfTimer.Instance.StartCoroutine(GetPublicIPCoroutine(callback));
         }
 
         /// <summary>
-        /// Wait for loading public IP from http://checkip.dyndns.org
+        /// Wait for loading public IP from https://ifconfig.co/json
         /// </summary>
         /// <param name="callback"></param>
         /// <returns></returns>
-        private IEnumerator GetPublicIPCoroutine(Action<string> callback)
+        private IEnumerator GetPublicIPCoroutine(Action<MsfIpInfo> callback)
         {
-            UnityWebRequest www = UnityWebRequest.Get("http://checkip.dyndns.org");
+            UnityWebRequest www = UnityWebRequest.Get("https://ifconfig.co/json");
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
@@ -66,9 +67,11 @@ namespace Barebones.MasterServer
             }
             else
             {
-                var regEx = new Regex(@"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}");
-                var ip = regEx.Match(www.downloadHandler.text);
-                callback?.Invoke(ip.ToString());
+                var ipInfo = JsonConvert.DeserializeObject<MsfIpInfo>(www.downloadHandler.text);
+
+                Debug.Log(ipInfo);
+
+                callback?.Invoke(ipInfo);
             }
         }
     }

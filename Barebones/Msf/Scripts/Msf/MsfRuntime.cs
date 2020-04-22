@@ -10,10 +10,19 @@ namespace Barebones.MasterServer
     {
         private string webGLQuitMessage = "You are in web browser window. The Quit command is not supported!";
 
-        public bool IsEditor => Application.isEditor;
+        /// <summary>
+        /// Check if we are in editor
+        /// </summary>
+        public bool IsEditor { get; private set; }
 
-        public string ProductKey => Application.companyName.Replace(" ", string.Empty) + "_" + Application.productName.Replace(" ", string.Empty);
+        /// <summary>
+        /// Product key
+        /// </summary>
+        public string ProductKey { get; private set; }
 
+        /// <summary>
+        /// Check if multithreading is supported
+        /// </summary>
         public bool SupportsThreads { get; private set; }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -35,6 +44,14 @@ namespace Barebones.MasterServer
 
         public MsfRuntime()
         {
+#if !UNITY_EDITOR
+            IsEditor = false;
+            ProductKey = (Application.companyName + "_" + Application.productName).Replace(" ", string.Empty).ToLower();
+#else
+            IsEditor = true;
+            ProductKey = "default";
+#endif
+
 #if UNITY_WEBGL && !UNITY_EDITOR
             SupportsThreads = false;
 #else

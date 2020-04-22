@@ -18,10 +18,10 @@ namespace Barebones.Networking
         private readonly Dictionary<int, ResponseCallback> acknowledgements;
         protected readonly List<long[]> ackTimeoutQueue;
         private readonly Dictionary<int, object> data;
-        private int id = -1;
+        private int _id = -1;
         private int nextAckId = 1;
-        private IIncommingMessage timeoutMessage;
-        private Dictionary<Type, IPeerExtension> extensionsList;
+        private readonly IIncommingMessage timeoutMessage;
+        private readonly Dictionary<Type, IPeerExtension> extensionsList;
         private static readonly object idGenerationLock = new object();
         private static int peerIdGenerator;
 
@@ -388,20 +388,11 @@ namespace Barebones.Networking
             }
         }
 
-        /// <summary>
-        /// Check if peer has <see cref="IPeerExtension"/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         public bool HasExtension<T>()
         {
             return extensionsList.ContainsKey(typeof(T));
         }
 
-        /// <summary>
-        ///     Force disconnect
-        /// </summary>
-        /// <param name="reason"></param>
         public abstract void Disconnect(string reason);
 
         public void NotifyDisconnectEvent()
@@ -414,8 +405,7 @@ namespace Barebones.Networking
             OnMessageReceivedEvent?.Invoke(message);
         }
 
-        protected int RegisterAck(IMessage message, ResponseCallback responseCallback,
-            int timeoutSecs)
+        protected int RegisterAck(IMessage message, ResponseCallback responseCallback, int timeoutSecs)
         {
             int id;
 
@@ -478,11 +468,8 @@ namespace Barebones.Networking
             {
 #if UNITY_EDITOR
                 if (DontCatchExceptionsInEditor)
-                {
                     throw e;
-                }
 #endif
-
                 Debug.LogError("Failed parsing an incomming message: " + e);
 
                 return;
@@ -493,34 +480,27 @@ namespace Barebones.Networking
 
         #region Ack Disposal Stuff
 
-        /// <summary>
-        ///     Unique id
-        /// </summary>
         public int Id
         {
             get
             {
-                if (id < 0)
+                if (_id < 0)
                 {
                     lock (idGenerationLock)
                     {
-                        if (id < 0)
+                        if (_id < 0)
                         {
-                            id = peerIdGenerator++;
+                            _id = peerIdGenerator++;
                         }
                     }
                 }
 
-                return id;
+                return _id;
             }
         }
 
-        /// <summary>
-        ///     Called when ack disposal thread ticks
-        /// </summary>
         private void HandleAckDisposalTick(long currentTick)
         {
-            // TODO test with ordered queue, might be more performant
             ackTimeoutQueue.RemoveAll(a =>
             {
                 if (a[1] > currentTick)
@@ -579,7 +559,6 @@ namespace Barebones.Networking
         public void Dispose()
         {
             Dispose(true);
-            // GC.SuppressFinalize(this);
         }
         #endregion
     }

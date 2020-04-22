@@ -8,17 +8,17 @@ namespace Barebones.Networking
     public delegate void ResponseCallback(ResponseStatus status, IIncommingMessage response);
 
     /// <summary>
-    ///     Represents connection peer
+    /// Represents connection peer
     /// </summary>
     public interface IPeer : IDisposable, IMsgDispatcher<IPeer>
     {
         /// <summary>
-        ///     Unique peer id
+        /// Unique peer id
         /// </summary>
         int Id { get; }
 
         /// <summary>
-        ///     True, if connection is stil valid
+        /// True, if connection is stil valid
         /// </summary>
         bool IsConnected { get; }
 
@@ -57,22 +57,22 @@ namespace Barebones.Networking
         void SendMessage(IMessage message, DeliveryMethod deliveryMethod);
 
         /// <summary>
-        ///     Stores a property into peer
+        /// Stores a property into peer
         /// </summary>
         /// <param name="id"></param>
         /// <param name="data"></param>
         void SetProperty(int id, object data);
 
         /// <summary>
-        ///     Retrieves a property from the peer
+        /// Retrieves a property from the peer
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         object GetProperty(int id);
 
         /// <summary>
-        ///     Retrieves a property from the peer, and if it's not found,
-        ///     retrieves a default value
+        /// Retrieves a property from the peer, and if it's not found,
+        /// retrieves a default value
         /// </summary>
         /// <param name="id"></param>
         /// <param name="defaultValue"></param>
@@ -93,6 +93,11 @@ namespace Barebones.Networking
         /// <returns></returns>
         T GetExtension<T>() where T : IPeerExtension;
 
+        /// <summary>
+        /// Check if peer has <see cref="IPeerExtension"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         bool HasExtension<T>();
     }
 }

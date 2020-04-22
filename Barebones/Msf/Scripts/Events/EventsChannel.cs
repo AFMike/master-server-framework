@@ -17,11 +17,6 @@ namespace Barebones.MasterServer
         private readonly bool _catchExceptions;
 
         /// <summary>
-        /// Last event id
-        /// </summary>
-        private int _eventId = 0;
-
-        /// <summary>
         /// List of event handlers
         /// </summary>
         private readonly Dictionary<string, List<EventHandler>> _handlers;

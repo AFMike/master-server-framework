@@ -1,5 +1,12 @@
 ## Updates Log
 
+### Msf 3.3.0
+
+- Class **BaseClientModule** is removed
+- Fix error with **Msf.Runtime.ProductKey**
+- Added method **RemoveHandler** to **MsfBaseClientModule**
+- Added new system of getting your **public IP**
+
 ### Msf 3.2.0
 
 One time login feature is here!

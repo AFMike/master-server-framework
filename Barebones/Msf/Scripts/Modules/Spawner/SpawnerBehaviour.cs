@@ -113,9 +113,9 @@ namespace Barebones.MasterServer
                 // if you want to use your public IP address
                 if (usePublicIp)
                 {
-                    Msf.Helper.GetPublicIp(myPublicIP =>
+                    Msf.Helper.GetPublicIp(ipInfo =>
                     {
-                        machineIp = myPublicIP;
+                        machineIp = ipInfo.Ip;
                         StartSpawner();
                     });
                 }

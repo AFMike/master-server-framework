@@ -7,12 +7,12 @@ namespace Barebones.MasterServer
     /// This class is a central class, which can be used by entities (clients and servers)
     /// that need to connect to master server, and access it's functionality
     /// </summary>
-    public class Msf
+    public static class Msf
     {
         /// <summary>
         /// Version of the framework
         /// </summary>
-        public static string Version => "v3.2.0";
+        public static string Version => "v3.3.0";
 
         /// <summary>
         /// Just name of the framework

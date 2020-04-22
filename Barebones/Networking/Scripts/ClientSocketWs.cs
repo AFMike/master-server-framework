@@ -15,12 +15,28 @@ namespace Barebones.Networking
         private WebSocket webSocket;
         private ConnectionStatus status;
         private readonly Dictionary<short, IPacketHandler> handlers;
-        private static bool rethrowExceptionsInEditor = true;
+        private const bool rethrowExceptionsInEditor = true;
 
         public bool IsConnected { get; private set; } = false;
         public bool IsConnecting { get { return status == ConnectionStatus.Connecting; } }
         public string ConnectionIp { get; private set; }
         public int ConnectionPort { get; private set; }
+
+        public ConnectionStatus Status
+        {
+            get
+            {
+                return status;
+            }
+            set
+            {
+                if (status != value)
+                {
+                    status = value;
+                    OnStatusChangedEvent?.Invoke(status);
+                }
+            }
+        }
 
         public event Action OnConnectedEvent;
         public event Action OnDisconnectedEvent;
@@ -32,12 +48,6 @@ namespace Barebones.Networking
             handlers = new Dictionary<short, IPacketHandler>();
         }
 
-        /// <summary>
-        /// Invokes a callback when connection is established, or after the timeout
-        /// (even if failed to connect). If already connected, callback is invoked instantly
-        /// </summary>
-        /// <param name="connectionCallback"></param>
-        /// <param name="timeoutSeconds"></param>
         public void WaitForConnection(Action<IClientSocket> connectionCallback, float timeoutSeconds)
         {
             if (IsConnected)
@@ -76,23 +86,11 @@ namespace Barebones.Networking
             });
         }
 
-        /// <summary>
-        /// Invokes a callback when connection is established, or after the timeout
-        /// (even if failed to connect). If already connected, callback is invoked instantly
-        /// </summary>
-        /// <param name="connectionCallback"></param>
         public void WaitForConnection(Action<IClientSocket> connectionCallback)
         {
             WaitForConnection(connectionCallback, 10);
         }
 
-        /// <summary>
-        /// Adds a listener, which is invoked when connection is established,
-        /// or instantly, if already connected and  <see cref="invokeInstantlyIfConnected"/> 
-        /// is true
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="invokeInstantlyIfConnected"></param>
         public void AddConnectionListener(Action callback, bool invokeInstantlyIfConnected = true)
         {
             // Remove copy of the callback method to prevent double invocation
@@ -107,22 +105,11 @@ namespace Barebones.Networking
             }
         }
 
-        /// <summary>
-        /// Removes connection listener
-        /// </summary>
-        /// <param name="callback"></param>
         public void RemoveConnectionListener(Action callback)
         {
             OnConnectedEvent -= callback;
         }
 
-        /// <summary>
-        /// Adds a listener, which is invoked when connection is broken,
-        /// or instantly, if already disconnected and invokeInstantlyIfDisconnected 
-        /// is true
-        /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="invokeInstantlyIfDisconnected"></param>
         public void AddDisconnectionListener(Action callback, bool invokeInstantlyIfDisconnected = true)
         {
             // Remove copy of the callback method to prevent double invocation
@@ -137,29 +124,17 @@ namespace Barebones.Networking
             }
         }
 
-        /// <summary>
-        /// Removes disconnection listener
-        /// </summary>
-        /// <param name="callback"></param>
         public void RemoveDisconnectionListener(Action callback)
         {
             OnDisconnectedEvent -= callback;
         }
 
-        /// <summary>
-        /// Adds a packet handler, which will be invoked when a message of
-        /// specific operation code is received
-        /// </summary>
         public IPacketHandler SetHandler(IPacketHandler handler)
         {
             handlers[handler.OpCode] = handler;
             return handler;
         }
 
-        /// <summary>
-        /// Adds a packet handler, which will be invoked when a message of
-        /// specific operation code is received
-        /// </summary>
         public IPacketHandler SetHandler(short opCode, IncommingMessageHandler handlerMethod)
         {
             var handler = new PacketHandler(opCode, handlerMethod);
@@ -167,13 +142,9 @@ namespace Barebones.Networking
             return handler;
         }
 
-        /// <summary>
-        /// Removes the packet handler, but only if this exact handler
-        /// was used
-        /// </summary>
-        /// <param name="handler"></param>
         public void RemoveHandler(IPacketHandler handler)
         {
+            // But only if this exact handler
             if (handlers.TryGetValue(handler.OpCode, out IPacketHandler previousHandler) && previousHandler != handler)
             {
                 return;
@@ -182,16 +153,12 @@ namespace Barebones.Networking
             handlers.Remove(handler.OpCode);
         }
 
-        /// <summary>
-        /// Disconnects and connects again
-        /// </summary>
         public void Reconnect()
         {
             Disconnect();
             Connect(ConnectionIp, ConnectionPort);
         }
 
-        // Update is called once per frame
         public void Update()
         {
             if (webSocket == null)
@@ -214,25 +181,6 @@ namespace Barebones.Networking
             if (wasConnected != IsConnected)
             {
                 SetStatus(IsConnected ? ConnectionStatus.Connected : ConnectionStatus.Disconnected);
-            }
-        }
-
-        /// <summary>
-        /// Connection status
-        /// </summary>
-        public ConnectionStatus Status
-        {
-            get
-            {
-                return status;
-            }
-            set
-            {
-                if (status != value)
-                {
-                    status = value;
-                    OnStatusChangedEvent?.Invoke(status);
-                }
             }
         }
 
@@ -270,24 +218,11 @@ namespace Barebones.Networking
             }
         }
 
-        /// <summary>
-        /// Starts connecting to another socket
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="port"></param>
-        /// <returns></returns>
         public IClientSocket Connect(string ip, int port)
         {
             return Connect(ip, port, 10000);
         }
 
-        /// <summary>
-        /// Starts connecting to another socket
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="port"></param>
-        /// <param name="timeoutMillis"></param>
-        /// <returns></returns>
         public IClientSocket Connect(string ip, int port, int timeoutMillis)
         {
             ConnectionIp = ip;
@@ -340,7 +275,14 @@ namespace Barebones.Networking
             {
                 if (handlers.TryGetValue(message.OpCode, out IPacketHandler handler))
                 {
-                    handler.Handle(message);
+                    if (handler != null)
+                    {
+                        handler.Handle(message);
+                    }
+                    else
+                    {
+                        Logs.Error($"Connection is missing a handler. OpCode: {message.OpCode}");
+                    }
                 }
                 else if (message.IsExpectingResponse)
                 {
@@ -350,7 +292,6 @@ namespace Barebones.Networking
             }
             catch (Exception e)
             {
-
 #if UNITY_EDITOR
                 if (rethrowExceptionsInEditor)
                 {

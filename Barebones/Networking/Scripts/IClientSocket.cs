@@ -80,7 +80,7 @@ namespace Barebones.Networking
 
         /// <summary>
         /// Adds a listener, which is invoked when connection is established,
-        /// or instantly, if already connected and  <see cref="invokeInstantlyIfConnected"/> 
+        /// or instantly, if already connected and <paramref name="invokeInstantlyIfConnected"/>
         /// is true
         /// </summary>
         /// <param name="callback"></param>
@@ -95,7 +95,7 @@ namespace Barebones.Networking
 
         /// <summary>
         /// Adds listener, which is invoked when connection is closed,
-        /// or instantly, if already disconnected and <see cref="invokeInstantlyIfDisconnected"/> 
+        /// or instantly, if already disconnected and <paramref name="invokeInstantlyIfDisconnected"/>
         /// </summary>
         /// <param name="callback"></param>
         /// <param name="invokeInstantlyIfDisconnected"></param>

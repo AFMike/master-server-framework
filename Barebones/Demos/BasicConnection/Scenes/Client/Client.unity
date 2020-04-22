@@ -940,10 +940,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logLevel: 3
-  readMasterServerAddressFromCmd: 1
-  serverIp: 127.0.0.1
-  serverPort: 5000
-  connectOnStart: 0
+  serverIp: 92.223.109.21
+  serverPort: 55000
+  connectOnStart: 1
   minTimeToConnect: 0.5
   maxTimeToConnect: 4
   timeToConnect: 0.5
@@ -954,6 +953,7 @@ MonoBehaviour:
   OnDisconnectedEvent:
     m_PersistentCalls:
       m_Calls: []
+  readMasterServerAddressFromCmd: 1
 --- !u!4 &1946718842
 Transform:
   m_ObjectHideFlags: 0
