@@ -341,7 +341,7 @@ namespace Barebones.Networking
 
         public static string ToReadableString(this Dictionary<string, string> dictionary, string itemsSeparator = "; ", string kvpSeparator = " : ")
         {
-            var readableString = "none";
+            var readableString = string.Empty;
 
             if (dictionary != null && dictionary.Count > 0)
             {

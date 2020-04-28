@@ -74,7 +74,7 @@ namespace Barebones.MasterServer
         [SerializeField, Tooltip("Log level of this script")]
         protected LogLevel logLevel = LogLevel.Info;
 
-        [SerializeField, Tooltip("If true server will try to listen to your public IP address")]
+        [SerializeField, Tooltip("If true server will try to listen to your public IP address. This feature is for quick way to get IP of the machine on which the server is running. Do not use it on your local machine.")]
         protected bool usePublicIp = false;
 
         [SerializeField, Tooltip("IP address, to which server will listen to")]
@@ -219,7 +219,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Start server with given port and ip
         /// </summary>
-        /// <param name="listenToIp"></param>
+        /// <param name="listenToIp">IP который слшаем</param>
         /// <param name="listenToPort"></param>
         public virtual void StartServer(string listenToIp, int listenToPort)
         {

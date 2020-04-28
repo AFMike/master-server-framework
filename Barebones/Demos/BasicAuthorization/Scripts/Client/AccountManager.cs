@@ -352,7 +352,7 @@ namespace Barebones.MasterServer.Examples
             }
             else
             {
-                if (Msf.Client.Auth.HasAuthToken)
+                if (Msf.Client.Auth.HasAuthToken())
                 {
                     SignInWithToken();
                 }

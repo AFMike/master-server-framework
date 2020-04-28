@@ -113,7 +113,7 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                if(_localCreatedRooms.TryGetValue(roomId, out RoomController destroyedRoom))
+                if (_localCreatedRooms.TryGetValue(roomId, out RoomController destroyedRoom))
                 {
                     _localCreatedRooms.Remove(roomId);
 
@@ -147,13 +147,14 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            var packet = new RoomAccessValidatePacket()
+            // Create access validation data packet
+            var accessValidationData = new RoomAccessValidatePacket()
             {
                 RoomId = roomId,
                 Token = token
             };
 
-            connection.SendMessage((short)MsfMessageCodes.ValidateRoomAccessRequest, packet, (status, response) =>
+            connection.SendMessage((short)MsfMessageCodes.ValidateRoomAccessRequest, accessValidationData, (status, response) =>
             {
                 if (status != ResponseStatus.Success)
                 {
@@ -234,9 +235,9 @@ namespace Barebones.MasterServer
             };
 
             connection.SendMessage((short)MsfMessageCodes.PlayerLeftRoomRequest, packet, (status, response) =>
-           {
-               callback.Invoke(status == ResponseStatus.Success, null);
-           });
+            {
+                callback.Invoke(status == ResponseStatus.Success, null);
+            });
         }
 
         /// <summary>

@@ -4,8 +4,8 @@ namespace Barebones.MasterServer
 {
     public class RoomAccessValidatePacket : SerializablePacket
     {
-        public string Token;
-        public int RoomId;
+        public string Token { get; set; }
+        public int RoomId { get; set; }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {

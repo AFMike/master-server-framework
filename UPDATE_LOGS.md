@@ -1,5 +1,10 @@
 ## Updates Log
 
+### Msf 3.3.1
+
+- Many bugs fixed
+- Made some improvement
+
 ### Msf 3.3.0
 
 - Class **BaseClientModule** is removed

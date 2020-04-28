@@ -13,41 +13,44 @@ namespace Barebones.MasterServer
         public delegate void GetAccessCallback(RoomAccessPacket access, string error);
 
         /// <summary>
-        /// List used accesses
+        /// List of used accesses
         /// </summary>
-        private Dictionary<int, RoomAccessPacket> _accessesInUse;
+        private readonly Dictionary<int, RoomAccessPacket> accessesInUse;
 
         /// <summary>
         /// List of unconfirmed access
         /// </summary>
-        private Dictionary<string, RoomAccessData> _unconfirmedAccesses;
+        private readonly Dictionary<string, RoomAccessData> unconfirmedAccesses;
 
         /// <summary>
         /// Connected players list
         /// </summary>
-        private Dictionary<int, IPeer> _players;
+        private Dictionary<int, IPeer> connectedPlayers;
 
         /// <summary>
         /// 
         /// </summary>
-        private HashSet<int> _requestsInProgress;
+        private HashSet<int> requestsInProgress;
 
         /// <summary>
-        /// 
+        /// Options this room has
         /// </summary>
         public RoomOptions Options { get; private set; }
 
         /// <summary>
-        /// 
+        /// Current room ID
         /// </summary>
         public int RoomId { get; private set; }
 
         /// <summary>
-        /// 
+        /// Peer of this room owner
         /// </summary>
         public IPeer Peer { get; private set; }
 
-        public int OnlineCount { get { return _accessesInUse.Count; } }
+        /// <summary>
+        /// Number of the connected users
+        /// </summary>
+        public int OnlineCount { get { return accessesInUse.Count; } }
 
         /// <summary>
         /// Fires when player joined room 
@@ -70,22 +73,21 @@ namespace Barebones.MasterServer
             Peer = peer;
             Options = options;
 
-            _unconfirmedAccesses = new Dictionary<string, RoomAccessData>();
-            _players = new Dictionary<int, IPeer>();
-            _accessesInUse = new Dictionary<int, RoomAccessPacket>();
-            _requestsInProgress = new HashSet<int>();
+            unconfirmedAccesses = new Dictionary<string, RoomAccessData>();
+            connectedPlayers = new Dictionary<int, IPeer>();
+            accessesInUse = new Dictionary<int, RoomAccessPacket>();
+            requestsInProgress = new HashSet<int>();
 
-            OverrideOptionsWithProperties();
-        }
-
-        public void OverrideOptionsWithProperties()
-        {
             if (Options.CustomOptions.Has(MsfDictKeys.isPublic))
             {
                 Options.IsPublic = Options.CustomOptions.AsBool(MsfDictKeys.isPublic);
             }
         }
 
+        /// <summary>
+        /// Replace options of the room with another
+        /// </summary>
+        /// <param name="options"></param>
         public void ChangeOptions(RoomOptions options)
         {
             Options = options;
@@ -108,14 +110,14 @@ namespace Barebones.MasterServer
         public void GetAccess(IPeer peer, Dictionary<string, string> properties, GetAccessCallback callback)
         {
             // If request is already pending
-            if (_requestsInProgress.Contains(peer.Id))
+            if (requestsInProgress.Contains(peer.Id))
             {
                 callback.Invoke(null, "You've already requested an access to this room");
                 return;
             }
 
             // If player is already in the game
-            if (_players.ContainsKey(peer.Id))
+            if (connectedPlayers.ContainsKey(peer.Id))
             {
                 callback.Invoke(null, "You are already in this room");
                 return;
@@ -123,7 +125,7 @@ namespace Barebones.MasterServer
 
             // If player has already received an access and didn't claim it
             // but is requesting again - send him the old one
-            var currentAccess = _unconfirmedAccesses.Values.FirstOrDefault(v => v.Peer == peer);
+            var currentAccess = unconfirmedAccesses.Values.FirstOrDefault(v => v.Peer == peer);
             if (currentAccess != null)
             {
                 // Restore the timeout
@@ -136,9 +138,9 @@ namespace Barebones.MasterServer
             // If there's a player limit
             if (Options.MaxConnections != 0)
             {
-                var playerSlotsTaken = _requestsInProgress.Count
-                                       + _accessesInUse.Count
-                                       + _unconfirmedAccesses.Count;
+                var playerSlotsTaken = requestsInProgress.Count
+                                       + accessesInUse.Count
+                                       + unconfirmedAccesses.Count;
 
                 if (playerSlotsTaken >= Options.MaxConnections)
                 {
@@ -161,12 +163,12 @@ namespace Barebones.MasterServer
             }
 
             // Add to pending list
-            _requestsInProgress.Add(peer.Id);
+            requestsInProgress.Add(peer.Id);
 
             Peer.SendMessage((short)MsfMessageCodes.ProvideRoomAccessCheck, packet, (status, response) =>
             {
                 // Remove from pending list
-                _requestsInProgress.Remove(peer.Id);
+                requestsInProgress.Remove(peer.Id);
 
                 if (status != ResponseStatus.Success)
                 {
@@ -184,7 +186,7 @@ namespace Barebones.MasterServer
                 };
 
                 // Save the access
-                _unconfirmedAccesses[access.Access.Token] = access;
+                unconfirmedAccesses[access.Access.Token] = access;
 
                 callback.Invoke(access.Access, null);
             });
@@ -199,7 +201,7 @@ namespace Barebones.MasterServer
         public bool ValidateAccess(string token, out IPeer peer)
         {
             RoomAccessData data;
-            _unconfirmedAccesses.TryGetValue(token, out data);
+            unconfirmedAccesses.TryGetValue(token, out data);
 
             peer = null;
 
@@ -210,7 +212,7 @@ namespace Barebones.MasterServer
             }
 
             // Remove unconfirmed
-            _unconfirmedAccesses.Remove(token);
+            unconfirmedAccesses.Remove(token);
 
             // If player is no longer connected
             if (!data.Peer.IsConnected)
@@ -219,7 +221,7 @@ namespace Barebones.MasterServer
             }
 
             // Set access as used
-            _accessesInUse.Add(data.Peer.Id, data.Access);
+            accessesInUse.Add(data.Peer.Id, data.Access);
 
             peer = data.Peer;
 
@@ -237,11 +239,11 @@ namespace Barebones.MasterServer
         /// </summary>
         public void ClearTimedOutAccesses()
         {
-            var timedOut = _unconfirmedAccesses.Values.Where(u => u.Timeout < DateTime.Now).ToList();
+            var timedOut = unconfirmedAccesses.Values.Where(u => u.Timeout < DateTime.Now).ToList();
 
             foreach (var access in timedOut)
             {
-                _unconfirmedAccesses.Remove(access.Access.Token);
+                unconfirmedAccesses.Remove(access.Access.Token);
             }
         }
 
@@ -254,9 +256,9 @@ namespace Barebones.MasterServer
 
         public void OnPlayerLeft(int peerId)
         {
-            _accessesInUse.Remove(peerId);
+            accessesInUse.Remove(peerId);
 
-            if (!_players.TryGetValue(peerId, out IPeer playerPeer))
+            if (!connectedPlayers.TryGetValue(peerId, out IPeer playerPeer))
             {
                 return;
             }
@@ -271,7 +273,7 @@ namespace Barebones.MasterServer
                 OnDestroyedEvent.Invoke(this);
             }
 
-            _unconfirmedAccesses.Clear();
+            unconfirmedAccesses.Clear();
 
             // Clear listeners
             OnPlayerJoinedEvent = null;

@@ -4,8 +4,8 @@ namespace Barebones.MasterServer
 {
     public class PlayerLeftRoomPacket : SerializablePacket
     {
-        public int PeerId;
-        public int RoomId;
+        public int PeerId { get; set; }
+        public int RoomId { get; set; }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {

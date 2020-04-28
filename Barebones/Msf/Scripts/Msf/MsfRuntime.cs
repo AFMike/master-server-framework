@@ -18,7 +18,15 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Product key
         /// </summary>
-        public string ProductKey { get; private set; }
+        public string ProductKey(string key = "")
+        {
+            string pk = $"{Application.companyName}_{Application.productName}";
+
+            if (!string.IsNullOrEmpty(key))
+                pk = $"{pk}_{key}";
+
+            return pk.Replace(" ", string.Empty).ToLower();
+        }
 
         /// <summary>
         /// Check if multithreading is supported
@@ -46,10 +54,8 @@ namespace Barebones.MasterServer
         {
 #if !UNITY_EDITOR
             IsEditor = false;
-            ProductKey = (Application.companyName + "_" + Application.productName).Replace(" ", string.Empty).ToLower();
 #else
             IsEditor = true;
-            ProductKey = "default";
 #endif
 
 #if UNITY_WEBGL && !UNITY_EDITOR

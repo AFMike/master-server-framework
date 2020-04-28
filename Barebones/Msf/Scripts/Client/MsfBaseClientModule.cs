@@ -12,10 +12,10 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Client handlers list. Requires for connection changing process. <seealso cref="ChangeConnection(IClientSocket)"/>
         /// </summary>
-        private Dictionary<short, IPacketHandler> _handlers;
+        private Dictionary<short, IPacketHandler> handlers;
 
         /// <summary>
-        /// Logger connected to this module
+        /// Logger assigned to this module
         /// </summary>
         protected Logging.Logger logger;
 
@@ -34,27 +34,41 @@ namespace Barebones.MasterServer
 
         protected virtual void Awake()
         {
-            _handlers = new Dictionary<short, IPacketHandler>();
+            handlers = new Dictionary<short, IPacketHandler>();
 
             logger = Msf.Create.Logger(GetType().Name);
             logger.LogLevel = logLevel;
-
-            ChangeConnection(Msf.Connection);
-
-            Connection.AddConnectionListener(ConnectedToMaster);
-            Connection.OnStatusChangedEvent += OnConnectionStatusChanged;
         }
 
         protected virtual void Start()
         {
+            ChangeConnection(CreateConnection());
             Initialize();
         }
 
         protected virtual void OnDestroy()
         {
-            Connection.OnStatusChangedEvent -= OnConnectionStatusChanged;
-            Connection.RemoveConnectionListener(ConnectedToMaster);
-            Connection.RemoveDisconnectionListener(DisconnectedToMaster);
+            if(Connection != null)
+            {
+                if (handlers != null)
+                {
+                    foreach (var handler in handlers.Values)
+                    {
+                        Connection.RemoveHandler(handler);
+                    }
+
+                    handlers.Clear();
+                }
+
+                Connection.OnStatusChangedEvent -= OnConnectionStatusChanged;
+                Connection.RemoveConnectionListener(ConnectedToServer);
+                Connection.RemoveDisconnectionListener(DisconnectedFromServer);
+            }
+        }
+
+        protected virtual IClientSocket CreateConnection()
+        {
+            return Msf.Client.Connection;
         }
 
         /// <summary>
@@ -64,7 +78,7 @@ namespace Barebones.MasterServer
         /// <param name="handler"></param>
         public void SetHandler(IPacketHandler handler)
         {
-            _handlers[handler.OpCode] = handler;
+            handlers[handler.OpCode] = handler;
             Connection?.SetHandler(handler);
         }
 
@@ -96,27 +110,35 @@ namespace Barebones.MasterServer
         /// <param name="socket"></param>
         public void ChangeConnection(IClientSocket socket)
         {
+            if (Connection != null)
+            {
+                Connection.RemoveConnectionListener(ConnectedToServer);
+                Connection.RemoveDisconnectionListener(DisconnectedFromServer);
+            }
+
             Connection = socket;
 
             // Override packet handlers
-            foreach (var packetHandler in _handlers.Values)
+            foreach (var packetHandler in handlers.Values)
             {
                 socket.SetHandler(packetHandler);
             }
+
+            OnConnectionSocketChanged(Connection);
         }
 
-        private void ConnectedToMaster()
+        private void ConnectedToServer()
         {
-            Connection.RemoveConnectionListener(ConnectedToMaster);
-            Connection.AddDisconnectionListener(DisconnectedToMaster);
+            Connection.RemoveConnectionListener(ConnectedToServer);
+            Connection.AddDisconnectionListener(DisconnectedFromServer);
 
             OnClientConnectedToServer();
         }
 
-        private void DisconnectedToMaster()
+        private void DisconnectedFromServer()
         {
-            Connection.AddConnectionListener(ConnectedToMaster);
-            Connection.RemoveDisconnectionListener(DisconnectedToMaster);
+            Connection.AddConnectionListener(ConnectedToServer);
+            Connection.RemoveDisconnectionListener(DisconnectedFromServer);
 
             OnClientDisconnectedFromServer();
         }
@@ -125,6 +147,16 @@ namespace Barebones.MasterServer
         /// Fired when this module is started
         /// </summary>
         protected virtual void Initialize() { }
+
+        /// <summary>
+        /// Fired when connection of this module is changed
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void OnConnectionSocketChanged(IClientSocket socket)
+        {
+            socket.AddConnectionListener(ConnectedToServer);
+            socket.OnStatusChangedEvent += OnConnectionStatusChanged;
+        }
 
         /// <summary>
         /// Fired each time the connection status was changed

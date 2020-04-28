@@ -42,7 +42,7 @@ namespace Barebones.MasterServer
         [Header("Spawner Default Options")]
         [SerializeField, Tooltip("Default IP address")]
         protected string machineIp = "127.0.0.1";
-        [SerializeField, Tooltip("If true server will try to listen to your public IP address")]
+        [SerializeField, Tooltip("If true server will try to get you machine public IP. This feature is for quick way to get IP of the machine on which the room server is running. Do not use it on your local machine.")]
         protected bool usePublicIp = false;
         [SerializeField, Tooltip("Default path to executable file")]
         protected string executableFilePath = "";

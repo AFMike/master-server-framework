@@ -8,8 +8,6 @@ namespace Barebones.MasterServer
 {
     public class MsfAuthClient : MsfBaseClient
     {
-        private string authTokenKey = string.Empty;
-
         public delegate void SignInCallback(AccountInfoPacket accountInfo, string error);
 
         /// <summary>
@@ -21,12 +19,6 @@ namespace Barebones.MasterServer
         /// Check if user is now logging in
         /// </summary>
         public bool IsNowSigningIn { get; protected set; }
-
-        /// <summary>
-        /// Check if we have auth token after last login
-        /// </summary>
-        /// <returns></returns>
-        public bool HasAuthToken => PlayerPrefs.HasKey(authTokenKey);
 
         /// <summary>
         /// Remember user after he logged in
@@ -42,9 +34,24 @@ namespace Barebones.MasterServer
         public event Action OnSignedUpEvent;
         public event Action OnSignedOutEvent;
 
-        public MsfAuthClient(IClientSocket connection) : base(connection)
+        public MsfAuthClient(IClientSocket connection) : base(connection) { }
+
+        /// <summary>
+        /// The key of the auth token
+        /// </summary>
+        /// <returns></returns>
+        public string AuthTokenKey()
         {
-            authTokenKey = Msf.Runtime.ProductKey + "_token";
+            return Msf.Runtime.ProductKey("token");
+        }
+
+        /// <summary>
+        /// Check if we have auth token after last login
+        /// </summary>
+        /// <returns></returns>
+        public bool HasAuthToken()
+        {
+            return PlayerPrefs.HasKey(AuthTokenKey());
         }
 
         /// <summary>
@@ -168,12 +175,12 @@ namespace Barebones.MasterServer
         /// <param name="callback"></param>
         public void SignInWithToken(SignInCallback callback)
         {
-            if (!HasAuthToken)
+            if (!HasAuthToken())
             {
                 throw new Exception("You have no auth token!");
             }
 
-            SignIn(PlayerPrefs.GetString(authTokenKey), callback);
+            SignIn(PlayerPrefs.GetString(AuthTokenKey()), callback);
         }
 
         /// <summary>
@@ -290,7 +297,7 @@ namespace Barebones.MasterServer
         /// </summary>
         private void SaveAuthToken(string token)
         {
-            PlayerPrefs.SetString(authTokenKey, token);
+            PlayerPrefs.SetString(AuthTokenKey(), token);
             PlayerPrefs.Save();
         }
 
@@ -299,9 +306,9 @@ namespace Barebones.MasterServer
         /// </summary>
         private void ClearAuthToken()
         {
-            if (PlayerPrefs.HasKey(authTokenKey))
+            if (PlayerPrefs.HasKey(AuthTokenKey()))
             {
-                PlayerPrefs.DeleteKey(authTokenKey);
+                PlayerPrefs.DeleteKey(AuthTokenKey());
                 PlayerPrefs.Save();
             }
         }
