@@ -1,5 +1,17 @@
 ## Updates Log
 
+### Msf 3.4.0 - 3.4.1
+
+- Spawning process is finished
+- Created spawn menu
+- Created games list menu
+- Create RoomServerBehaviour class
+- Create RoomClientBehaviour class
+
+
+Now you can test how to spawn **[Mirror](https://github.com/vis2k/Mirror)** rooms and list tham in games list view.
+
+
 ### Msf 3.3.1
 
 - Many bugs fixed
