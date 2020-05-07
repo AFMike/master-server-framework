@@ -14,5 +14,8 @@
         public static string lobbyTeam = "msf.lobbyTeam";
         public static string isPublic = "msf.isPrivate";
         public static string region = "msf.region";
+        public static string autoStartRoomClient = "msf.autoStartRoomClient";
+        public static string onlineSceneName = "msf.onlineSceneName";
+        public static string offlineSceneName = "msf.offlineSceneName";
     }
 }

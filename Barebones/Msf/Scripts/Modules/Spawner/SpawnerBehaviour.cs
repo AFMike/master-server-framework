@@ -30,7 +30,7 @@ namespace Barebones.MasterServer
         [SerializeField]
         private HelpBox headerWarn = new HelpBox()
         {
-            Text = $"It will start ONLY if '{Msf.Args.Names.StartSpawner}' argument is found, or if StartSpawner() is called manually from your scripts",
+            Text = $"It will start ONLY if '-msfStartSpawner' argument is found, or if StartSpawner() is called manually from your scripts",
             Type = HelpBoxType.Warning
         };
 
@@ -57,6 +57,13 @@ namespace Barebones.MasterServer
 
         [Header("Runtime Settings"), SerializeField, Tooltip("If true, kills all spawned processes when master server quits")]
         protected bool killProcessesWhenAppQuits = true;
+
+        [Header("Editor Settings"), SerializeField]
+        private HelpBox hpEditor = new HelpBox()
+        {
+            Text = "Editor settings are used only while running in editor and for test purpose only",
+            Type = HelpBoxType.Warning
+        };
 
         [Header("Running in Editor"), SerializeField, Tooltip("If true, when running in editor, spawner server will start automatically (after connecting to master)")]
         protected bool autoStartInEditor = true;

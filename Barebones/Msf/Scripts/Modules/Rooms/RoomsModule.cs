@@ -348,7 +348,6 @@ namespace Barebones.MasterServer
             }
 
             ChangeRoomOptions(room, data.Options);
-
             message.Respond(ResponseStatus.Success);
         }
 
@@ -356,12 +355,14 @@ namespace Barebones.MasterServer
         {
             var data = message.Deserialize(new RoomAccessRequestPacket());
 
+            // Let's find a room by Id which the player wants to join
             if (!roomsList.TryGetValue(data.RoomId, out RegisteredRoom room))
             {
                 message.Respond("Room does not exist", ResponseStatus.Failed);
                 return;
             }
 
+            // If room requires the password and given password is not valid
             if (!string.IsNullOrEmpty(room.Options.Password) && room.Options.Password != data.Password)
             {
                 message.Respond("Invalid password", ResponseStatus.Unauthorized);
@@ -369,7 +370,7 @@ namespace Barebones.MasterServer
             }
 
             // Send room access request to peer who owns it
-            room.GetAccess(message.Peer, data.Properties, (packet, error) =>
+            room.GetAccess(message.Peer, data.CustomOptions, (packet, error) =>
             {
                 if (packet == null)
                 {

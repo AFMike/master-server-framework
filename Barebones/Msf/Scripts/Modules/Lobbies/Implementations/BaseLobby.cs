@@ -718,7 +718,7 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            var requestData = new Dictionary<string, string>().FromBytes(message.AsBytes());
+            var requestData = new DictionaryOptions(new Dictionary<string, string>().FromBytes(message.AsBytes()));
 
             Room.GetAccess(message.Peer, requestData, (access, error) =>
             {

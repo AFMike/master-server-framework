@@ -57,7 +57,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Region, to which the spawned room belongs
         /// </summary>
-        public string Region { get; set; } = "International";
+        public string Region { get; set; } = string.Empty;
 
         /// <summary>
         /// Extra properties that you might want to send to master server
@@ -99,18 +99,18 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            StringBuilder s = new StringBuilder();
-            s.Append($"Name: {Name}, ");
-            s.Append($"RoomIp: {RoomIp}, ");
-            s.Append($"RoomPort: {RoomPort}, ");
-            s.Append($"MaxConnections: {MaxConnections}, ");
-            s.Append($"Use Password: {!string.IsNullOrEmpty(Password)}, ");
-            s.Append($"AccessTimeoutPeriod: {AccessTimeoutPeriod} sec., ");
-            s.Append($"AllowUsersRequestAccess: {AllowUsersRequestAccess}, ");
-            s.Append($"Region: {Region}, ");
-            s.Append($"{CustomOptions.ToReadableString(", ")}");
+            var options = new DictionaryOptions();
+            options.Add("RoomName", Name);
+            options.Add("RoomIp", RoomIp);
+            options.Add("RoomPort", RoomPort);
+            options.Add("MaxConnections", MaxConnections <= 0 ? "Unlimited" : MaxConnections.ToString());
+            options.Add("Use Password", !string.IsNullOrEmpty(Password));
+            options.Add("AccessTimeoutPeriod", $"{AccessTimeoutPeriod} sec.");
+            options.Add("AllowUsersRequestAccess", AllowUsersRequestAccess);
+            options.Add("Region", string.IsNullOrEmpty(Region) ? "International" : Region);
+            options.Append(CustomOptions);
 
-            return s.ToString();
+            return options.ToReadableString();
         }
     }
 }

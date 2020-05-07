@@ -20,7 +20,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
         public UnityEvent OnProfileLoadedEvent;
         public UnityEvent OnProfileSavedEvent;
 
-        protected override void Initialize()
+        protected override void OnBeforeClientConnectedToServer()
         {
             profileView = ViewsManager.GetView<ProfileView>("ProfileView");
             profileSettingsView = ViewsManager.GetView<ProfileSettingsView>("ProfileSettingsView");

@@ -515,7 +515,7 @@ namespace Barebones.MasterServer
             var userAccountPacket = new PeerAccountInfoPacket()
             {
                 PeerId = peerId,
-                Properties = userAccount.Properties,
+                CustomOptions = new DictionaryOptions(userAccount.Properties),
                 Username = userExtension.Username
             };
 
@@ -645,6 +645,8 @@ namespace Barebones.MasterServer
 
             // Add to lookup of logged in users
             LoggedInUsers.Add(userExtension.Username.ToLower(), userExtension);
+
+            logger.Debug($"User {message.Peer.Id} signed in as {userAccount.Username}");
 
             // Send response to logged in user
             message.Respond(userExtension.CreateAccountInfoPacket().ToBytes(), ResponseStatus.Success);

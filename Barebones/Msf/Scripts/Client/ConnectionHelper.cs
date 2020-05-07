@@ -29,9 +29,6 @@ namespace Barebones.MasterServer
         [Tooltip("Port of the server"), SerializeField]
         protected int serverPort = 5000;
 
-        [Header("Automation"), Tooltip("If true, will try to connect on the Start()"), SerializeField]
-        protected bool connectOnStart = false;
-
         [Header("Advanced"), SerializeField]
         protected float minTimeToConnect = 0.5f;
         [SerializeField]
@@ -40,6 +37,16 @@ namespace Barebones.MasterServer
         protected float timeToConnect = 0.5f;
         [SerializeField]
         protected int maxAttemptsToConnect = 5;
+
+        [Header("Editor Settings"), SerializeField]
+        private HelpBox roomServerInfo = new HelpBox()
+        {
+            Text = "Editor settings works only in editor",
+            Type = HelpBoxType.Info
+        };
+
+        [Tooltip("If true, will try to connect on the Start()"), SerializeField]
+        protected bool autoStartInEditor = false;
 
         [Header("Events")]
         /// <summary>
@@ -79,7 +86,7 @@ namespace Barebones.MasterServer
 
         protected virtual void Start()
         {
-            if (connectOnStart)
+            if (Msf.Runtime.IsEditor && autoStartInEditor)
             {
                 StartConnection();
             }

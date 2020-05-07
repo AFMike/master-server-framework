@@ -5,8 +5,19 @@ using UnityEngine.SceneManagement;
 
 namespace Barebones.MasterServer
 {
+    /// <summary>
+    /// Room access provider callback
+    /// </summary>
+    /// <param name="access"></param>
+    /// <param name="error"></param>
     public delegate void RoomAccessProviderCallback(RoomAccessPacket access, string error);
-    public delegate void RoomAccessProvider(UsernameAndPeerIdPacket requester, RoomAccessProviderCallback giveAccess);
+
+    /// <summary>
+    /// Room access provider factory
+    /// </summary>
+    /// <param name="accessCheckOptions">Options you may use to dive access</param>
+    /// <param name="giveAccess"></param>
+    public delegate void RoomAccessProvider(RoomAccessProviderCheck accessCheckOptions, RoomAccessProviderCallback giveAccess);
 
     /// <summary>
     /// Instance of this class will be created when room registration is completed.
@@ -14,12 +25,45 @@ namespace Barebones.MasterServer
     /// </summary>
     public class RoomController
     {
-        private RoomAccessProvider _accessProvider;
+        /// <summary>
+        /// Access provider
+        /// </summary>
+        private RoomAccessProvider accessProvider;
 
+        /// <summary>
+        /// Connection of current room controller
+        /// </summary>
         public IClientSocket Connection { get; private set; }
+
+        /// <summary>
+        /// Room Id
+        /// </summary>
         public int RoomId { get; private set; }
+
+        /// <summary>
+        /// Options of current room controller
+        /// </summary>
         public RoomOptions Options { get; private set; }
+
+        /// <summary>
+        /// Logger of all room controllers
+        /// </summary>
         public static Logger Logger { get; private set; }
+
+        /// <summary>
+        /// Access provider of current room controller
+        /// </summary>
+        public RoomAccessProvider AccessProvider
+        {
+            get
+            {
+                return accessProvider ?? DefaultAccessProvider;
+            }
+            set
+            {
+                accessProvider = value;
+            }
+        }
 
         public RoomController(int roomId, IClientSocket connection, RoomOptions options)
         {
@@ -30,7 +74,7 @@ namespace Barebones.MasterServer
             Options = options;
 
             // Add handlers
-            connection.SetHandler((short)MsfMessageCodes.ProvideRoomAccessCheck, HandleProvideRoomAccessCheck);
+            connection.SetHandler((short)MsfMessageCodes.ProvideRoomAccessCheck, ProvideRoomAccessCheckHandler);
         }
 
         /// <summary>
@@ -46,7 +90,7 @@ namespace Barebones.MasterServer
                 }
                 else
                 {
-                    Logger.Debug("Unregistered room successfully: " + RoomId);
+                    Logger.Debug($"Room {RoomId} was successfully unregistered");
                 }
             });
         }
@@ -104,15 +148,6 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
-        /// Call this, if you want to manually check if peer should receive an access
-        /// </summary>
-        /// <param name="provider"></param>
-        public void SetAccessProvider(RoomAccessProvider provider)
-        {
-            _accessProvider = provider;
-        }
-
-        /// <summary>
         /// Sends the token to "master" server to see if it's valid. If it is -
         /// callback will be invoked with peer id of the user, whos access was confirmed.
         /// This peer id can be used to retrieve users data from master server
@@ -144,9 +179,9 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Default access provider, which always confirms access requests
         /// </summary>
-        /// <param name="peerId"></param>
+        /// <param name="accessCheckOptions"></param>
         /// <param name="callback"></param>
-        public void DefaultAccessProvider(UsernameAndPeerIdPacket requester, RoomAccessProviderCallback callback)
+        public void DefaultAccessProvider(RoomAccessProviderCheck accessCheckOptions, RoomAccessProviderCallback callback)
         {
             callback.Invoke(new RoomAccessPacket()
             {
@@ -182,29 +217,35 @@ namespace Barebones.MasterServer
 
         #region Message handlers
 
-        private void HandleProvideRoomAccessCheck(IIncommingMessage message)
+        private void ProvideRoomAccessCheckHandler(IIncommingMessage message)
         {
-            var data = message.Deserialize(new RoomAccessProvideCheckPacket());
-
-            var roomController = Msf.Server.Rooms.GetRoomController(data.RoomId);
+            var provideRoomAccessCheckPacket = message.Deserialize(new ProvideRoomAccessCheckPacket());
+            var roomController = Msf.Server.Rooms.GetRoomController(provideRoomAccessCheckPacket.RoomId);
 
             if (roomController == null)
             {
-                message.Respond("There's no room controller with room id " + data.RoomId, ResponseStatus.NotHandled);
+                message.Respond($"There's no room controller with room id {provideRoomAccessCheckPacket.RoomId}", ResponseStatus.NotHandled);
                 return;
             }
 
-            var accessProvider = roomController._accessProvider ?? DefaultAccessProvider;
             var isProviderDone = false;
 
             var requester = new UsernameAndPeerIdPacket()
             {
-                PeerId = data.PeerId,
-                Username = data.Username
+                PeerId = provideRoomAccessCheckPacket.PeerId,
+                Username = provideRoomAccessCheckPacket.Username
+            };
+
+            // Create access provider check options
+            var roomAccessProviderCheck = new RoomAccessProviderCheck()
+            {
+                PeerId = provideRoomAccessCheckPacket.PeerId,
+                Username = provideRoomAccessCheckPacket.Username,
+                CustomOptions = provideRoomAccessCheckPacket.CustomOptions
             };
 
             // Invoke the access provider
-            accessProvider.Invoke(requester, (access, error) =>
+            roomController.AccessProvider.Invoke(roomAccessProviderCheck, (access, error) =>
             {
                 // In case provider timed out
                 if (isProviderDone)
@@ -217,7 +258,7 @@ namespace Barebones.MasterServer
                 if (access == null)
                 {
                     // If access is not provided
-                    message.Respond(error ?? "", ResponseStatus.Failed);
+                    message.Respond(string.IsNullOrEmpty(error) ? "" : error, ResponseStatus.Failed);
                     return;
                 }
 
@@ -225,7 +266,7 @@ namespace Barebones.MasterServer
 
                 if (Logger.IsLogging(LogLevel.Trace))
                 {
-                    Logger.Trace("Room controller gave address to peer " + data.PeerId + ":" + access);
+                    Logger.Trace("Room controller gave address to peer " + provideRoomAccessCheckPacket.PeerId + ":" + access);
                 }
             });
 
@@ -236,7 +277,7 @@ namespace Barebones.MasterServer
                 {
                     isProviderDone = true;
                     message.Respond("Timed out", ResponseStatus.Timeout);
-                    Logger.Error("Access provider took longer than " + Msf.Server.Rooms.AccessProviderTimeout + " seconds to provide access. " +
+                    Logger.Error($"Access provider took longer than {Msf.Server.Rooms.AccessProviderTimeout} seconds to provide access. " +
                                "If it's intended, increase the threshold at Msf.Server.Rooms.AccessProviderTimeout");
                 }
             });

@@ -4,7 +4,7 @@ namespace Barebones.MasterServer
 {
     public class MsfAuthServer : MsfBaseClient
     {
-        public delegate void PeerAccountInfoCallback(PeerAccountInfoPacket info, string error);
+        public delegate void PeerAccountInfoCallback(PeerAccountInfoPacket accountInfo, string accountError);
 
         public MsfAuthServer(IClientSocket connection) : base(connection) { }
 

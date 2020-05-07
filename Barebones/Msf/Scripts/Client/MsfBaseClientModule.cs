@@ -19,6 +19,9 @@ namespace Barebones.MasterServer
         /// </summary>
         protected Logging.Logger logger;
 
+        /// <summary>
+        /// Log levelof this module
+        /// </summary>
         [Header("Base Module Settings"), SerializeField]
         protected LogLevel logLevel = LogLevel.Info;
 
@@ -28,7 +31,7 @@ namespace Barebones.MasterServer
         public IClientSocket Connection { get; protected set; }
 
         /// <summary>
-        /// Check if current module connection isconnected to server
+        /// Check if current module is connected to server
         /// </summary>
         public bool IsConnected => Connection != null && Connection.IsConnected;
 
@@ -42,15 +45,32 @@ namespace Barebones.MasterServer
 
         protected virtual void Start()
         {
-            ChangeConnection(CreateConnection());
-            Initialize();
+            OnBeforeClientConnectedToServer();
+            ChangeConnection(ConnectionFactory());
         }
 
         protected virtual void OnDestroy()
         {
-            if(Connection != null)
+            ClearConnection();
+        }
+
+        /// <summary>
+        /// Returns the connection to server
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IClientSocket ConnectionFactory()
+        {
+            return Msf.Client.Connection;
+        }
+
+        /// <summary>
+        /// Clears connection and all its handlers if <paramref name="clearHandlers"/> is true
+        /// </summary>
+        public void ClearConnection(bool clearHandlers = true)
+        {
+            if (Connection != null)
             {
-                if (handlers != null)
+                if (handlers != null && clearHandlers)
                 {
                     foreach (var handler in handlers.Values)
                     {
@@ -61,14 +81,9 @@ namespace Barebones.MasterServer
                 }
 
                 Connection.OnStatusChangedEvent -= OnConnectionStatusChanged;
-                Connection.RemoveConnectionListener(ConnectedToServer);
-                Connection.RemoveDisconnectionListener(DisconnectedFromServer);
+                Connection.RemoveConnectionListener(OnClientConnectedToServer);
+                Connection.RemoveDisconnectionListener(OnClientDisconnectedFromServer);
             }
-        }
-
-        protected virtual IClientSocket CreateConnection()
-        {
-            return Msf.Client.Connection;
         }
 
         /// <summary>
@@ -110,12 +125,10 @@ namespace Barebones.MasterServer
         /// <param name="socket"></param>
         public void ChangeConnection(IClientSocket socket)
         {
-            if (Connection != null)
-            {
-                Connection.RemoveConnectionListener(ConnectedToServer);
-                Connection.RemoveDisconnectionListener(DisconnectedFromServer);
-            }
+            // Clear just connection but not handlers
+            ClearConnection(false);
 
+            // Change connections
             Connection = socket;
 
             // Override packet handlers
@@ -124,54 +137,37 @@ namespace Barebones.MasterServer
                 socket.SetHandler(packetHandler);
             }
 
+            Connection.OnStatusChangedEvent += OnConnectionStatusChanged;
             OnConnectionSocketChanged(Connection);
-        }
-
-        private void ConnectedToServer()
-        {
-            Connection.RemoveConnectionListener(ConnectedToServer);
-            Connection.AddDisconnectionListener(DisconnectedFromServer);
-
-            OnClientConnectedToServer();
-        }
-
-        private void DisconnectedFromServer()
-        {
-            Connection.AddConnectionListener(ConnectedToServer);
-            Connection.RemoveDisconnectionListener(DisconnectedFromServer);
-
-            OnClientDisconnectedFromServer();
+            Connection.AddConnectionListener(OnClientConnectedToServer);
+            Connection.AddDisconnectionListener(OnClientDisconnectedFromServer, false);
         }
 
         /// <summary>
-        /// Fired when this module is started
+        /// Fires when this module is started before connection is established
         /// </summary>
-        protected virtual void Initialize() { }
+        protected virtual void OnBeforeClientConnectedToServer() { }
 
         /// <summary>
-        /// Fired when connection of this module is changed
-        /// </summary>
-        /// <param name="socket"></param>
-        protected virtual void OnConnectionSocketChanged(IClientSocket socket)
-        {
-            socket.AddConnectionListener(ConnectedToServer);
-            socket.OnStatusChangedEvent += OnConnectionStatusChanged;
-        }
-
-        /// <summary>
-        /// Fired each time the connection status was changed
-        /// </summary>
-        /// <param name="status"></param>
-        protected virtual void OnConnectionStatusChanged(ConnectionStatus status) { }
-
-        /// <summary>
-        /// Fired when this module successfully connected to server
+        /// Fires when this module successfully connected to server
         /// </summary>
         protected virtual void OnClientConnectedToServer() { }
 
         /// <summary>
-        /// Fired when this module disconnected from server
+        /// Fires when this module disconnected from server
         /// </summary>
         protected virtual void OnClientDisconnectedFromServer() { }
+
+        /// <summary>
+        /// Fires when connection of this module is changing
+        /// </summary>
+        /// <param name="socket"></param>
+        protected virtual void OnConnectionSocketChanged(IClientSocket socket) { }
+
+        /// <summary>
+        /// Fires each time the connection status is changing
+        /// </summary>
+        /// <param name="status"></param>
+        protected virtual void OnConnectionStatusChanged(ConnectionStatus status) { }
     }
 }

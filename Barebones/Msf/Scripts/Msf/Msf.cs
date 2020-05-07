@@ -12,7 +12,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Version of the framework
         /// </summary>
-        public static string Version => "v3.3.1";
+        public static string Version => "v3.4.1";
 
         /// <summary>
         /// Just name of the framework
@@ -77,8 +77,13 @@ namespace Barebones.MasterServer
         /// </summary>
         public static MsfArgs Args { get; private set; }
 
+        public static DictionaryOptions Options { get; private set; }
+
         static Msf()
         {
+            // Initialize helpers to work with MSF
+            Helper = new MsfHelper();
+
             // Initialize advanced settings
             Advanced = new MsfAdvancedSettings();
 
@@ -88,8 +93,8 @@ namespace Barebones.MasterServer
             // Initialize work with command line arguments
             Args = new MsfArgs();
 
-            // Initialize helpers to work with MSF
-            Helper = new MsfHelper();
+            // List of options you can use in game
+            Options = new DictionaryOptions();
 
             // Create a default connection
             Connection = Advanced.ClientSocketFactory();

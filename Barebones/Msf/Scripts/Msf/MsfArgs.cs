@@ -20,7 +20,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// If true, client will try to connect to master at start
         /// </summary>
-        public bool AutoConnectClient { get; private set; }
+        public bool StartClientConnection { get; private set; }
 
         /// <summary>
         /// Ip address to the master server
@@ -31,6 +31,16 @@ namespace Barebones.MasterServer
         /// Port, which will be open on the master server
         /// </summary>
         public int MasterPort { get; private set; }
+
+        /// <summary>
+        /// Room name
+        /// </summary>
+        public string RoomName { get; private set; }
+
+        /// <summary>
+        /// Set room as private or public
+        /// </summary>
+        public bool RoomIsPrivate { get; private set; }
 
         /// <summary>
         /// Public ip of the machine, on which the process is running
@@ -56,6 +66,11 @@ namespace Barebones.MasterServer
         /// Region, to which the spawner belongs
         /// </summary>
         public string RoomRegion { get; private set; }
+
+        /// <summary>
+        /// Password of the room
+        /// </summary>
+        public string RoomPassword { get; private set; }
 
         /// <summary>
         /// If true, some of the Ui game objects will be destroyed.
@@ -121,17 +136,20 @@ namespace Barebones.MasterServer
 
             StartMaster = IsProvided(Names.StartMaster);
             StartSpawner = IsProvided(Names.StartSpawner);
-            AutoConnectClient = IsProvided(Names.StartClientConnection);
+            StartClientConnection = IsProvided(Names.StartClientConnection);
             DestroyUi = IsProvided(Names.DestroyUi);
 
             MasterPort = ExtractValueInt(Names.MasterPort, 5000);
             MasterIp = ExtractValue(Names.MasterIp, "127.0.0.1");
 
+            RoomName = ExtractValue(Names.RoomName, "Room_" + Msf.Helper.CreateRandomString(5));
             RoomIp = ExtractValue(Names.RoomIp, "127.0.0.1");
             RoomPort = ExtractValueInt(Names.RoomPort, 7777);
             RoomExecutablePath = ExtractValue(Names.RoomExecutablePath);
-            RoomRegion = ExtractValue(Names.RoomRegion, "International");
-            RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 1000);
+            RoomRegion = ExtractValue(Names.RoomRegion, string.Empty);
+            RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 10);
+            RoomIsPrivate = !IsProvided(Names.RoomIsPrivate);
+            RoomPassword = ExtractValue(Names.RoomPassword, string.Empty);
 
             SpawnTaskId = ExtractValueInt(Names.SpawnTaskId, -1);
             SpawnTaskUniqueCode = ExtractValue(Names.SpawnTaskUniqueCode);

@@ -49,7 +49,13 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            return $"MachineIp: {MachineIp}, MaxProcesses: {MaxProcesses}, Region: {Region}, Properties: {CustomOptions.ToDictionary().ToReadableString(", ", ": ")}";
+            var options = new DictionaryOptions();
+            options.Add("MachineIp", MachineIp);
+            options.Add("MaxProcesses", MaxProcesses);
+            options.Add("Region", string.IsNullOrEmpty(Region) ? "International" : Region);
+            options.Append(CustomOptions);
+
+            return options.ToReadableString();
         }
     }
 }

@@ -192,6 +192,13 @@ namespace Barebones.MasterServer
             processArguments.Set(Msf.Args.Names.RoomRegion, $"\"{SpawnSettings.Region}\"");
 
             /************************************************************************/
+            // Room Max Connections
+            if (data.Options.Has(MsfDictKeys.maxPlayers))
+            {
+                processArguments.Set(Msf.Args.Names.RoomMaxConnections, data.Options.AsString(MsfDictKeys.maxPlayers));
+            }
+
+            /************************************************************************/
             // Machine Ip
             processArguments.Set(Msf.Args.Names.RoomIp, SpawnSettings.MachineIp);
 

@@ -13,7 +13,7 @@
         public string StartSpawner { get { return "-msfStartSpawner"; } }
 
         /// <summary>
-        /// Use this cmd to start client connection to master server after unity player is started
+        /// Use this cmd to start client connection to server after unity player is started
         /// </summary>
         public string StartClientConnection { get { return "-msfStartClientConnection"; } }
 

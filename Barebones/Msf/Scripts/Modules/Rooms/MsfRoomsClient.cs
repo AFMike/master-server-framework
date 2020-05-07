@@ -33,48 +33,55 @@ namespace Barebones.MasterServer
         /// <param name="callback"></param>
         public void GetAccess(int roomId, RoomAccessCallback callback)
         {
-            GetAccess(roomId, callback, "", new Dictionary<string, string>(), Connection);
+            GetAccess(roomId, "", new DictionaryOptions(), callback, Connection);
         }
 
         /// <summary>
-        /// Tries to get an access to a room with a given room id and password
+        /// Try to get an access to a room with a given room id and password
         /// </summary>
+        /// <param name="roomId"></param>
+        /// <param name="password"></param>
+        /// <param name="callback"></param>
         public void GetAccess(int roomId, string password, RoomAccessCallback callback)
         {
-            GetAccess(roomId, callback, password, new Dictionary<string, string>(), Connection);
+            GetAccess(roomId, password, new DictionaryOptions(), callback, Connection);
         }
 
         /// <summary>
-        /// Tries to get an access to a room with a given room id and password
+        /// Tries to get an access to a room with a given room id
+        /// and some other <paramref name="customOptions"/>, which will be visible to the room (game server)
         /// </summary>
-        public void GetAccess(int roomId, RoomAccessCallback callback, string password)
+        /// <param name="roomId"></param>
+        /// <param name="callback"></param>
+        /// <param name="customOptions"></param>
+        public void GetAccess(int roomId, RoomAccessCallback callback, DictionaryOptions customOptions)
         {
-            GetAccess(roomId, callback, password, new Dictionary<string, string>(), Connection);
+            GetAccess(roomId, "", customOptions, callback, Connection);
         }
 
         /// <summary>
         /// Tries to get an access to a room with a given room id, password,
-        /// and some other properties, which will be visible to the room (game server)
+        /// and some other <paramref name="customOptions"/>, which will be visible to the room (game server)
         /// </summary>
-        public void GetAccess(int roomId, RoomAccessCallback callback, Dictionary<string, string> properties)
+        /// <param name="roomId"></param>
+        /// <param name="callback"></param>
+        /// <param name="password"></param>
+        /// <param name="customOptions"></param>
+        public void GetAccess(int roomId, string password, DictionaryOptions customOptions, RoomAccessCallback callback)
         {
-            GetAccess(roomId, callback, "", properties, Connection);
+            GetAccess(roomId, password, customOptions, callback, Connection);
         }
 
         /// <summary>
         /// Tries to get an access to a room with a given room id, password,
-        /// and some other properties, which will be visible to the room (game server)
+        /// and some other <paramref name="customOptions"/>, which will be visible to the room (game server)
         /// </summary>
-        public void GetAccess(int roomId, RoomAccessCallback callback, string password, Dictionary<string, string> properties)
-        {
-            GetAccess(roomId, callback, password, properties, Connection);
-        }
-
-        /// <summary>
-        /// Tries to get an access to a room with a given room id, password,
-        /// and some other properties, which will be visible to the room (game server)
-        /// </summary>
-        public void GetAccess(int roomId, RoomAccessCallback callback, string password, Dictionary<string, string> properties, IClientSocket connection)
+        /// <param name="roomId"></param>
+        /// <param name="password"></param>
+        /// <param name="customOptions"></param>
+        /// <param name="callback"></param>
+        /// <param name="connection"></param>
+        public void GetAccess(int roomId, string password, DictionaryOptions customOptions, RoomAccessCallback callback, IClientSocket connection)
         {
             if (!connection.IsConnected)
             {
@@ -82,14 +89,14 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            var packet = new RoomAccessRequestPacket()
+            var roomAccessRequestPacket = new RoomAccessRequestPacket()
             {
                 RoomId = roomId,
-                Properties = properties,
+                CustomOptions = customOptions,
                 Password = password
             };
 
-            connection.SendMessage((short)MsfMessageCodes.GetRoomAccessRequest, packet, (status, response) =>
+            connection.SendMessage((short)MsfMessageCodes.GetRoomAccessRequest, roomAccessRequestPacket, (status, response) =>
             {
                 if (status != ResponseStatus.Success)
                 {

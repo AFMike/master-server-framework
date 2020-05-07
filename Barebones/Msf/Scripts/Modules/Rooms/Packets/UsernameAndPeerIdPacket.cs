@@ -21,7 +21,11 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            return string.Format("[Username: {0}, Peer ID: {1}]", Username, PeerId);
+            var options = new DictionaryOptions();
+            options.Add("Username", Username);
+            options.Add("PeerId", PeerId);
+
+            return options.ToReadableString();
         }
     }
 }

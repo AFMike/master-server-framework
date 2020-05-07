@@ -34,7 +34,15 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            return $"[RoomAccessPacket| PublicAddress: {RoomIp}:{RoomPort}, RoomId: {RoomId}, Token: {Token}, Properties: {CustomOptions.ToReadableString()}]";
+            var options = new DictionaryOptions();
+            options.Add("RoomIp", RoomIp);
+            options.Add("RoomPort", RoomPort);
+            options.Add("RoomId", RoomId);
+            options.Add("Token", Token);
+            options.Add("SceneName", SceneName);
+            options.Append(CustomOptions);
+
+            return $"[Room Access Info: {options.ToReadableString()}]";
         }
     }
 }

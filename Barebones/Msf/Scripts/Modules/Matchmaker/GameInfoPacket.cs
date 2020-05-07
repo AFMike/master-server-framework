@@ -58,7 +58,20 @@ namespace Barebones.MasterServer
 
         public override string ToString()
         {
-            return $"[GameInfo: id: {Id}, address: {Address}, players: {OnlinePlayers}/{MaxPlayers}, type: {Type}], password: {IsPasswordProtected}, region: {Region}, customOptions : [{CustomOptions.ToReadableString(", ")}]";
+            string maxPleyers = MaxPlayers <= 0 ? "Unlimited" : MaxPlayers.ToString();
+
+            var options = new DictionaryOptions();
+            options.Add("Id", Id);
+            options.Add("Address", Address);
+            options.Add("Type", Type.ToString());
+            options.Add("Name", Name);
+            options.Add("Region", string.IsNullOrEmpty(Region) ? "International" : Region);
+            options.Add("IsPasswordProtected", IsPasswordProtected);
+            options.Add("MaxPlayers", maxPleyers);
+            options.Add("OnlinePlayers", $"{OnlinePlayers}/{maxPleyers}");
+            options.Append(CustomOptions);
+
+            return $"[GameInfo: {options.ToReadableString()}]";
         }
     }
 }

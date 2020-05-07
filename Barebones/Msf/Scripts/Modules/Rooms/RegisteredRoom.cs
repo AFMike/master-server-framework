@@ -28,7 +28,7 @@ namespace Barebones.MasterServer
         private Dictionary<int, IPeer> connectedPlayers;
 
         /// <summary>
-        /// 
+        /// The number of requests that are waiting for access token from room the player wants to be connected
         /// </summary>
         private HashSet<int> requestsInProgress;
 
@@ -100,14 +100,17 @@ namespace Barebones.MasterServer
         /// <param name="callback"></param>
         public void GetAccess(IPeer peer, GetAccessCallback callback)
         {
-            GetAccess(peer, new Dictionary<string, string>(), callback);
+            GetAccess(peer, new DictionaryOptions(), callback);
         }
 
         /// <summary>
         /// Sends a request to room, to retrieve an access to it for a specified peer, 
-        /// with some extra properties
+        /// with some extra options
         /// </summary>
-        public void GetAccess(IPeer peer, Dictionary<string, string> properties, GetAccessCallback callback)
+        /// <param name="peer"></param>
+        /// <param name="customOptions"></param>
+        /// <param name="callback"></param>
+        public void GetAccess(IPeer peer, DictionaryOptions customOptions, GetAccessCallback callback)
         {
             // If request is already pending
             if (requestsInProgress.Contains(peer.Id))
@@ -138,9 +141,7 @@ namespace Barebones.MasterServer
             // If there's a player limit
             if (Options.MaxConnections != 0)
             {
-                var playerSlotsTaken = requestsInProgress.Count
-                                       + accessesInUse.Count
-                                       + unconfirmedAccesses.Count;
+                var playerSlotsTaken = requestsInProgress.Count + accessesInUse.Count + unconfirmedAccesses.Count;
 
                 if (playerSlotsTaken >= Options.MaxConnections)
                 {
@@ -149,25 +150,29 @@ namespace Barebones.MasterServer
                 }
             }
 
-            var packet = new RoomAccessProvideCheckPacket()
+            // Create packet to request checking of access
+            var provideRoomAccessCheckPacket = new ProvideRoomAccessCheckPacket()
             {
                 PeerId = peer.Id,
-                RoomId = RoomId
+                RoomId = RoomId,
+                CustomOptions = customOptions
             };
 
-            // Add the username if available
-            var userExt = peer.GetExtension<IUserPeerExtension>();
-            if (userExt != null && !string.IsNullOrEmpty(userExt.Username))
+            // Try to find out if requester is logged in add the username if available
+            // Simetimes we want to check if user is banned
+            var userPeerExtension = peer.GetExtension<IUserPeerExtension>();
+            if (userPeerExtension != null && !string.IsNullOrEmpty(userPeerExtension.Username))
             {
-                packet.Username = userExt.Username;
+                provideRoomAccessCheckPacket.Username = userPeerExtension.Username;
             }
 
-            // Add to pending list
+            // Add requester peer id to pending list to prevent new access request to this room
             requestsInProgress.Add(peer.Id);
 
-            Peer.SendMessage((short)MsfMessageCodes.ProvideRoomAccessCheck, packet, (status, response) =>
+            // Send request to owner of the room to get access token
+            Peer.SendMessage((short)MsfMessageCodes.ProvideRoomAccessCheck, provideRoomAccessCheckPacket, (status, response) =>
             {
-                // Remove from pending list
+                // Remove requester peer id from pending list
                 requestsInProgress.Remove(peer.Id);
 
                 if (status != ResponseStatus.Success)
@@ -176,8 +181,10 @@ namespace Barebones.MasterServer
                     return;
                 }
 
+                // Parse access data from message
                 var accessData = response.Deserialize(new RoomAccessPacket());
 
+                // Create new access info
                 var access = new RoomAccessData()
                 {
                     Access = accessData,
@@ -185,7 +192,7 @@ namespace Barebones.MasterServer
                     Timeout = DateTime.Now.AddSeconds(Options.AccessTimeoutPeriod)
                 };
 
-                // Save the access
+                // Save the access info to list and wait for confirmation
                 unconfirmedAccesses[access.Access.Token] = access;
 
                 callback.Invoke(access.Access, null);

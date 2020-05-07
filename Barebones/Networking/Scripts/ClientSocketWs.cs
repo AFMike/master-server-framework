@@ -93,9 +93,6 @@ namespace Barebones.Networking
 
         public void AddConnectionListener(Action callback, bool invokeInstantlyIfConnected = true)
         {
-            // Remove copy of the callback method to prevent double invocation
-            OnConnectedEvent -= callback;
-
             // Asign callback method again
             OnConnectedEvent += callback;
 

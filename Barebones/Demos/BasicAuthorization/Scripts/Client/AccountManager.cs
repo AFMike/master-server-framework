@@ -35,7 +35,7 @@ namespace Barebones.MasterServer.Examples
         public UnityEvent OnEmailConfirmedEvent;
         public UnityEvent OnPasswordChangedEvent;
 
-        protected override void Initialize()
+        protected override void OnBeforeClientConnectedToServer()
         {
             signinView = ViewsManager.GetView<SignInView>("SigninView");
             signupView = ViewsManager.GetView<SignUpView>("SignupView");
@@ -220,7 +220,7 @@ namespace Barebones.MasterServer.Examples
             OnSignedOutEvent?.Invoke();
             Msf.Client.Auth.SignOut(true);
             ViewsManager.HideAllViews();
-            Initialize();
+            OnBeforeClientConnectedToServer();
         }
 
         public void Quit()
@@ -374,7 +374,7 @@ namespace Barebones.MasterServer.Examples
                 () =>
                 {
                     ViewsManager.HideAllViews();
-                    Initialize();
+                    OnBeforeClientConnectedToServer();
                     ClientToMasterConnector.Instance.StartConnection();
                 }));
         }
