@@ -12,7 +12,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Version of the framework
         /// </summary>
-        public static string Version => "v3.4.1";
+        public static string Version => "v3.5.0";
 
         /// <summary>
         /// Just name of the framework

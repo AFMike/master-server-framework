@@ -224,7 +224,7 @@ namespace Barebones.MasterServer
         {
             if (!connection.IsConnected)
             {
-                callback.Invoke(false, null);
+                callback.Invoke(false, "Not connected");
                 return;
             }
 

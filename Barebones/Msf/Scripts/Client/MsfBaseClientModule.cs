@@ -45,8 +45,8 @@ namespace Barebones.MasterServer
 
         protected virtual void Start()
         {
-            OnBeforeClientConnectedToServer();
             ChangeConnection(ConnectionFactory());
+            OnBeforeClientConnectedToServer();
         }
 
         protected virtual void OnDestroy()
@@ -139,7 +139,7 @@ namespace Barebones.MasterServer
 
             Connection.OnStatusChangedEvent += OnConnectionStatusChanged;
             OnConnectionSocketChanged(Connection);
-            Connection.AddConnectionListener(OnClientConnectedToServer);
+            Connection.AddConnectionListener(OnClientConnectedToServer, false);
             Connection.AddDisconnectionListener(OnClientDisconnectedFromServer, false);
         }
 

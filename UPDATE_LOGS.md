@@ -1,5 +1,29 @@
 ## Updates Log
 
+### Msf 3.5.0
+
+**Mirror official support is integrated**
+
+- MirrorRoomManager - controls the room server and client
+- MirrorRoomServer - controls all the logic of mirror room server side
+- MirrorRoomClient - controls all the logic of mirror room client side
+- MirrorRoomPlayer - is a holder of mirror room player info
+
+**Added Async methods to IAccountsDatabaseAccessor**
+
+- void GetAccountByUsernameAsync(string username, GetAccountCallback callback)
+- void GetAccountByTokenAsync(string token, GetAccountCallback callback)
+- void GetAccountByEmailAsync(string email, GetAccountCallback callback)
+- void SavePasswordResetCodeAsync(IAccountInfoData account, string code, Action<string> callback)
+- void GetPasswordResetDataAsync(string email, GetPasswordResetCallback callback)
+- void SaveEmailConfirmationCodeAsync(string email, string code, Action<string> callback)
+- void GetEmailConfirmationCodeAsync(string email, GetEmailConfirmationCodeCallback callback)
+- void UpdateAccountAsync(IAccountInfoData account, Action<string> callback)
+- void InsertNewAccountAsync(IAccountInfoData account, Action<string> callback)
+- void InsertTokenAsync(IAccountInfoData account, string token, Action<string> callback)
+
+Fixed token saving issue. When guest client is authenticated an empty token is saving. There was no possibility to sign in again after you stop game.
+
 ### Msf 3.4.0 - 3.4.1
 
 - Spawning process is finished

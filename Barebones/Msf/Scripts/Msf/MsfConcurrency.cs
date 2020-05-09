@@ -36,7 +36,7 @@ namespace Barebones.MasterServer
 			{
 				// Apply the specified delay
 				if (delayOrSleep > 0)
-					Thread.Sleep(delayOrSleep);
+					Sleep(delayOrSleep);
 
 				// Call the requested method
 				expression.Invoke();

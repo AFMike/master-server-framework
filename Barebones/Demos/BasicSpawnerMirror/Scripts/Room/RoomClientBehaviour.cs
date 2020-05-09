@@ -390,7 +390,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
         /// Sets a room server ip address
         /// </summary>
         /// <param name="roomIp"></param>
-        private void SetIpAddress(string roomIp)
+        public void SetIpAddress(string roomIp)
         {
             NetworkManager.singleton.networkAddress = roomIp;
         }
@@ -399,7 +399,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
         /// Gets a room server ip address
         /// </summary>
         /// <param name="roomIp"></param>
-        private string GetIpAddress()
+        public string GetIpAddress()
         {
             return NetworkManager.singleton.networkAddress;
         }

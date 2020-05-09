@@ -7,8 +7,8 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 {
     public class ProfilesDatabaseAccessor : IProfilesDatabaseAccessor
     {
-        private readonly LiteCollection<ProfileInfoData> profiles;
-        private readonly LiteDatabase database;
+        private readonly ILiteCollection<ProfileInfoData> profiles;
+        private readonly ILiteDatabase database;
 
         public ProfilesDatabaseAccessor(LiteDatabase database)
         {

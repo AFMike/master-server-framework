@@ -1,4 +1,5 @@
 ﻿using Aevien.UI;
+using Barebones.Bridges.Mirror;
 using Barebones.Networking;
 using System;
 using System.Collections;
@@ -16,6 +17,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         protected override void OnBeforeClientConnectedToServer()
         {
+            DestroyUnwanted();
+
             // Set cliet mode
             Msf.Client.Rooms.ForceClientMode = true;
 
@@ -31,6 +34,20 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
                 Msf.Events.Invoke(EventKeys.showLoadingInfo, "Signing in... Please wait!");
             else
                 Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+
+            if (Connection.IsConnected)
+            {
+                OnClientConnectedToServer();
+            }
+            else
+            {
+                FindObjectOfType<ClientToMasterConnector>()?.StartConnection();
+            }
+        }
+
+        private void DestroyUnwanted()
+        {
+            FindObjectOfType<MirrorRoomManager>()?.Destroy();
         }
 
         protected override void OnClientConnectedToServer()

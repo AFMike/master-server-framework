@@ -51,7 +51,13 @@ namespace Barebones.MasterServer
         /// <returns></returns>
         public bool HasAuthToken()
         {
-            return PlayerPrefs.HasKey(AuthTokenKey());
+            if (PlayerPrefs.HasKey(AuthTokenKey()))
+            {
+                string key = PlayerPrefs.GetString(AuthTokenKey());
+                return !string.IsNullOrEmpty(key);
+            }
+
+            return false;
         }
 
         /// <summary>
