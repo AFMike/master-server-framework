@@ -81,7 +81,7 @@ namespace Barebones.MasterServer
         protected string serverIP = "127.0.0.1";
 
         [SerializeField, Tooltip("Port, to which server will listen to")]
-        protected int serverPort = 55000;
+        protected int serverPort = 5000;
 
         [Header("Editor Settings"), SerializeField]
         private HelpBox hpEditor = new HelpBox()

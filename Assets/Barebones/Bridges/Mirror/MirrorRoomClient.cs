@@ -372,7 +372,7 @@ namespace Barebones.Bridges.Mirror
         public virtual void CreatePlayer()
         {
             if (!ClientScene.ready) ClientScene.Ready(NetworkClient.connection);
-            ClientScene.AddPlayer();
+            ClientScene.AddPlayer(NetworkClient.connection);
         }
     }
 }

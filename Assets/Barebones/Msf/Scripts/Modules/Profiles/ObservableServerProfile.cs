@@ -23,6 +23,9 @@ namespace Barebones.MasterServer
         /// </summary>
         public bool ShouldBeSavedToDatabase { get; set; } = true;
 
+        /// <summary>
+        /// When profile modified in server
+        /// </summary>
         public event Action<ObservableServerProfile> OnModifiedInServerEvent;
         public event Action<ObservableServerProfile> OnDisposedEvent;
 
@@ -40,11 +43,7 @@ namespace Barebones.MasterServer
         protected override void OnDirtyProperty(IObservableProperty property)
         {
             base.OnDirtyProperty(property);
-
-            if (OnModifiedInServerEvent != null)
-            {
-                OnModifiedInServerEvent.Invoke(this);
-            }
+            OnModifiedInServerEvent?.Invoke(this);
         }
 
         protected void Dispose()
