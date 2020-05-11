@@ -5,23 +5,27 @@ using System.Collections.Generic;
 
 namespace Barebones.Client.Utilities
 {
-    public static class ClientAuthTerminalCommands
+    public class ClientAuthTerminalCommands : MsfBaseClientModule
     {
-        //[RegisterCommand(Name = "client.auth.signinasguest", Help = "Sign up as guest client. No credentials required", MaxArgCount = 0)]
-        //static void ClientAuthSignInAsGuest(CommandArg[] args)
-        //{
-        //    Msf.Client.Auth.SignInAsGuest((accountInfo, error) =>
-        //    {
-        //        if (string.IsNullOrEmpty(error))
-        //        {
-        //            Logs.Info($"You have logged in as: {accountInfo.Username}");
-        //        }
-        //        else
-        //        {
-        //            Logs.Error($"An error occurred while logging in: {error}");
-        //        }
-        //    });
-        //}
+        protected override void OnBeforeClientConnectedToServer()
+        {
+            Terminal.Shell.AddCommand("auth.signinasguest", ClientAuthSignInAsGuest, 0, 0, "Sign up as guest client. No credentials required");
+        }
+
+        private void ClientAuthSignInAsGuest(CommandArg[] args)
+        {
+            Msf.Client.Auth.SignInAsGuest((accountInfo, error) =>
+            {
+                if (string.IsNullOrEmpty(error))
+                {
+                    Logs.Info($"You have logged in as: {accountInfo.Username}");
+                }
+                else
+                {
+                    Logs.Error($"An error occurred while logging in: {error}");
+                }
+            });
+        }
 
         //[RegisterCommand(Name = "client.auth.signin", Help = "Sign in as registered user. 1 Username, 2 Password", MinArgCount = 2, MaxArgCount = 2)]
         //static void ClientAuthSignIn(CommandArg[] args)

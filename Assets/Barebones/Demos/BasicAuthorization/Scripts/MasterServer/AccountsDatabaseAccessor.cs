@@ -87,8 +87,7 @@ namespace Barebones.MasterServer.Examples.BasicAuthorization
 
         public IAccountInfoData GetAccountByEmail(string email)
         {
-            var emailLower = email.ToLower();
-            return accounts.FindOne(Query.EQ("Email", emailLower));
+            return accounts.FindOne(i => i.Email == email.ToLower());
         }
 
         public async void GetAccountByEmailAsync(string email, GetAccountCallback callback)
@@ -112,7 +111,7 @@ namespace Barebones.MasterServer.Examples.BasicAuthorization
 
         public void SavePasswordResetCode(IAccountInfoData account, string code)
         {
-            resetCodes.DeleteMany(Query.EQ("Email", account.Email.ToLower()));
+            resetCodes.DeleteMany(i => i.Email == account.Email.ToLower());
             resetCodes.Insert(new PasswordResetData()
             {
                 Email = account.Email,
@@ -135,7 +134,7 @@ namespace Barebones.MasterServer.Examples.BasicAuthorization
 
         public IPasswordResetData GetPasswordResetData(string email)
         {
-            return resetCodes.FindOne(Query.EQ("Email", email.ToLower()));
+            return resetCodes.FindOne(i => i.Email == email.ToLower());
         }
 
         public async void GetPasswordResetDataAsync(string email, GetPasswordResetCallback callback)
@@ -159,7 +158,8 @@ namespace Barebones.MasterServer.Examples.BasicAuthorization
 
         public void SaveEmailConfirmationCode(string email, string code)
         {
-            emailConfirmationCodes.DeleteMany(Query.EQ("Email", email.ToLower()));
+            emailConfirmationCodes.DeleteMany(i => i.Email == email.ToLower());
+
             emailConfirmationCodes.Insert(new EmailConfirmationData()
             {
                 Code = code,
@@ -182,8 +182,8 @@ namespace Barebones.MasterServer.Examples.BasicAuthorization
 
         public string GetEmailConfirmationCode(string email)
         {
-            var entry = emailConfirmationCodes.FindOne(Query.EQ("Email", email));
-            return entry != null ? entry.Code : null;
+            var entry = emailConfirmationCodes.FindOne(i => i.Email == email);
+            return entry != null ? entry.Code : string.Empty;
         }
 
         public async void GetEmailConfirmationCodeAsync(string email, GetEmailConfirmationCodeCallback callback)

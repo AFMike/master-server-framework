@@ -1,5 +1,9 @@
 ## Updates Log
 
+### Msf 3.5.2
+
+- Another Bugs and errors fixed
+
 ### Msf 3.5.1
 
 - Bugs and errors fixed

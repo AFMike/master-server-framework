@@ -966,7 +966,7 @@ MonoBehaviour:
   timeoutInSeconds: 60
   mailFrom: yourgame@gmail.com
   senderDisplayName: Awesome Game
-  emailBodyTemplate: {fileID: 4900000, guid: 6397dd8c110436a4ea30b256b0493b84, type: 3}
+  emailBodyTemplate: {fileID: 0}
 --- !u!1001 &203920466
 PrefabInstance:
   m_ObjectHideFlags: 0
