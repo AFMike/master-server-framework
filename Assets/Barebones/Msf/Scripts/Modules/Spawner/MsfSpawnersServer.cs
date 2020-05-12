@@ -84,14 +84,14 @@ namespace Barebones.MasterServer
         /// <param name="callback"></param>
         public void FinalizeSpawnedProcess(int spawnId, CompleteSpawnedProcessCallback callback)
         {
-            FinalizeSpawnedProcess(spawnId, new Dictionary<string, string>(), callback, Connection);
+            FinalizeSpawnedProcess(spawnId, new DictionaryOptions(), callback, Connection);
         }
 
         /// <summary>
         /// This method should be called, when spawn process is finalized (finished spawning).
         /// For example, when spawned game server fully starts
         /// </summary>
-        public void FinalizeSpawnedProcess(int spawnId, Dictionary<string, string> finalizationData, CompleteSpawnedProcessCallback callback)
+        public void FinalizeSpawnedProcess(int spawnId, DictionaryOptions finalizationData, CompleteSpawnedProcessCallback callback)
         {
             FinalizeSpawnedProcess(spawnId, finalizationData, callback, Connection);
         }
@@ -100,7 +100,7 @@ namespace Barebones.MasterServer
         /// This method should be called, when spawn process is finalized (finished spawning).
         /// For example, when spawned game server fully starts
         /// </summary>
-        public void FinalizeSpawnedProcess(int spawnId, Dictionary<string, string> finalizationData, CompleteSpawnedProcessCallback callback, IClientSocket connection)
+        public void FinalizeSpawnedProcess(int spawnId, DictionaryOptions finalizationData, CompleteSpawnedProcessCallback callback, IClientSocket connection)
         {
             if (!connection.IsConnected)
             {
@@ -168,9 +168,8 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                var properties = new Dictionary<string, string>().FromBytes(response.AsBytes());
-
-                var process = new SpawnTaskController(spawnId, properties, connection);
+                var options = new DictionaryOptions(new Dictionary<string, string>().FromBytes(response.AsBytes()));
+                var process = new SpawnTaskController(spawnId, options, connection);
 
                 callback.Invoke(process, null);
             });

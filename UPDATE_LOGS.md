@@ -1,5 +1,11 @@
 ## Updates Log
 
+### Msf 3.5.3
+
+- When room is full client is disconnected by server, but stay the in the same scene. Now after disconnection client goes back to offline scene
+- Some changes in lobby
+- Another Bugs and errors fixed 
+
 ### Msf 3.5.2
 
 - Another Bugs and errors fixed

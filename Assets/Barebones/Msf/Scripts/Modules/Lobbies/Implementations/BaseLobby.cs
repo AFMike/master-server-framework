@@ -8,31 +8,140 @@ namespace Barebones.MasterServer
 {
     public class BaseLobby : ILobby
     {
+        /// <summary>
+        /// Current state of the lobby
+        /// </summary>
         private LobbyState _state;
+
+        /// <summary>
+        /// Status infoof the lobby
+        /// </summary>
         private string _statusText = "";
+
+        /// <summary>
+        /// 
+        /// </summary>
         private LobbyMember _gameMaster;
 
-        public event Action<LobbyMember> OnPlayerAddedEvent;
-        public event Action<LobbyMember> OnPlayerRemovedEvent;
-
-        public event Action<ILobby> OnDestroyedEvent;
-
-        public Logger Logger = Msf.Create.Logger(typeof(BaseLobby).Name);
-
+        /// <summary>
+        /// List of lobby members
+        /// </summary>
         protected Dictionary<string, LobbyMember> membersList;
-        protected Dictionary<int, LobbyMember> membersByPeerIdList;
-        protected DictionaryOptions propertiesList;
+
+        /// <summary>
+        /// Lobby teams list
+        /// </summary>
         protected Dictionary<string, LobbyTeam> teamsList;
+
+        /// <summary>
+        /// Lobby subscribers list
+        /// </summary>
         protected HashSet<IPeer> subscribersList;
 
-        protected List<LobbyPropertyData> Controls;
+        /// <summary>
+        /// Filtered list of lobby members by peer Id
+        /// </summary>
+        protected Dictionary<int, LobbyMember> membersByPeerIdList;
 
-        protected SpawnTask GameSpawnTask;
-        protected RegisteredRoom Room;
+        /// <summary>
+        /// Lobby properties
+        /// </summary>
+        protected DictionaryOptions propertiesList;
 
-        public BaseLobby(int lobbyId, IEnumerable<LobbyTeam> teams,
-            LobbiesModule module, LobbyConfig config)
+        /// <summary>
+        /// 
+        /// </summary>
+        protected List<LobbyPropertyData> controls;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected SpawnTask gameSpawnTask;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected RegisteredRoom lobbyRoom;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected LobbiesModule Module { get; private set; }
+
+        /// <summary>
+        /// When new player added to lobby
+        /// </summary>
+        public event Action<LobbyMember> OnPlayerAddedEvent;
+
+        /// <summary>
+        /// When one of the players removed from lobby
+        /// </summary>
+        public event Action<LobbyMember> OnPlayerRemovedEvent;
+
+        /// <summary>
+        /// When lobby is destroyed
+        /// </summary>
+        public event Action<ILobby> OnDestroyedEvent;
+
+        /// <summary>
+        /// Logger of the lobby
+        /// </summary>
+        public Logger Logger { get; protected set; }
+
+        /// <summary>
+        /// Id of the lobby
+        /// </summary>
+        public int Id { get; private set; }
+
+        /// <summary>
+        /// Name of the lobby 
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The number of players in lobby
+        /// </summary>
+        public int PlayerCount { get { return membersList.Count; } }
+
+        /// <summary>
+        /// Check if lobby is destroyed
+        /// </summary>
+        public bool IsDestroyed { get; private set; }
+
+        /// <summary>
+        /// Current lobbyconfig data
+        /// </summary>
+        public LobbyConfig Config { get; private set; }
+
+        /// <summary>
+        /// The allowed max number of players
+        /// </summary>
+        public int MaxPlayers { get; protected set; }
+
+        /// <summary>
+        /// The allowed min number of players
+        /// </summary>
+        public int MinPlayers { get; protected set; }
+
+        /// <summary>
+        /// Type of the lobby
+        /// </summary>
+        public string Type { get; set; }
+
+        /// <summary>
+        /// IP address of the game
+        /// </summary>
+        public string GameIp { get; protected set; }
+
+        /// <summary>
+        /// Port of the game
+        /// </summary>
+        public int GamePort { get; protected set; }
+
+        public BaseLobby(int lobbyId, IEnumerable<LobbyTeam> teams, LobbiesModule module, LobbyConfig config)
         {
+            Logger = Msf.Create.Logger(typeof(BaseLobby).Name);
+
             Id = lobbyId;
             Module = module;
             GameIp = "";
@@ -40,7 +149,7 @@ namespace Barebones.MasterServer
 
             Config = config;
 
-            Controls = new List<LobbyPropertyData>();
+            controls = new List<LobbyPropertyData>();
             membersList = new Dictionary<string, LobbyMember>();
             membersByPeerIdList = new Dictionary<int, LobbyMember>();
             propertiesList = new DictionaryOptions();
@@ -51,23 +160,9 @@ namespace Barebones.MasterServer
             MinPlayers = teamsList.Values.Sum(t => t.MinPlayers);
         }
 
-        public string Name { get; set; }
-        public int PlayerCount { get { return membersList.Count; } }
-
-        public int Id { get; private set; }
-        protected LobbiesModule Module { get; private set; }
-
-        public bool IsDestroyed { get; private set; }
-
-        public LobbyConfig Config { get; private set; }
-
-        public int MaxPlayers { get; protected set; }
-        public int MinPlayers { get; protected set; }
-
-        public string Type { get; set; }
-        public string GameIp { get; protected set; }
-        public int GamePort { get; protected set; }
-
+        /// <summary>
+        /// Get or set the state of the lobby
+        /// </summary>
         public LobbyState State
         {
             get
@@ -86,6 +181,9 @@ namespace Barebones.MasterServer
             }
         }
 
+        /// <summary>
+        /// Get or set the status info
+        /// </summary>
         public string StatusText
         {
             get { return _statusText; }
@@ -100,6 +198,9 @@ namespace Barebones.MasterServer
             }
         }
 
+        /// <summary>
+        /// Get or set the game master
+        /// </summary>
         protected LobbyMember GameMaster
         {
             get { return _gameMaster; }
@@ -115,6 +216,12 @@ namespace Barebones.MasterServer
             }
         }
 
+        /// <summary>
+        /// Add player to lobby
+        /// </summary>
+        /// <param name="playerExt"></param>
+        /// <param name="error"></param>
+        /// <returns></returns>
         public bool AddPlayer(LobbyUserPeerExtension playerExt, out string error)
         {
             error = null;
@@ -206,6 +313,10 @@ namespace Barebones.MasterServer
             return true;
         }
 
+        /// <summary>
+        /// Remove player from lobby
+        /// </summary>
+        /// <param name="playerExt"></param>
         public void RemovePlayer(LobbyUserPeerExtension playerExt)
         {
             var username = TryGetUsername(playerExt.Peer);
@@ -255,6 +366,13 @@ namespace Barebones.MasterServer
             }
         }
 
+        /// <summary>
+        /// Set the lobby property
+        /// </summary>
+        /// <param name="setter"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public virtual bool SetProperty(LobbyUserPeerExtension setter, string key, string value)
         {
             if (!Config.AllowPlayersChangeLobbyProperties)
@@ -276,6 +394,12 @@ namespace Barebones.MasterServer
             return SetProperty(key, value);
         }
 
+        /// <summary>
+        /// Set the lobby property
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool SetProperty(string key, string value)
         {
             propertiesList.Set(key, value);
@@ -284,7 +408,12 @@ namespace Barebones.MasterServer
             return true;
         }
 
-        public LobbyMember GetMember(LobbyUserPeerExtension playerExt)
+        /// <summary>
+        /// Get member of the lobby by extension
+        /// </summary>
+        /// <param name="playerExt"></param>
+        /// <returns></returns>
+        public LobbyMember GetMemberByExtension(LobbyUserPeerExtension playerExt)
         {
             LobbyMember member;
             membersByPeerIdList.TryGetValue(playerExt.Peer.Id, out member);
@@ -292,7 +421,12 @@ namespace Barebones.MasterServer
             return member;
         }
 
-        public LobbyMember GetMember(string username)
+        /// <summary>
+        /// Get member of the lobby by username
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public LobbyMember GetMemberByUsername(string username)
         {
             LobbyMember member;
             membersList.TryGetValue(username, out member);
@@ -300,6 +434,11 @@ namespace Barebones.MasterServer
             return member;
         }
 
+        /// <summary>
+        /// Get member of the lobby by peer id
+        /// </summary>
+        /// <param name="peerId"></param>
+        /// <returns></returns>
         public LobbyMember GetMemberByPeerId(int peerId)
         {
             LobbyMember member;
@@ -308,6 +447,13 @@ namespace Barebones.MasterServer
             return member;
         }
 
+        /// <summary>
+        /// Set a lobby player property
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool SetPlayerProperty(LobbyMember player, string key, string value)
         {
             // Invalid property
@@ -329,11 +475,20 @@ namespace Barebones.MasterServer
             return true;
         }
 
+        /// <summary>
+        /// Set a lobby player property
+        /// </summary>
+        /// <param name="properties"></param>
         public void SetLobbyProperties(Dictionary<string, string> properties)
         {
             propertiesList.Append(properties);
         }
 
+        /// <summary>
+        /// Set the lobby member state as ready
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="state"></param>
         public void SetReadyState(LobbyMember member, bool state)
         {
             if (!membersList.ContainsKey(member.Username))
@@ -354,7 +509,7 @@ namespace Barebones.MasterServer
         public void AddControl(LobbyPropertyData propertyData, string defaultValue)
         {
             SetProperty(propertyData.PropertyKey, defaultValue);
-            Controls.Add(propertyData);
+            controls.Add(propertyData);
         }
 
         public void AddControl(LobbyPropertyData propertyData)
@@ -367,7 +522,7 @@ namespace Barebones.MasterServer
             }
 
             SetProperty(propertyData.PropertyKey, defaultValue);
-            Controls.Add(propertyData);
+            controls.Add(propertyData);
         }
 
         public bool TryJoinTeam(string teamName, LobbyMember member)
@@ -517,10 +672,10 @@ namespace Barebones.MasterServer
                 RemovePlayer(member.Extension);
             }
 
-            if (GameSpawnTask != null)
+            if (gameSpawnTask != null)
             {
-                GameSpawnTask.OnStatusChangedEvent -= OnSpawnServerStatusChanged;
-                GameSpawnTask.KillSpawnedProcess();
+                gameSpawnTask.OnStatusChangedEvent -= OnSpawnServerStatusChanged;
+                gameSpawnTask.KillSpawnedProcess();
             }
 
             if (OnDestroyedEvent != null)
@@ -544,19 +699,19 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            if (GameSpawnTask == task)
+            if (gameSpawnTask == task)
             {
                 return;
             }
 
-            if (GameSpawnTask != null)
+            if (gameSpawnTask != null)
             {
                 // Unsubscribe from previous game
-                GameSpawnTask.OnStatusChangedEvent -= OnSpawnServerStatusChanged;
-                GameSpawnTask.Abort();
+                gameSpawnTask.OnStatusChangedEvent -= OnSpawnServerStatusChanged;
+                gameSpawnTask.Abort();
             }
 
-            GameSpawnTask = task;
+            gameSpawnTask = task;
 
             task.OnStatusChangedEvent += OnSpawnServerStatusChanged;
         }
@@ -597,21 +752,21 @@ namespace Barebones.MasterServer
 
         protected virtual void OnGameServerFinalized()
         {
-            if (GameSpawnTask.FinalizationPacket == null)
+            if (gameSpawnTask.FinalizationPacket == null)
             {
                 return;
             }
 
-            var data = GameSpawnTask.FinalizationPacket.FinalizationData;
+            var data = gameSpawnTask.FinalizationPacket.FinalizationData;
 
-            if (!data.ContainsKey(MsfDictKeys.roomId))
+            if (!data.Has(MsfDictKeys.roomId))
             {
                 BroadcastChatMessage("Game server finalized, but room ID cannot be found", true);
                 return;
             }
 
             // Get room id from finalization data
-            var roomId = int.Parse(data[MsfDictKeys.roomId]);
+            var roomId = data.AsInt(MsfDictKeys.roomId);
             var room = Module.RoomsModule.GetRoom(roomId);
 
             if (room == null)
@@ -619,7 +774,7 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            Room = room;
+            this.lobbyRoom = room;
 
             GameIp = room.Options.RoomIp;
             GamePort = room.Options.RoomPort;
@@ -633,9 +788,9 @@ namespace Barebones.MasterServer
 
             GameIp = "";
             GamePort = -1;
-            Room = null;
+            this.lobbyRoom = null;
 
-            GameSpawnTask = null;
+            gameSpawnTask = null;
 
             State = Config.PlayAgainEnabled ? LobbyState.Preparations : LobbyState.GameOver;
         }
@@ -659,7 +814,7 @@ namespace Barebones.MasterServer
                 Players = membersList.Values
                     .ToDictionary(m => m.Username, GenerateMemberData),
                 Teams = teamsList.Values.ToDictionary(t => t.Name, t => t.GenerateData()),
-                Controls = Controls,
+                Controls = controls,
                 LobbyState = State,
                 MaxPlayers = MaxPlayers,
                 EnableTeamSwitching = Config.EnableTeamSwitching,
@@ -683,7 +838,7 @@ namespace Barebones.MasterServer
                 Players = membersList.Values
                     .ToDictionary(m => m.Username, GenerateMemberData),
                 Teams = teamsList.Values.ToDictionary(t => t.Name, t => t.GenerateData()),
-                Controls = Controls,
+                Controls = controls,
                 LobbyState = State,
                 MaxPlayers = MaxPlayers,
                 EnableTeamSwitching = Config.EnableTeamSwitching,
@@ -712,7 +867,7 @@ namespace Barebones.MasterServer
 
         public void HandleGameAccessRequest(IIncommingMessage message)
         {
-            if (Room == null)
+            if (lobbyRoom == null)
             {
                 message.Respond("Game is not running", ResponseStatus.Failed);
                 return;
@@ -720,7 +875,7 @@ namespace Barebones.MasterServer
 
             var requestData = new DictionaryOptions(new Dictionary<string, string>().FromBytes(message.AsBytes()));
 
-            Room.GetAccess(message.Peer, requestData, (access, error) =>
+            lobbyRoom.GetAccess(message.Peer, requestData, (access, error) =>
             {
                 if (access == null)
                 {
@@ -735,7 +890,7 @@ namespace Barebones.MasterServer
 
         public virtual bool StartGameManually(LobbyUserPeerExtension user)
         {
-            var member = GetMember(user);
+            var member = GetMemberByExtension(user);
 
             if (!Config.EnableManualStart)
             {

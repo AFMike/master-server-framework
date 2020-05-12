@@ -274,7 +274,7 @@ namespace Barebones.MasterServer
 
             var properties = new Dictionary<string, string>().FromBytes(message.AsBytes());
 
-            var player = lobby.GetMember(lobbiesExt);
+            var player = lobby.GetMemberByExtension(lobbiesExt);
 
             foreach (var dataProperty in properties)
             {
@@ -304,7 +304,7 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            var member = lobby.GetMember(lobbiesExt);
+            var member = lobby.GetMemberByExtension(lobbiesExt);
 
             if (member == null)
             {
@@ -329,7 +329,7 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            var player = lobby.GetMember(lobbiesExt);
+            var player = lobby.GetMemberByExtension(lobbiesExt);
 
             if (player == null)
             {
@@ -351,7 +351,7 @@ namespace Barebones.MasterServer
             var lobbiesExt = GetOrCreateLobbiesExtension(message.Peer);
             var lobby = lobbiesExt.CurrentLobby;
 
-            var member = lobby.GetMember(lobbiesExt);
+            var member = lobby.GetMemberByExtension(lobbiesExt);
 
             // Invalid request
             if (member == null)

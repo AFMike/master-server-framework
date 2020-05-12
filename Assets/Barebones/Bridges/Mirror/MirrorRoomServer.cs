@@ -293,7 +293,13 @@ namespace Barebones.Bridges.Mirror
                 RegisterRoomServer(() =>
                 {
                     logger.Info("Finalizing registration task");
-                    taskController.FinalizeTask(new Dictionary<string, string>(), () =>
+
+                    // Create finalization options
+                    var options = new DictionaryOptions();
+                    options.Add(MsfDictKeys.roomId, CurrentRoomController.RoomId);
+
+                    // Send finilization request
+                    taskController.FinalizeTask(options, () =>
                     {
                         logger.Info("Ok!");
                         OnRoomServerRegisteredEvent?.Invoke();
@@ -305,7 +311,7 @@ namespace Barebones.Bridges.Mirror
         /// <summary>
         /// Start registering our room server
         /// </summary>
-        protected virtual void RegisterRoomServer(UnityAction successCallback = null)
+        protected virtual void RegisterRoomServer(Action successCallback = null)
         {
             Msf.Server.Rooms.RegisterRoom(roomOptions, (controller, error) =>
             {

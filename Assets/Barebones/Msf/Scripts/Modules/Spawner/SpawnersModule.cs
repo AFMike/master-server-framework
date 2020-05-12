@@ -441,6 +441,7 @@ namespace Barebones.MasterServer
         {
             var data = message.Deserialize(new RegisterSpawnedProcessPacket());
 
+            // Try get psawn task by ID
             if (!spawnTasksList.TryGetValue(data.SpawnId, out SpawnTask task))
             {
                 message.Respond("Invalid spawn task", ResponseStatus.Failed);
@@ -448,6 +449,7 @@ namespace Barebones.MasterServer
                 return;
             }
 
+            // Check spawn task unique code
             if (task.UniqueCode != data.SpawnCode)
             {
                 message.Respond("Unauthorized", ResponseStatus.Unauthorized);
@@ -455,10 +457,13 @@ namespace Barebones.MasterServer
                 return;
             }
 
+            // Set task as registered
             task.OnRegistered(message.Peer);
 
+            // Invoke event
             OnSpawnedProcessRegisteredEvent?.Invoke(task, message.Peer);
 
+            // Respon to requester
             message.Respond(task.Options.ToDictionary().ToBytes(), ResponseStatus.Success);
         }
 

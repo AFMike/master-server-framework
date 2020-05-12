@@ -12,22 +12,22 @@ namespace Barebones.MasterServer
         /// Type of the property. Should be useful if you're making controls
         /// for different types of inputs (radio buttons, drop downs, text fields and etc.)
         /// </summary>
-        public byte Type;
+        public byte Type { get; set; }
 
         /// <summary>
         /// Label of the property
         /// </summary>
-        public string Label = "";
+        public string Label { get; set; } = string.Empty;
 
         /// <summary>
         /// Key of the exact property
         /// </summary>
-        public string PropertyKey;
+        public string PropertyKey { get; set; }
 
         /// <summary>
         /// List of property options (useful for dropdowns)
         /// </summary>
-        public List<string> Options;
+        public List<string> Options { get; set; }
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {

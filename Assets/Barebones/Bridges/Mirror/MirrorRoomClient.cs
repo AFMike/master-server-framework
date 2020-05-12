@@ -50,14 +50,9 @@ namespace Barebones.Bridges.Mirror
         public event Action OnAccessDiniedEvent;
 
         /// <summary>
-        /// Fire when room server sends alert message to client
+        /// Fires when room server sends alert message to client
         /// </summary>
         public event Action<RoomAlertMessage> OnRoomAlertMessageEvent;
-
-        /// <summary>
-        /// Fires when client joined the room as player
-        /// </summary>
-        public event Action OnJoinedRoomEvent;
 
         /// <summary>
         /// Room manager
@@ -230,6 +225,10 @@ namespace Barebones.Bridges.Mirror
                 if (access == null)
                 {
                     logger.Error(error);
+
+                    // This will send us to offline scene if it is set
+                    RoomManager.StopClient();
+
                     return;
                 }
 

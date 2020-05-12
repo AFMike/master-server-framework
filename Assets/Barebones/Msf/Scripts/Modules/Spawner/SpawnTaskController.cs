@@ -9,26 +9,38 @@ namespace Barebones.MasterServer
     {
         private readonly IClientSocket _connection;
         public int SpawnId { get; private set; }
-        public Dictionary<string, string> Properties { get; private set; }
+        public DictionaryOptions CustomOptions { get; private set; }
 
-        public SpawnTaskController(int spawnId, Dictionary<string, string> properties, IClientSocket connection)
+        public SpawnTaskController(int spawnId, DictionaryOptions options, IClientSocket connection)
         {
             _connection = connection;
             SpawnId = spawnId;
-            Properties = properties;
+            CustomOptions = options;
         }
 
+        /// <summary>
+        /// Finalize spawn task
+        /// </summary>
         public void FinalizeTask()
         {
-            FinalizeTask(new Dictionary<string, string>(), () => { });
+            FinalizeTask(new DictionaryOptions());
         }
 
-        public void FinalizeTask(Dictionary<string, string> finalizationData)
+        /// <summary>
+        /// Finalize spawn task
+        /// </summary>
+        /// <param name="finalizationData"></param>
+        public void FinalizeTask(DictionaryOptions finalizationData)
         {
             FinalizeTask(finalizationData, () => { });
         }
 
-        public void FinalizeTask(Dictionary<string, string> finalizationData, Action callback)
+        /// <summary>
+        /// Finalize spawn task
+        /// </summary>
+        /// <param name="finalizationData"></param>
+        /// <param name="callback"></param>
+        public void FinalizeTask(DictionaryOptions finalizationData, Action callback)
         {
             Msf.Server.Spawners.FinalizeSpawnedProcess(SpawnId, finalizationData, (successful, error) =>
             {

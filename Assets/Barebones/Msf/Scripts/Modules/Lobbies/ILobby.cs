@@ -22,8 +22,8 @@ namespace Barebones.MasterServer
         bool SetProperty(LobbyUserPeerExtension setter, string key, string value);
         bool SetProperty(string key, string value);
 
-        LobbyMember GetMember(LobbyUserPeerExtension playerExt);
-        LobbyMember GetMember(string username);
+        LobbyMember GetMemberByExtension(LobbyUserPeerExtension playerExt);
+        LobbyMember GetMemberByUsername(string username);
         LobbyMember GetMemberByPeerId(int peerId);
 
         void SetReadyState(LobbyMember member, bool state);
