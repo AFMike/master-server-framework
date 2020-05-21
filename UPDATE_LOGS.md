@@ -1,5 +1,16 @@
 ## Updates Log
 
+### Msf 3.6.0
+
+- Demo scenes are fully remade
+- Deleted deprecated classes
+- Bug fixes
+
+**Mirror demos are coming! Stay tuned!!!**
+
+- Spawn rooms and use NetworkManager and NetworkRoomManager
+- Matchmaking system
+
 ### Msf 3.5.3
 
 - When room is full client is disconnected by server, but stay the in the same scene. Now after disconnection client goes back to offline scene
