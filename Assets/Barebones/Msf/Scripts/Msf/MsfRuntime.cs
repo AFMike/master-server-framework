@@ -4,11 +4,15 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        using System.Runtime.InteropServices;
+#endif
+
 namespace Barebones.MasterServer
 {
     public class MsfRuntime
     {
-        private string webGLQuitMessage = "You are in web browser window. The Quit command is not supported!";
+        private readonly string webGlQuitMessage = "You are in web browser window. The Quit command is not supported!";
 
         /// <summary>
         /// Check if we are in editor
@@ -45,8 +49,8 @@ namespace Barebones.MasterServer
 #elif !UNITY_EDITOR && !UNITY_WEBGL
             Application.Quit();
 #elif !UNITY_EDITOR && UNITY_WEBGL
-            MsfAlert(webGLQuitMessage);
-            Logs.Info(webGLQuitMessage);
+            MsfAlert(webGlQuitMessage);
+            Logs.Info(webGlQuitMessage);
 #endif
         }
 

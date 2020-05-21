@@ -77,8 +77,20 @@ TextureImporter:
   - first:
       213: 8705369088665539303
     second: msf_logo_small
+  - first:
+      213: 4640495241477865562
+    second: coins
+  - first:
+      213: -5207509682399473976
+    second: bronze_coins
+  - first:
+      213: 8675995047303388538
+    second: gold_coins
+  - first:
+      213: 9129354605046137251
+    second: silver_coins
   externalObjects: {}
-  serializedVersion: 10
+  serializedVersion: 11
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -132,6 +144,7 @@ TextureImporter:
   maxTextureSizeSet: 0
   compressionQualitySet: 0
   textureFormatSet: 0
+  applyGammaDecoding: 1
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
@@ -173,7 +186,7 @@ TextureImporter:
       name: bg_02
       rect:
         serializedVersion: 2
-        x: 11
+        x: 431
         y: 1192
         width: 50
         height: 50
@@ -194,8 +207,8 @@ TextureImporter:
       name: bg_03
       rect:
         serializedVersion: 2
-        x: 73
-        y: 1192
+        x: 431
+        y: 1130
         width: 50
         height: 50
       alignment: 0
@@ -215,8 +228,8 @@ TextureImporter:
       name: bg_04
       rect:
         serializedVersion: 2
-        x: 135
-        y: 1192
+        x: 493
+        y: 1081
         width: 50
         height: 50
       alignment: 0
@@ -236,8 +249,8 @@ TextureImporter:
       name: bg_05
       rect:
         serializedVersion: 2
-        x: 197
-        y: 1192
+        x: 431
+        y: 1068
         width: 50
         height: 50
       alignment: 0
@@ -257,8 +270,8 @@ TextureImporter:
       name: bg_06
       rect:
         serializedVersion: 2
-        x: 259
-        y: 1192
+        x: 555
+        y: 1081
         width: 50
         height: 50
       alignment: 0
@@ -275,11 +288,32 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: connection
+      name: bronze_coins
       rect:
         serializedVersion: 2
         x: 530
         y: 1143
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ce0c20d8853bb7b0800000000000000
+      internalID: -5207509682399473976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: connection
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 1152
         width: 128
         height: 128
       alignment: 0
@@ -341,8 +375,8 @@ TextureImporter:
       name: globe
       rect:
         serializedVersion: 2
-        x: 810
-        y: 1152
+        x: 11
+        y: 1114
         width: 128
         height: 128
       alignment: 0
@@ -354,6 +388,27 @@ TextureImporter:
       bones: []
       spriteID: 6f39069a32d17c5c0800000000000000
       internalID: -4195352488869587978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: gold_coins
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 1114
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7d11933783576870800000000000000
+      internalID: 8675995047303388538
       vertices: []
       indices: 
       edges: []
@@ -480,6 +535,27 @@ TextureImporter:
       bones: []
       spriteID: d725a830440eee1e0800000000000000
       internalID: -2166547787996835203
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: silver_coins
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 1114
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a10a56d4abf1be70800000000000000
+      internalID: 9129354605046137251
       vertices: []
       indices: 
       edges: []

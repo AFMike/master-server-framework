@@ -1,4 +1,5 @@
 ﻿using Aevien.UI;
+using Barebones.Games;
 using Barebones.Logging;
 using Barebones.Networking;
 using System;
@@ -22,17 +23,17 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         public void FindGames()
         {
-            Msf.Events.Invoke(EventKeys.showLoadingInfo, "Finding rooms... Please wait!");
+            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Finding rooms... Please wait!");
 
             MsfTimer.WaitForSeconds(1f, () =>
             {
                 Msf.Client.Matchmaker.FindGames((games) =>
                 {
-                    Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
 
                     if (games.Count == 0)
                     {
-                        Msf.Events.Invoke(EventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("No games found!"));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("No games found!"));
                         return;
                     }
 
@@ -79,7 +80,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
             ScenesLoader.LoadSceneByName("Room", (progressValue) =>
             {
-                Msf.Events.Invoke(EventKeys.showLoadingInfo, $"Loading scene {Mathf.RoundToInt(progressValue * 100f)}% ... Please wait!");
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Loading scene {Mathf.RoundToInt(progressValue * 100f)}% ... Please wait!");
             }, null);
         }
     }

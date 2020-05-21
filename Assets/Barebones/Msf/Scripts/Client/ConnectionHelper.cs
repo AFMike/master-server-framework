@@ -8,11 +8,9 @@ using UnityEngine.Events;
 
 namespace Barebones.MasterServer
 {
-    public abstract class ConnectionHelper : Singleton<ConnectionHelper>
+    public abstract class ConnectionHelper<T> : Singleton<T> where T : MonoBehaviour
     {
-        protected int currentAttemptToConnect = 0;
-        protected Logging.Logger logger;
-
+        #region INSPECTOR
         [SerializeField]
         protected HelpBox header = new HelpBox()
         {
@@ -37,16 +35,11 @@ namespace Barebones.MasterServer
         protected float timeToConnect = 0.5f;
         [SerializeField]
         protected int maxAttemptsToConnect = 5;
-
-        [Header("Editor Settings"), SerializeField]
-        private HelpBox roomServerInfo = new HelpBox()
-        {
-            Text = "Editor settings works only in editor",
-            Type = HelpBoxType.Info
-        };
+        [SerializeField]
+        protected float waitAndConnect = 0.2f;
 
         [Tooltip("If true, will try to connect on the Start()"), SerializeField]
-        protected bool autoStartInEditor = false;
+        protected bool connectOnStart = false;
 
         [Header("Events")]
         /// <summary>
@@ -58,6 +51,10 @@ namespace Barebones.MasterServer
         /// triggers when disconnected from server
         /// </summary>
         public UnityEvent OnDisconnectedEvent;
+        #endregion
+
+        protected int currentAttemptToConnect = 0;
+        protected Logging.Logger logger;
 
         /// <summary>
         /// Main connection to server
@@ -71,6 +68,9 @@ namespace Barebones.MasterServer
             logger = Msf.Create.Logger(typeof(ClientToMasterConnector).Name);
             logger.LogLevel = logLevel;
 
+            // Set connection if it is null
+            if (Connection == null) Connection = ConnectionFactory();
+
             // In case this object is not at the root level of hierarchy
             // move it there, so that it won't be destroyed
             if (transform.parent != null)
@@ -81,15 +81,25 @@ namespace Barebones.MasterServer
 
         protected virtual void OnValidate()
         {
-            if (maxAttemptsToConnect <= 0) maxAttemptsToConnect = 1;
+            if (maxAttemptsToConnect < 1) maxAttemptsToConnect = 1;
+            if (waitAndConnect < 0.2f) waitAndConnect = 0.2f;
         }
 
         protected virtual void Start()
         {
-            if (Msf.Runtime.IsEditor && autoStartInEditor)
+            if (connectOnStart)
             {
                 StartConnection();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IClientSocket ConnectionFactory()
+        {
+            return Msf.Client.Connection;
         }
 
         /// <summary>
@@ -137,9 +147,12 @@ namespace Barebones.MasterServer
             yield return new WaitForSeconds(0.2f);
 
             if (!Connection.IsConnected)
-                logger.Info($"Starting MSF Client... {Msf.Version}. Multithreading is: {(Msf.Runtime.SupportsThreads ? "On" : "Off")}");
-
+                logger.Info($"Starting MSF Connection Helper... {Msf.Version}. Multithreading is: {(Msf.Runtime.SupportsThreads ? "On" : "Off")}");
+            
+            Connection.RemoveConnectionListener(OnConnectedEventHandler);
+            Connection.RemoveDisconnectionListener(OnDisconnectedEventHandler);
             Connection.AddConnectionListener(OnConnectedEventHandler);
+            Connection.AddDisconnectionListener(OnDisconnectedEventHandler, false);
 
             while (true)
             {
@@ -191,32 +204,20 @@ namespace Barebones.MasterServer
         protected virtual void OnDisconnectedEventHandler()
         {
             logger.Info($"Disconnected from MSF server");
-
             timeToConnect = minTimeToConnect;
-
-            Connection.RemoveDisconnectionListener(OnDisconnectedEventHandler);
-
             OnDisconnectedEvent?.Invoke();
         }
 
         protected virtual void OnConnectedEventHandler()
         {
             logger.Info($"Connected to MSF server at: {serverIp}:{serverPort}");
-
             timeToConnect = minTimeToConnect;
-
-            Connection.RemoveConnectionListener(OnConnectedEventHandler);
-            Connection.AddDisconnectionListener(OnDisconnectedEventHandler);
-
             OnConnectedEvent?.Invoke();
         }
 
         protected virtual void OnApplicationQuit()
         {
-            if (Connection != null)
-            {
-                Connection.Disconnect();
-            }
+            Connection?.Disconnect();
         }
     }
 }

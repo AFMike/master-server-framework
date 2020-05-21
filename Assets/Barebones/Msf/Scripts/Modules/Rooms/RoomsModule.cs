@@ -87,7 +87,7 @@ namespace Barebones.MasterServer
         /// <param name="peer"></param>
         private void OnRegisteredPeerDisconnect(IPeer peer)
         {
-            Dictionary<int, RegisteredRoom> peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
+            Dictionary<int, RegisteredRoom> peerRooms = peer.GetProperty((int)MsfPeerPropertyCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
 
             if (peerRooms == null)
             {
@@ -124,7 +124,7 @@ namespace Barebones.MasterServer
         {
             // Create the object
             var room = new RegisteredRoom(GenerateRoomId(), peer, options);
-            var peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
+            var peerRooms = peer.GetProperty((int)MsfPeerPropertyCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
 
             if (peerRooms == null)
             {
@@ -132,7 +132,7 @@ namespace Barebones.MasterServer
 
                 // Save the dictionary
                 peerRooms = new Dictionary<int, RegisteredRoom>();
-                peer.SetProperty((int)MsfPropCodes.RegisteredRooms, peerRooms);
+                peer.SetProperty((int)MsfPeerPropertyCodes.RegisteredRooms, peerRooms);
 
                 // Listen to disconnect event
                 peer.OnPeerDisconnectedEvent += OnRegisteredPeerDisconnect;
@@ -160,7 +160,7 @@ namespace Barebones.MasterServer
 
             if (peer != null)
             {
-                var peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
+                var peerRooms = peer.GetProperty((int)MsfPeerPropertyCodes.RegisteredRooms) as Dictionary<int, RegisteredRoom>;
 
                 // Remove the room from peer
                 if (peerRooms != null)

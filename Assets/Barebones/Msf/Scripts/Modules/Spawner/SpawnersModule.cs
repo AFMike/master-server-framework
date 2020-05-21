@@ -55,14 +55,14 @@ namespace Barebones.MasterServer
         {
             var spawner = new RegisteredSpawner(GenerateSpawnerId(), peer, options);
 
-            Dictionary<int, RegisteredSpawner> peerSpawners = peer.GetProperty((int)MsfPropCodes.RegisteredSpawners) as Dictionary<int, RegisteredSpawner>;
+            Dictionary<int, RegisteredSpawner> peerSpawners = peer.GetProperty((int)MsfPeerPropertyCodes.RegisteredSpawners) as Dictionary<int, RegisteredSpawner>;
 
             // If this is the first time registering a spawners
             if (peerSpawners == null)
             {
                 // Save the dictionary
                 peerSpawners = new Dictionary<int, RegisteredSpawner>();
-                peer.SetProperty((int)MsfPropCodes.RegisteredSpawners, peerSpawners);
+                peer.SetProperty((int)MsfPeerPropertyCodes.RegisteredSpawners, peerSpawners);
 
                 peer.OnPeerDisconnectedEvent += OnRegisteredPeerDisconnect;
             }
@@ -84,7 +84,7 @@ namespace Barebones.MasterServer
 
         private void OnRegisteredPeerDisconnect(IPeer peer)
         {
-            var peerSpawners = peer.GetProperty((int)MsfPropCodes.RegisteredSpawners) as Dictionary<int, RegisteredSpawner>;
+            var peerSpawners = peer.GetProperty((int)MsfPeerPropertyCodes.RegisteredSpawners) as Dictionary<int, RegisteredSpawner>;
 
             if (peerSpawners == null)
             {
@@ -106,7 +106,7 @@ namespace Barebones.MasterServer
 
             if (peer != null)
             {
-                var peerRooms = peer.GetProperty((int)MsfPropCodes.RegisteredSpawners) as Dictionary<int, RegisteredSpawner>;
+                var peerRooms = peer.GetProperty((int)MsfPeerPropertyCodes.RegisteredSpawners) as Dictionary<int, RegisteredSpawner>;
 
                 // Remove the spawner from peer
                 if (peerRooms != null)
@@ -312,7 +312,7 @@ namespace Barebones.MasterServer
             }
 
             // Try to find existing request to prevent new one
-            SpawnTask prevRequest = peer.GetProperty((int)MsfPropCodes.ClientSpawnRequest) as SpawnTask;
+            SpawnTask prevRequest = peer.GetProperty((int)MsfPeerPropertyCodes.ClientSpawnRequest) as SpawnTask;
 
             if (prevRequest != null && !prevRequest.IsDoneStartingProcess)
             {
@@ -337,7 +337,7 @@ namespace Barebones.MasterServer
             task.Requester = message.Peer;
 
             // Save the task as peer property
-            peer.SetProperty((int)MsfPropCodes.ClientSpawnRequest, task);
+            peer.SetProperty((int)MsfPeerPropertyCodes.ClientSpawnRequest, task);
 
             // Listen to status changes
             task.OnStatusChangedEvent += (status) =>
@@ -360,7 +360,7 @@ namespace Barebones.MasterServer
 
         private void AbortSpawnRequestHandler(IIncommingMessage message)
         {
-            var prevRequest = message.Peer.GetProperty((int)MsfPropCodes.ClientSpawnRequest) as SpawnTask;
+            var prevRequest = message.Peer.GetProperty((int)MsfPeerPropertyCodes.ClientSpawnRequest) as SpawnTask;
 
             if (prevRequest == null)
             {

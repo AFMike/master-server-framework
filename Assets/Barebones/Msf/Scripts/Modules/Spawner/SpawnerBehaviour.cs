@@ -9,15 +9,7 @@ namespace Barebones.MasterServer
 {
     public class SpawnerBehaviour : Singleton<SpawnerBehaviour>
     {
-        /// <summary>
-        /// Current spawner controller assigned to this behaviour
-        /// </summary>
-        protected ISpawnerController spawnerController;
-
-        /// <summary>
-        /// Just logger :)
-        /// </summary>
-        protected Logging.Logger logger;
+        #region INSPECTOR
 
         [SerializeField]
         private HelpBox headerEditor = new HelpBox()
@@ -72,10 +64,32 @@ namespace Barebones.MasterServer
         [SerializeField, Tooltip("Path to the executable to be spawned as server")]
         protected string exePathFromEditor = "C:/Please set your own path";
 
+        #endregion
+
+        /// <summary>
+        /// Current spawner controller assigned to this behaviour
+        /// </summary>
+        protected ISpawnerController spawnerController;
+
+        /// <summary>
+        /// Just logger :)
+        /// </summary>
+        protected Logging.Logger logger;
+
         /// <summary>
         /// Check if spawner is ready to create rooms/servers
         /// </summary>
         public bool IsSpawnerStarted { get; protected set; } = false;
+
+        /// <summary>
+        /// Check if spawner successfully registered
+        /// </summary>
+        public bool IsSpawnerRegistered => spawnerController != null;
+
+        /// <summary>
+        /// Invokes when this spawner is registered in Master server
+        /// </summary>
+        public Action OnSpawnerRegisteredEvent;
 
         protected override void Awake()
         {

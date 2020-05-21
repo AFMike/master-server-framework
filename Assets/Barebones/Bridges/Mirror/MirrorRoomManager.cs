@@ -11,7 +11,6 @@ using UnityEngine.Events;
 
 namespace Barebones.Bridges.Mirror
 {
-    [AddComponentMenu("Network/MSF/MirrorRoomManager")]
     public class MirrorRoomManager : NetworkManager
     {
         #region INSPECTOR

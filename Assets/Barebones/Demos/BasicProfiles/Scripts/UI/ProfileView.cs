@@ -105,7 +105,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
         {
             if (key == (short)ObservablePropertiyCodes.DisplayName)
             {
-                DisplayName = $"Name: {property.Serialize()}";
+                DisplayName = property.CastTo<ObservableString>().GetValue();
             }
             else if (key == (short)ObservablePropertiyCodes.Avatar)
             {
@@ -113,15 +113,15 @@ namespace Barebones.MasterServer.Examples.BasicProfile
             }
             else if (key == (short)ObservablePropertiyCodes.Bronze)
             {
-                Bronze = $"Bronze: {property.CastTo<ObservableFloat>().GetValue().ToString("F2")}";
+                Bronze = property.CastTo<ObservableFloat>().GetValue().ToString("F2");
             }
             else if (key == (short)ObservablePropertiyCodes.Silver)
             {
-                Silver = $"Silver: {property.CastTo<ObservableFloat>().GetValue().ToString("F2")}";
+                Silver = property.CastTo<ObservableFloat>().GetValue().ToString("F2");
             }
             else if (key == (short)ObservablePropertiyCodes.Gold)
             {
-                Gold = $"Gold: {property.CastTo<ObservableFloat>().GetValue().ToString("F2")}";
+                Gold = property.CastTo<ObservableFloat>().GetValue().ToString("F2");
             }
         }
 

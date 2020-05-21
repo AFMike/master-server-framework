@@ -1,4 +1,5 @@
 ﻿using Aevien.UI;
+using Barebones.Games;
 using Barebones.MasterServer.Examples.BasicProfile;
 using Barebones.Networking;
 using System;
@@ -9,7 +10,7 @@ using UnityEngine.Events;
 
 namespace Barebones.MasterServer.Examples.BasicProfile
 {
-    public class ProfilesManager : MsfBaseClientModule
+    public class ProfilesManager : BaseClientBehaviour
     {
         public ObservableProfile Profile { get; private set; }
 
@@ -20,7 +21,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
         public UnityEvent OnProfileLoadedEvent;
         public UnityEvent OnProfileSavedEvent;
 
-        protected override void OnBeforeClientConnectedToServer()
+        protected override void OnInitialize()
         {
             profileView = ViewsManager.GetView<ProfileView>("ProfileView");
             profileSettingsView = ViewsManager.GetView<ProfileSettingsView>("ProfileSettingsView");
@@ -53,7 +54,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 
         public void LoadProfile()
         {
-            Msf.Events.Invoke(EventKeys.showLoadingInfo, "Loading profile... Please wait!");
+            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Loading profile... Please wait!");
 
             MsfTimer.WaitForSeconds(1f, () =>
             {
@@ -61,12 +62,12 @@ namespace Barebones.MasterServer.Examples.BasicProfile
                 {
                     if (isSuccessful)
                     {
-                        Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+                        Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
                         OnProfileLoadedEvent?.Invoke();
                     }
                     else
                     {
-                        Msf.Events.Invoke(EventKeys.showOkDialogBox,
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox,
                             new OkDialogBoxViewEventMessage($"When requesting profile data an error occurred. [{error}]"));
                     }
                 });
@@ -75,7 +76,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 
         public void UpdateProfile()
         {
-            Msf.Events.Invoke(EventKeys.showLoadingInfo, "Saving profile data... Please wait!");
+            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Saving profile data... Please wait!");
 
             MsfTimer.WaitForSeconds(1f, () =>
             {
@@ -91,7 +92,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 
         private void OnSaveProfileResponseCallback(ResponseStatus status, IIncommingMessage response)
         {
-            Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+            Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
 
             if(status == ResponseStatus.Success)
             {
@@ -101,7 +102,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
             }
             else
             {
-                Msf.Events.Invoke(EventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(response.AsString()));
+                Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(response.AsString()));
                 logger.Error(response.AsString());
             }
         }

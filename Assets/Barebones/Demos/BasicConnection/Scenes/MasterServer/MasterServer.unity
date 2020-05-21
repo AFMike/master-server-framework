@@ -155,9 +155,9 @@ MonoBehaviour:
   permissions: []
   targetFrameRate: 60
   logLevel: 0
-  usePublicIp: 1
-  ip: 127.0.0.1
-  port: 5000
+  usePublicIp: 0
+  serverIP: 127.0.0.1
+  serverPort: 5000
   autoStartInEditor: 1
 --- !u!4 &70840830
 Transform:

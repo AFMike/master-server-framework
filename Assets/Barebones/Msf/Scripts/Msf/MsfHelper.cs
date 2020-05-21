@@ -1,4 +1,5 @@
 ﻿using Barebones.Networking;
+using CommandTerminal;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -38,7 +39,7 @@ namespace Barebones.MasterServer
         /// </summary>
         /// <param name="color"></param>
         /// <returns></returns>
-        public static string ColorToHex(Color32 color)
+        public string ColorToHex(Color32 color)
         {
             string hex = color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2") + color.a.ToString("X2");
             return hex;
@@ -49,7 +50,7 @@ namespace Barebones.MasterServer
         /// </summary>
         /// <param name="hex"></param>
         /// <returns></returns>
-        public static Color HexToColor(string hex)
+        public Color HexToColor(string hex)
         {
             byte r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
             byte g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
@@ -73,6 +74,24 @@ namespace Barebones.MasterServer
         public void GetPublicIp(Action<MsfIpInfo> callback)
         {
             MsfTimer.Instance.StartCoroutine(GetPublicIPCoroutine(callback));
+        }
+
+        /// <summary>
+        /// Join command terminal arguments to one string
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="from"></param>
+        /// <returns></returns>
+        public string JoinCommandArgs(CommandArg[] args, int from)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = from; i < args.Length; i++)
+            {
+                sb.Append($"{args[i].String.Trim()} ");
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>

@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Barebones.Bridges.Mirror
 {
-    public class MirrorRoomClient : MsfBaseClientModule
+    public class MirrorRoomClient : BaseClientBehaviour
     {
         #region INSPECTOR
 
@@ -25,7 +25,7 @@ namespace Barebones.Bridges.Mirror
         [SerializeField]
         private int masterPort = 5000;
 
-        [SerializeField]
+        [Header("Editor Settings"), SerializeField]
         protected bool autoStartInEditor = true;
 
         [SerializeField]
@@ -63,9 +63,6 @@ namespace Barebones.Bridges.Mirror
         {
             base.Awake();
 
-            logger = Msf.Create.Logger(GetType().Name);
-            logger.LogLevel = logLevel;
-
             // If master IP is provided via cmd arguments
             if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
             {
@@ -79,7 +76,7 @@ namespace Barebones.Bridges.Mirror
             }
         }
 
-        protected override void OnBeforeClientConnectedToServer()
+        protected override void OnInitialize()
         {
             NetworkClient.RegisterHandler<RoomAccessValidationResultMessage>(RoomAccessValidationResultMessageHandler, false);
             NetworkClient.RegisterHandler<RoomAlertMessage>(RoomAlertMessageHandler, false);

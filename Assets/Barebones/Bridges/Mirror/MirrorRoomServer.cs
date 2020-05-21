@@ -11,7 +11,7 @@ using UnityEngine.Events;
 
 namespace Barebones.Bridges.Mirror
 {
-    public class MirrorRoomServer : MsfBaseClientModule
+    public class MirrorRoomServer : BaseClientBehaviour
     {
         #region INSPECTOR
 
@@ -74,10 +74,6 @@ namespace Barebones.Bridges.Mirror
         {
             base.Awake();
 
-            // Init logger
-            logger = Msf.Create.Logger(GetType().Name);
-            logger.LogLevel = logLevel;
-
             // Create filtered lists of players
             roomPlayersByMsfPeerId = new Dictionary<int, MirrorRoomPlayer>();
             roomPlayersByMirrorPeerId = new Dictionary<int, MirrorRoomPlayer>();
@@ -96,7 +92,7 @@ namespace Barebones.Bridges.Mirror
             }
         }
 
-        protected override void OnBeforeClientConnectedToServer()
+        protected override void OnInitialize()
         {
             // Register handler to listen to client access validation request
             NetworkServer.RegisterHandler<ValidateRoomAccessRequestMessage>(ValidateRoomAccessRequestHandler, false);
@@ -196,7 +192,7 @@ namespace Barebones.Bridges.Mirror
         /// <summary>
         /// Fired when this room server is disconnected from master as client
         /// </summary>
-        protected override void OnClientDisconnectedFromServer()
+        protected virtual void OnClientDisconnectedFromMasterServer()
         {
             // Stop Mirror server
             RoomManager.StopServer();
@@ -337,8 +333,8 @@ namespace Barebones.Bridges.Mirror
         {
             if (Msf.Client.Rooms.ForceClientMode && !ignoreForceClientMode) return;
 
-            // Set connection of the room server
-            Connection = ConnectionFactory();
+            // Listen to disconnection from master
+            Connection.AddDisconnectionListener(OnClientDisconnectedFromMasterServer, false);
 
             // Set this connection to services we want to use
             Msf.Server.Rooms.ChangeConnection(Connection);

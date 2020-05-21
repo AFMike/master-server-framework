@@ -1,4 +1,5 @@
 ﻿using Barebones.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -77,6 +78,21 @@ namespace Barebones.MasterServer
                     {
                         sendMailExceptions.Add(args.Error);
                     }
+                }else if(args.Cancelled)
+                {
+                    lock (sendMailExceptions)
+                    {
+                        sendMailExceptions.Add(new Exception("Email sending cancelled!"));
+                    }
+                }
+                else
+                {
+                    logger.Info("It is OK!");
+
+                    //if(args.UserState != null)
+                    //{
+                    //    logger.Info(JsonConvert.SerializeObject(args.UserState));
+                    //}
                 }
             };
 
@@ -107,8 +123,7 @@ namespace Barebones.MasterServer
                 From = new MailAddress(mailFrom, senderDisplayName),
                 Subject = subject,
                 Body = messageBody,
-                IsBodyHtml = true,
-                Priority = MailPriority.High
+                IsBodyHtml = true
             };
 
             mailMessage.To.Add(to);

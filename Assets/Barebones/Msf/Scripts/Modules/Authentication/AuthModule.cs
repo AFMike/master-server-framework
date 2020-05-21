@@ -175,6 +175,8 @@ namespace Barebones.MasterServer
         /// <param name="peer"></param>
         private void OnUserDisconnectedEventListener(IPeer peer)
         {
+            peer.OnPeerDisconnectedEvent -= OnUserDisconnectedEventListener;
+
             var extension = peer.GetExtension<IUserPeerExtension>();
 
             if (extension == null)
@@ -183,9 +185,6 @@ namespace Barebones.MasterServer
             }
 
             LoggedInUsers.Remove(extension.Username.ToLower());
-
-            peer.OnPeerDisconnectedEvent -= OnUserDisconnectedEventListener;
-
             OnUserLoggedOutEvent?.Invoke(extension);
         }
 
@@ -572,17 +571,7 @@ namespace Barebones.MasterServer
 
                 if (userAccount == null)
                 {
-                    message.Respond("Invalid Credentials".ToBytes(), ResponseStatus.Unauthorized);
-                    return;
-                }
-
-                // Try to find other session of this peer
-                var otherSession = GetLoggedInUser(userAccount.Username);
-
-                if (otherSession != null)
-                {
-                    otherSession.Peer.Disconnect("Other user logged in");
-                    message.Respond("This account is already logged in".ToBytes(), ResponseStatus.Unauthorized);
+                    message.Respond("Your session token has expired".ToBytes(), ResponseStatus.Unauthorized);
                     return;
                 }
 
@@ -595,6 +584,14 @@ namespace Barebones.MasterServer
                         message.Respond("Your session token has expired".ToBytes(), ResponseStatus.Unauthorized);
                         return;
                     }
+                }
+
+                // If another session found
+                if (IsUserLoggedIn(userAccount.Username))
+                {
+                    // And respond to requester
+                    message.Respond("This account is already logged in".ToBytes(), ResponseStatus.Unauthorized);
+                    return;
                 }
 
                 userAccount.Properties["expires"] = DateTime.Now.AddDays(7).ToFileTime().ToString();
@@ -622,6 +619,14 @@ namespace Barebones.MasterServer
                 {
                     // Password is not correct
                     message.Respond("Invalid Credentials".ToBytes(), ResponseStatus.Unauthorized);
+                    return;
+                }
+
+                // If another session found
+                if (IsUserLoggedIn(userAccount.Username))
+                {
+                    // And respond to requester
+                    message.Respond("This account is already logged in".ToBytes(), ResponseStatus.Unauthorized);
                     return;
                 }
 

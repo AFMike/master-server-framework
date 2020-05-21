@@ -1,5 +1,6 @@
 ﻿using Aevien.UI;
 using Barebones.Bridges.Mirror;
+using Barebones.Games;
 using Barebones.Networking;
 using System;
 using System.Collections;
@@ -9,15 +10,21 @@ using UnityEngine.SceneManagement;
 
 namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 {
-    public class ClientManager : MsfBaseClientModule
+    public class ClientManager : BaseClientBehaviour
     {
+        [Header("Components"), SerializeField]
+        private ClientToMasterConnector clientToMasterConnector;
+
         private MainView mainView;
         private CreateNewRoomView createNewRoomView;
         private GamesListView gamesListView;
 
-        protected override void OnBeforeClientConnectedToServer()
+        protected override void OnInitialize()
         {
             DestroyUnwanted();
+
+            if (!clientToMasterConnector)
+                clientToMasterConnector = FindObjectOfType<ClientToMasterConnector>();
 
             // Set cliet mode
             Msf.Client.Rooms.ForceClientMode = true;
@@ -31,18 +38,16 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
             gamesListView = ViewsManager.GetView<GamesListView>("GamesListView");
 
             if (!Msf.Client.Auth.IsSignedIn)
-                Msf.Events.Invoke(EventKeys.showLoadingInfo, "Signing in... Please wait!");
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Signing in... Please wait!");
             else
-                Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+                Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
 
-            if (Connection.IsConnected)
+            if (!IsConnected)
             {
-                OnClientConnectedToServer();
+                clientToMasterConnector.StartConnection();
             }
-            else
-            {
-                FindObjectOfType<ClientToMasterConnector>()?.StartConnection();
-            }
+
+            Connection.AddConnectionListener(OnClientConnectedToMasterServer);
         }
 
         private void DestroyUnwanted()
@@ -50,7 +55,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
             FindObjectOfType<MirrorRoomManager>()?.Destroy();
         }
 
-        protected override void OnClientConnectedToServer()
+        protected void OnClientConnectedToMasterServer()
         {
             MsfTimer.WaitForSeconds(1f, () =>
             {
@@ -68,11 +73,11 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         private void OnSignedInAsGuest(AccountInfoPacket accountInfo, string error)
         {
-            Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+            Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
 
             if (accountInfo == null)
             {
-                Msf.Events.Invoke(EventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(error));
+                Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(error));
 
                 logger.Error(error);
                 return;
@@ -87,7 +92,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
         {
             createNewRoomView.Hide();
 
-            Msf.Events.Invoke(EventKeys.showLoadingInfo, "Starting room... Please wait!");
+            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Starting room... Please wait!");
 
             // Spawn options for spawner controller
             var spawnOptions = new DictionaryOptions();
@@ -101,25 +106,25 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
             Msf.Client.Spawners.RequestSpawn(spawnOptions, customSpawnOptions, createNewRoomView.RegionName, (controller, error) =>
             {
                 if (controller == null) {
-                    Msf.Events.Invoke(EventKeys.hideLoadingInfo);
-                    Msf.Events.Invoke(EventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(error, null));
+                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
+                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(error, null));
                     return;
                 }
 
-                Msf.Events.Invoke(EventKeys.showLoadingInfo, "Room started. Finalizing... Please wait!");
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Room started. Finalizing... Please wait!");
 
                 MsfTimer.WaitWhile(() =>
                 {
                     return controller.Status != SpawnStatus.Finalized;
                 }, (isSuccess) =>
                 {
-                    Msf.Events.Invoke(EventKeys.hideLoadingInfo);
+                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
 
                     if (!isSuccess)
                     {
                         Msf.Client.Spawners.AbortSpawn(controller.SpawnTaskId);
                         logger.Error("Failed spawn new room. Time is up!");
-                        Msf.Events.Invoke(EventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("Failed spawn new room. Time is up!", null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("Failed spawn new room. Time is up!", null));
                         return;
                     }
 

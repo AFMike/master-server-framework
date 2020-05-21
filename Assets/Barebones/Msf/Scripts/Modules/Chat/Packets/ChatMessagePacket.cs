@@ -15,9 +15,9 @@ namespace Barebones.MasterServer
         /// Represents receiver username if it's a private message,
         /// or channel name, if channel message
         /// </summary>
-        public string Receiver { get; set; }
+        public string Receiver { get; set; } = string.Empty;
         public string Sender { get; set; } = string.Empty;
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         public override void ToBinaryWriter(EndianBinaryWriter writer)
         {

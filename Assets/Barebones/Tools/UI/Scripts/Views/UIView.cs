@@ -11,10 +11,7 @@ namespace Aevien.UI
     [RequireComponent(typeof(Canvas), typeof(GraphicRaycaster), typeof(CanvasGroup))]
     public class UIView : MonoBehaviour, IUIView
     {
-        private Dictionary<string, Component> children;
-        protected Dictionary<string, IUIViewComponent> uiViewComponents;
-        protected IUIViewTweener uiViewTweener;
-        protected CanvasGroup canvasGroup;
+        #region INSPECTOR
 
         [Header("Identity Settings"), SerializeField]
         protected string id = "New View Id";
@@ -23,6 +20,8 @@ namespace Aevien.UI
         protected bool hideOnStart = true;
         [SerializeField]
         protected bool allwaysOnTop = false;
+        [SerializeField]
+        protected bool ignoreHideAll = false;
 
         [Header("Events")]
         public UnityEvent OnShowEvent;
@@ -30,10 +29,19 @@ namespace Aevien.UI
         public UnityEvent OnShowFinishedEvent;
         public UnityEvent OnHideFinishedEvent;
 
+        #endregion
+
+        private Dictionary<string, Component> children;
+        protected Dictionary<string, IUIViewComponent> uiViewComponents;
+        protected IUIViewTweener uiViewTweener;
+        protected CanvasGroup canvasGroup;
+
         public bool IsVisible { get; private set; } = true;
         public string Id => id;
 
         public RectTransform Rect => transform as RectTransform;
+
+        public bool IgnoreHideAll { get => ignoreHideAll; set => ignoreHideAll = value; }
 
         protected virtual void Awake()
         {

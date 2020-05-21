@@ -9,6 +9,11 @@ namespace Barebones.MasterServer
 
     public class MsfMatchmakerClient : MsfBaseClient
     {
+        /// <summary>
+        /// List of the last loaded games
+        /// </summary>
+        public List<GameInfoPacket> Games { get; private set; }
+
         public MsfMatchmakerClient(IClientSocket connection) : base(connection) { }
 
         /// <summary>
@@ -39,8 +44,9 @@ namespace Barebones.MasterServer
         {
             if (!connection.IsConnected)
             {
+                Games = new List<GameInfoPacket>();
                 Logs.Error("Not connected");
-                callback.Invoke(new List<GameInfoPacket>());
+                callback.Invoke(Games);
                 return;
             }
 
@@ -48,14 +54,14 @@ namespace Barebones.MasterServer
             {
                 if (status != ResponseStatus.Success)
                 {
+                    Games = new List<GameInfoPacket>();
                     Logs.Error(response.AsString("Unknown error while requesting a list of games"));
-                    callback.Invoke(new List<GameInfoPacket>());
+                    callback.Invoke(Games);
                     return;
                 }
 
-                var games = response.DeserializeList(() => new GameInfoPacket()).ToList();
-
-                callback.Invoke(games);
+                Games = response.DeserializeList(() => new GameInfoPacket()).ToList();
+                callback.Invoke(Games);
             });
         }
     }

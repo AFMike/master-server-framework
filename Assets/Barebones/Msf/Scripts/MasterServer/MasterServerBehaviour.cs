@@ -29,8 +29,6 @@ namespace Barebones.MasterServer
 
         protected override void Awake()
         {
-            base.Awake();
-
             // If instance of the server is already running
             if (Instance != null)
             {
@@ -63,6 +61,8 @@ namespace Barebones.MasterServer
             {
                 serverPort = Msf.Args.MasterPort;
             }
+
+            base.Awake();
         }
 
         protected override void Start()
@@ -73,7 +73,8 @@ namespace Barebones.MasterServer
             if (Msf.Args.StartMaster && !Msf.Runtime.IsEditor)
             {
                 // Start the server on next frame
-                MsfTimer.WaitForEndOfFrame(() => {
+                MsfTimer.WaitForEndOfFrame(() =>
+                {
                     StartServer();
                 });
             }
@@ -90,7 +91,9 @@ namespace Barebones.MasterServer
                 return;
             }
 
-            logger.Info($"Starting Master Server... {Msf.Version}");
+            logger.Info("Starting Master Server...");
+            logger.Info($"Multithreading is: {(Msf.Runtime.SupportsThreads ? "On" : "Off")}");
+            logger.Info($"FPS is: {Application.targetFrameRate}");
 
             base.StartServer();
         }

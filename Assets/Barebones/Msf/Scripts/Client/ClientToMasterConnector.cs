@@ -7,13 +7,16 @@ using UnityEngine.Events;
 
 namespace Barebones.MasterServer
 {
+    [AddComponentMenu("MSF/Shared/ClientToMasterConnector")]
     /// <summary>
     /// Automatically connects to master server
     /// </summary>
-    public class ClientToMasterConnector : ConnectionHelper
+    public class ClientToMasterConnector : ConnectionHelper<ClientToMasterConnector>
     {
         protected override void Awake()
         {
+            base.Awake();
+
             // If master IP is provided via cmd arguments
             if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
             {
@@ -24,20 +27,6 @@ namespace Barebones.MasterServer
             if (Msf.Args.IsProvided(Msf.Args.Names.MasterPort))
             {
                 serverPort = Msf.Args.MasterPort;
-            }
-
-            Connection = Msf.Client.Connection;
-
-            base.Awake();
-        }
-
-        protected override void Start()
-        {
-            base.Start();
-
-            if (Msf.Args.StartClientConnection)
-            {
-                StartConnection();
             }
         }
     }
