@@ -1,5 +1,8 @@
 ## Updates Log
 
+### Msf 3.6.1
+ - Delete old version before import
+
 ### Msf 3.6.0
 
 - Demo scenes are fully remade
