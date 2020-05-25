@@ -1,13 +1,9 @@
-﻿using Barebones.Logging;
-using Barebones.MasterServer;
-using Barebones.MasterServer.Examples.BasicSpawnerMirror;
+﻿using Barebones.MasterServer;
 using Barebones.Networking;
 using Mirror;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Barebones.Bridges.Mirror
 {
@@ -15,15 +11,43 @@ namespace Barebones.Bridges.Mirror
     {
         #region INSPECTOR
 
-        [Header("Master Connection Settings"), SerializeField]
-        private string masterIp = "127.0.0.1";
-        [SerializeField]
-        private int masterPort = 5000;
+        /// <summary>
+        /// Master server IP address to connect room server to master server as client
+        /// </summary>
+        [Header("Master Connection Settings"), SerializeField, Tooltip("Master server IP address to connect room server to master server as client")]
+        protected string masterIp = "127.0.0.1";
 
-        [SerializeField]
+        /// <summary>
+        /// Master server port to connect room server to master server as client
+        /// </summary>
+        [SerializeField, Tooltip("Master server port to connect room server to master server as client")]
+        protected int masterPort = 5000;
+
+        [Header("Editor Settings"), SerializeField]
+        private HelpBox editorHelp = new HelpBox()
+        {
+            Text = "This settings works only in editor. They are for test purpose only",
+            Type = HelpBoxType.Info
+        };
+
+        /// <summary>
+        /// This will start server in editor automatically
+        /// </summary>
+        [SerializeField, Tooltip("This will start server in editor automatically")]
         protected bool autoStartInEditor = true;
 
+        /// <summary>
+        /// If true this will start server as host in test mode
+        /// </summary>
+        [SerializeField, Tooltip("If true this will start server as host in test mode")]
+        protected bool startServerAsHost = true;
+
         #endregion
+
+        /// <summary>
+        /// The instance of the <see cref="MirrorRoomServer"/>
+        /// </summary>
+        public static MirrorRoomServer Instance { get; protected set; }
 
         /// <summary>
         /// List of players filtered by MSF peer Id
@@ -46,9 +70,9 @@ namespace Barebones.Bridges.Mirror
         private RoomOptions roomOptions;
 
         /// <summary>
-        /// Room manager
+        /// Mirror network manager
         /// </summary>
-        public MirrorRoomManager RoomManager { get; set; }
+        public NetworkManager MirrorNetworkManager { get; set; }
 
         /// <summary>
         /// Controller of the room
@@ -72,6 +96,17 @@ namespace Barebones.Bridges.Mirror
 
         protected override void Awake()
         {
+            // Only one room server can exist in scene
+            if(Instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Create simple singleton
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+
             base.Awake();
 
             // Create filtered lists of players
@@ -80,16 +115,10 @@ namespace Barebones.Bridges.Mirror
             roomPlayersByUsername = new Dictionary<string, MirrorRoomPlayer>();
 
             // If master IP is provided via cmd arguments
-            if (Msf.Args.IsProvided(Msf.Args.Names.MasterIp))
-            {
-                masterIp = Msf.Args.MasterIp;
-            }
+            masterIp = Msf.Args.ExtractValue(Msf.Args.Names.MasterIp, masterIp);
 
             // If master port is provided via cmd arguments
-            if (Msf.Args.IsProvided(Msf.Args.Names.MasterPort))
-            {
-                masterPort = Msf.Args.MasterPort;
-            }
+            masterPort = Msf.Args.ExtractValueInt(Msf.Args.Names.MasterPort, masterPort);
         }
 
         protected override void OnInitialize()
@@ -97,19 +126,31 @@ namespace Barebones.Bridges.Mirror
             // Register handler to listen to client access validation request
             NetworkServer.RegisterHandler<ValidateRoomAccessRequestMessage>(ValidateRoomAccessRequestHandler, false);
 
-            if (Msf.Runtime.IsEditor && autoStartInEditor && !Msf.Options.Has(MsfDictKeys.autoStartRoomClient))
+            // Get mirror network manager
+            MirrorNetworkManager = NetworkManager.singleton;
+
+            // Start listening to OnServerStartedEvent of our MirrorNetworkManager
+            if(NetworkManager.singleton is MirrorNetworkManager manager)
             {
-                MsfTimer.WaitForEndOfFrame(() => {
-                    StartRoomServer(true);
-                });
+                manager.OnServerStartedEvent += OnMirrorServerStartedEventHandler;
+                manager.OnClientDisconnectedEvent += OnMirrorClientDisconnectedEvent;
+            }
+            else
+            {
+                logger.Error("We cannot register listeners of MirrorNetworkManager events because we cannot find it onscene");
             }
 
-            // Start room server at start
-            if (Msf.Args.StartClientConnection && !Msf.Runtime.IsEditor)
+            // Set room oprions
+            roomOptions = SetRoomOptions();
+
+            // Add master server connection and disconnection listeners
+            Connection.AddConnectionListener(OnConnectedToMasterServerEventHandler, true);
+            Connection.AddDisconnectionListener(OnDisconnectedFromMasterServerEventHandler, false);
+
+            // If connection to master server is not established
+            if (!Connection.IsConnected && !Connection.IsConnecting)
             {
-                MsfTimer.WaitForEndOfFrame(() => {
-                    StartRoomServer();
-                });
+                Connection.Connect(masterIp, masterPort);
             }
         }
 
@@ -129,17 +170,122 @@ namespace Barebones.Bridges.Mirror
         {
             base.OnDestroy();
 
+            // Remove connection listeners
+            Connection?.RemoveConnectionListener(OnConnectedToMasterServerEventHandler);
+            Connection?.RemoveDisconnectionListener(OnDisconnectedFromMasterServerEventHandler);
+
+            // Start listenin to OnServerStartedEvent of our MirrorNetworkManager
+            if (NetworkManager.singleton is MirrorNetworkManager manager)
+            {
+                manager.OnServerStartedEvent -= OnMirrorServerStartedEventHandler;
+            }
+
             // Unregister handlers
             NetworkServer.UnregisterHandler<ValidateRoomAccessRequestMessage>();
         }
 
         /// <summary>
-        /// Let's create new connection to master server
+        /// Check is this module is allowed to be started in editor. This feature is for testing purpose only
         /// </summary>
         /// <returns></returns>
-        protected override IClientSocket ConnectionFactory()
+        protected virtual bool IsAllowedToBeStartedInEditor()
         {
-            return Msf.Create.ClientSocket();
+            return !Msf.Client.Rooms.ForceClientMode
+                && Msf.Runtime.IsEditor
+                   && autoStartInEditor;
+        }
+
+        #region MIRROR EVENTS
+
+        /// <summary>
+        /// Invokes when mirror server is started
+        /// </summary>
+        protected virtual void OnMirrorServerStartedEventHandler()
+        {
+            // Start room registration
+            RegisterRoomServer();
+        }
+
+        /// <summary>
+        /// This is called on the Server when a Mirror Client disconnects from the Server
+        /// </summary>
+        /// <param name="obj"></param>
+        private void OnMirrorClientDisconnectedEvent(NetworkConnection connection)
+        {
+            // Try to find player in filtered list
+            if (roomPlayersByMirrorPeerId.TryGetValue(connection.connectionId, out MirrorRoomPlayer player))
+            {
+                logger.Debug($"Room server player {player.Username} with room client Id {connection.connectionId} left the room");
+
+                // Remove thisplayer from filtered list
+                roomPlayersByMirrorPeerId.Remove(player.MirrorPeer.connectionId);
+                roomPlayersByMsfPeerId.Remove(player.MsfPeerId);
+                roomPlayersByUsername.Remove(player.Username);
+
+                // Notify master server about disconnected player
+                CurrentRoomController.NotifyPlayerLeft(player.MsfPeerId);
+
+                // Inform subscribers about this bad guy
+                OnPlayerLeftRoomEvent?.Invoke(player);
+
+            }
+            else
+            {
+                logger.Debug($"Room server client {connection.connectionId} left the room");
+            }
+        }
+
+        #endregion
+
+        #region MSF CONNECTION EVENTS
+
+        /// <summary>
+        /// Invokes when room server is successfully connected to master server as client
+        /// </summary>
+        private void OnConnectedToMasterServerEventHandler()
+        {
+            logger.Debug("Room server is successfully connected to master server");
+
+            // If this room was spawned
+            if (Msf.Server.Spawners.IsSpawnedProccess)
+            {
+                // Try to register spawned process first
+                RegisterSpawnedProcess();
+            }
+
+            // If we are testing our room in editor
+            if (IsAllowedToBeStartedInEditor())
+            {
+                StartServerInEditor();
+            }
+        }
+
+        /// <summary>
+        /// Fired when this room server is disconnected from master as client
+        /// </summary>
+        protected virtual void OnDisconnectedFromMasterServerEventHandler()
+        {
+            // Quit the room
+            Msf.Runtime.Quit();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// This will start server in test mode
+        /// </summary>
+        protected virtual void StartServerInEditor()
+        {
+            if (startServerAsHost)
+            {
+                MirrorNetworkManager.StopHost();
+                MsfTimer.WaitForSeconds(0.2f, () => MirrorNetworkManager.StartHost());
+            }
+            else
+            {
+                MirrorNetworkManager.StopServer();
+                MsfTimer.WaitForSeconds(0.2f, () => MirrorNetworkManager.StartServer());
+            }
         }
 
         /// <summary>
@@ -150,55 +296,76 @@ namespace Barebones.Bridges.Mirror
         {
             return new RoomOptions
             {
-                IsPublic = Msf.Args.RoomIsPrivate,
-                MaxConnections = RoomManager.maxConnections,
-                Name = Msf.Args.RoomName,
+                // Let's make this room as private until it is successfully registered. 
+                // This is useful to prevent players connection to this room before registration process finished.
+                IsPublic = false,
+
+                // This is for controlling max number of players that may be connected
+                MaxConnections = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomMaxConnections, MirrorNetworkManager.maxConnections),
+
+                // Just the name of the room
+                Name = Msf.Args.ExtractValue(Msf.Args.Names.RoomName, $"Room[{Msf.Helper.CreateRandomString(5)}]"),
+
+                // If room uses the password
                 Password = Msf.Args.RoomPassword,
+
+                // Room IP that will be used by players to connect to this room
                 RoomIp = Msf.Args.RoomIp,
-                RoomPort = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomPort, RoomManager.GetPort()),
-                Region = Msf.Args.RoomRegion
+
+                // Room port that will be used by players to connect to this room
+                RoomPort = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomPort, GetPort()),
+
+                // Region that this room may use to filter it in games list
+                Region = Msf.Args.ExtractValue(Msf.Args.Names.RoomRegion, string.Empty)
             };
         }
 
         /// <summary>
-        /// Starting connection to master server as client to be able to register room later after successful connection
+        /// Before we register our room we need to register spawned process if required
         /// </summary>
-        private void ConnectToMaster()
+        protected void RegisterSpawnedProcess()
         {
-            // Start client connection
-            if (!Connection.IsConnected)
+            // Let's register this process
+            Msf.Server.Spawners.RegisterSpawnedProcess(Msf.Args.SpawnTaskId, Msf.Args.SpawnTaskUniqueCode, (taskController, error) =>
             {
-                Connection.Connect(masterIp, masterPort);
-            }
-
-            // Wait a result of client connection
-            Connection.WaitForConnection((clientSocket) =>
-            {
-                if (!clientSocket.IsConnected)
+                if (taskController == null)
                 {
-                    logger.Error("Failed to connect room server to master server");
+                    logger.Error($"Room server process cannot be registered. The reason is: {error}");
+                    return;
                 }
-                else
-                {
-                    logger.Info("Room server is successfuly connected to master server");
-                    logger.Info("Starting Mirror server...");
 
+                // Set port of the Mirror server
+                SetPort((ushort)roomOptions.RoomPort);
+
+                // Finalize spawn task before we start mirror server 
+                taskController.FinalizeTask(new DictionaryOptions(), () => {
                     // Start Mirror server
-                    RoomManager.StartServer();
-                }
-            }, 4f);
+                    MirrorNetworkManager.StartServer();
+                });
+            });
         }
 
         /// <summary>
-        /// Fired when this room server is disconnected from master as client
+        /// Start registering our room server
         /// </summary>
-        protected virtual void OnClientDisconnectedFromMasterServer()
+        protected virtual void RegisterRoomServer()
         {
-            // Stop Mirror server
-            RoomManager.StopServer();
+            Msf.Server.Rooms.RegisterRoom(roomOptions, (controller, error) =>
+            {
+                if (controller == null)
+                {
+                    logger.Error(error);
+                    return;
+                }
 
-            // Quit the room
-            Msf.Runtime.Quit();
+                // Save our room controller
+                CurrentRoomController = controller;
+
+                // Save room id to global options just for test purpose only
+                Msf.Options.Add(MsfDictKeys.roomId, controller.RoomId);
+
+                logger.Info($"Room {controller.RoomId} is successfully registered with options {roomOptions}");
+            });
         }
 
         /// <summary>
@@ -206,7 +373,7 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         /// <param name="conn"></param>
         /// <param name="msg"></param>
-        private void ValidateRoomAccessRequestHandler(NetworkConnection conn, ValidateRoomAccessRequestMessage msg)
+        protected virtual void ValidateRoomAccessRequestHandler(NetworkConnection conn, ValidateRoomAccessRequestMessage msg)
         {
             logger.Debug($"Room client {conn.connectionId} asked to validate access token [{msg.Token}]");
 
@@ -218,7 +385,7 @@ namespace Barebones.Bridges.Mirror
                 {
                     logger.Error(error);
 
-                    conn.Send(new RoomAccessValidationResultMessage()
+                    conn.Send(new ValidateRoomAccessResultMessage()
                     {
                         Error = error,
                         Status = ResponseStatus.Failed
@@ -238,7 +405,7 @@ namespace Barebones.Bridges.Mirror
                     {
                         logger.Error(accountError);
 
-                        conn.Send(new RoomAccessValidationResultMessage()
+                        conn.Send(new ValidateRoomAccessResultMessage()
                         {
                             Error = accountError,
                             Status = ResponseStatus.Error
@@ -251,7 +418,7 @@ namespace Barebones.Bridges.Mirror
 
                     logger.Debug($"Client {conn.connectionId} has become a player of this room. Congratulations to {accountInfo.Username}");
 
-                    conn.Send(new RoomAccessValidationResultMessage()
+                    conn.Send(new ValidateRoomAccessResultMessage()
                     {
                         Error = string.Empty,
                         Status = ResponseStatus.Success
@@ -272,130 +439,53 @@ namespace Barebones.Bridges.Mirror
         }
 
         /// <summary>
-        /// Before we register our room we need to register spawned process if required
+        /// Sets an address 
         /// </summary>
-        protected void RegisterSpawnedProcess()
+        /// <param name="roomAddress"></param>
+        public void SetAddress(string roomAddress)
         {
-            // Let's register this process
-            Msf.Server.Spawners.RegisterSpawnedProcess(Msf.Args.SpawnTaskId, Msf.Args.SpawnTaskUniqueCode, (taskController, error) =>
-            {
-                if (taskController == null)
-                {
-                    logger.Error($"Room server process cannot be registered. The reason is: {error}");
-                    return;
-                }
-
-                // Then start registering our room server
-                RegisterRoomServer(() =>
-                {
-                    logger.Info("Finalizing registration task");
-
-                    // Create finalization options
-                    var options = new DictionaryOptions();
-                    options.Add(MsfDictKeys.roomId, CurrentRoomController.RoomId);
-
-                    // Send finilization request
-                    taskController.FinalizeTask(options, () =>
-                    {
-                        logger.Info("Ok!");
-                        OnRoomServerRegisteredEvent?.Invoke();
-                    });
-                });
-            });
+            NetworkManager.singleton.networkAddress = roomAddress;
         }
 
         /// <summary>
-        /// Start registering our room server
+        /// Gets an address
         /// </summary>
-        protected virtual void RegisterRoomServer(Action successCallback = null)
+        /// <param name="roomIp"></param>
+        public string GetAddress()
         {
-            Msf.Server.Rooms.RegisterRoom(roomOptions, (controller, error) =>
-            {
-                if (controller == null)
-                {
-                    logger.Error(error);
-                    return;
-                }
-
-                CurrentRoomController = controller;
-
-                logger.Info($"Room Created successfully. Room ID: {controller.RoomId}, {roomOptions}");
-
-                successCallback?.Invoke();
-            });
+            return NetworkManager.singleton.networkAddress;
         }
 
         /// <summary>
-        /// Start room server
+        /// Set network transport port
         /// </summary>
-        /// <param name="ignoreForceClientMode"></param>
-        public virtual void StartRoomServer(bool ignoreForceClientMode = false)
+        /// <param name="port"></param>
+        public virtual void SetPort(int port)
         {
-            if (Msf.Client.Rooms.ForceClientMode && !ignoreForceClientMode) return;
-
-            // Listen to disconnection from master
-            Connection.AddDisconnectionListener(OnClientDisconnectedFromMasterServer, false);
-
-            // Set this connection to services we want to use
-            Msf.Server.Rooms.ChangeConnection(Connection);
-            Msf.Server.Spawners.ChangeConnection(Connection);
-            Msf.Server.Auth.ChangeConnection(Connection);
-            Msf.Server.Profiles.ChangeConnection(Connection);
-
-            // Set room oprions
-            roomOptions = SetRoomOptions();
-
-            // Start connecting room server to master server
-            ConnectToMaster();
-        }
-
-        /// <summary>
-        /// Fired when mirror server is started
-        /// </summary>
-        public void OnMirrorServerStarted()
-        {
-            // If this room was spawned
-            if (Msf.Server.Spawners.IsSpawnedProccess)
+            if (Transport.activeTransport is TelepathyTransport transport)
             {
-                // Try to register spawned process first
-                RegisterSpawnedProcess();
+                transport.port = (ushort)port;
             }
             else
             {
-                RegisterRoomServer(() =>
-                {
-                    logger.Info("Ok!");
-                    OnRoomServerRegisteredEvent?.Invoke();
-                });
+                logger.Error("You are trying to use TelepathyTransport. But it is not found on the scene. Try to override this method to create you own implementation");
             }
         }
 
         /// <summary>
-        /// Fired when mirror client disconnected
+        /// Get network transport port
         /// </summary>
-        /// <param name="mirrorConn"></param>
-        public void OnPlayerLeftRoomHandler(NetworkConnection mirrorConn)
+        /// <returns></returns>
+        public virtual int GetPort()
         {
-            // Try to find player in filtered list
-            if (roomPlayersByMirrorPeerId.TryGetValue(mirrorConn.connectionId, out MirrorRoomPlayer player))
+            if (Transport.activeTransport is TelepathyTransport transport)
             {
-                logger.Debug($"Room server player {player.Username} with room client Id {mirrorConn.connectionId} left the room");
-
-                // Remove thisplayer from filtered list
-                roomPlayersByMirrorPeerId.Remove(player.MirrorPeer.connectionId);
-                roomPlayersByMsfPeerId.Remove(player.MsfPeerId);
-                roomPlayersByUsername.Remove(player.Username);
-
-                // Notify master server about disconnected player
-                CurrentRoomController.NotifyPlayerLeft(player.MsfPeerId);
-
-                // Inform subscribers about this bad guy
-                OnPlayerLeftRoomEvent?.Invoke(player);
-
+                return (int)transport.port;
             }
             else
             {
-                logger.Debug($"Room server client {mirrorConn.connectionId} left the room");
+                logger.Error("You are trying to use TelepathyTransport. But it is not found on the scene. Try to override this method to create you own implementation");
+                return 0;
             }
         }
     }

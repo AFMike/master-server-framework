@@ -1,9 +1,6 @@
-﻿using Aevien.SpaceBattles;
-using Aevien.UI;
+﻿using Aevien.UI;
 using Barebones.MasterServer;
 using Barebones.Networking;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -16,19 +13,19 @@ namespace Barebones.Games
         #region INSPECTOR
 
         [Header("Components"), SerializeField]
-        private ClientToMasterConnector clientToMasterConnector;
+        protected ClientToMasterConnector clientToMasterConnector;
 
         [Header("Settings"), SerializeField]
-        private bool rememberUser = true;
+        protected bool rememberUser = true;
 
         [Header("Editor Settings"), SerializeField]
-        private string defaultUsername = "qwerty";
+        protected string defaultUsername = "qwerty";
         [SerializeField]
-        private string defaultEmail = "qwerty@mail.com";
+        protected string defaultEmail = "qwerty@mail.com";
         [SerializeField]
-        private string defaultPassword = "qwerty123!@#";
+        protected string defaultPassword = "qwerty123!@#";
         [SerializeField]
-        private bool useDefaultCredentials = false;
+        protected bool useDefaultCredentials = false;
 
         public UnityEvent OnSignedInEvent;
         public UnityEvent OnSignedOutEvent;
@@ -37,13 +34,13 @@ namespace Barebones.Games
 
         #endregion
 
-        private string outputMessage = string.Empty;
+        protected string outputMessage = string.Empty;
 
-        private SignInView signinView;
-        private SignUpView signupView;
-        private PasswordResetView passwordResetView;
-        private PasswordResetCodeView passwordResetCodeView;
-        private EmailConfirmationView emailConfirmationView;
+        protected SignInView signinView;
+        protected SignUpView signupView;
+        protected PasswordResetView passwordResetView;
+        protected PasswordResetCodeView passwordResetCodeView;
+        protected EmailConfirmationView emailConfirmationView;
 
         protected override void OnDestroy()
         {

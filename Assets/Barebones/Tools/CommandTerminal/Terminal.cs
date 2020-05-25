@@ -1,3 +1,4 @@
+using Aevien.Utilities;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -10,7 +11,7 @@ namespace CommandTerminal
         OpenFull
     }
 
-    public class Terminal : MonoBehaviour
+    public class Terminal : Singleton<Terminal>
     {
         [Header("Window")]
         [Range(0, 1)]

@@ -52,7 +52,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         private void DestroyUnwanted()
         {
-            FindObjectOfType<MirrorRoomManager>()?.Destroy();
+            //FindObjectOfType<MirrorNetworkManager>()?.Destroy();
         }
 
         protected void OnClientConnectedToMasterServer()

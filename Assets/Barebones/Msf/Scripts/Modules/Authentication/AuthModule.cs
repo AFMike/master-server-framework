@@ -37,6 +37,9 @@ namespace Barebones.MasterServer
         [SerializeField]
         protected int usernameMaxChars = 12;
 
+        [SerializeField]
+        protected bool useEmailConfirmation = true;
+
         [Header("Guest Settings")]
         [SerializeField, Tooltip("If true, players will be able to log in as guests")]
         protected bool enableGuestLogin = true;
@@ -632,6 +635,12 @@ namespace Barebones.MasterServer
 
                 userAccount.Token = Msf.Helper.CreateRandomString(64);
                 userAccount.Properties["expires"] = DateTime.Now.AddDays(7).ToFileTime().ToString();
+
+                if (!useEmailConfirmation)
+                {
+                    userAccount.IsEmailConfirmed = true;
+                }
+
                 authDbAccessor.UpdateAccount(userAccount);
             }
 

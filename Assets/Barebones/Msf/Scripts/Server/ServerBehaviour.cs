@@ -316,8 +316,11 @@ namespace Barebones.MasterServer
 
         protected virtual void OnDestroy()
         {
-            socket.OnClientConnectedEvent -= OnConnectedEventHandle;
-            socket.OnClientDisconnectedEvent -= OnDisconnectedEventHandler;
+            if (socket != null)
+            {
+                socket.OnClientConnectedEvent -= OnConnectedEventHandle;
+                socket.OnClientDisconnectedEvent -= OnDisconnectedEventHandler;
+            }
         }
 
         #region MESSAGE HANDLERS

@@ -3,7 +3,7 @@ using Mirror;
 
 namespace Barebones.Bridges.Mirror
 {
-    public class RoomAccessValidationResultMessage : IMessageBase
+    public class ValidateRoomAccessResultMessage : IMessageBase
     {
         public string Error { get; set; }
         public ResponseStatus Status { get; set; }
