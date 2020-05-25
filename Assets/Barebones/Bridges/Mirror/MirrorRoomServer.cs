@@ -134,6 +134,7 @@ namespace Barebones.Bridges.Mirror
             {
                 manager.OnServerStartedEvent += OnMirrorServerStartedEventHandler;
                 manager.OnClientDisconnectedEvent += OnMirrorClientDisconnectedEvent;
+                manager.OnHostStopEvent += OnMirrorHostStoppedEventHandler;
             }
             else
             {
@@ -178,6 +179,8 @@ namespace Barebones.Bridges.Mirror
             if (NetworkManager.singleton is MirrorNetworkManager manager)
             {
                 manager.OnServerStartedEvent -= OnMirrorServerStartedEventHandler;
+                manager.OnClientDisconnectedEvent -= OnMirrorClientDisconnectedEvent;
+                manager.OnHostStopEvent -= OnMirrorHostStoppedEventHandler;
             }
 
             // Unregister handlers
@@ -232,6 +235,19 @@ namespace Barebones.Bridges.Mirror
             else
             {
                 logger.Debug($"Room server client {connection.connectionId} left the room");
+            }
+        }
+
+        /// <summary>
+        /// Fired when mirror host was stopped.
+        /// This is usefull in test mode.
+        /// </summary>
+        private void OnMirrorHostStoppedEventHandler()
+        {
+            if(CurrentRoomController != null)
+            {
+                Connection?.Disconnect();
+                CurrentRoomController = null;
             }
         }
 
@@ -296,9 +312,8 @@ namespace Barebones.Bridges.Mirror
         {
             return new RoomOptions
             {
-                // Let's make this room as private until it is successfully registered. 
-                // This is useful to prevent players connection to this room before registration process finished.
-                IsPublic = false,
+                // Set room as public
+                IsPublic = true,
 
                 // This is for controlling max number of players that may be connected
                 MaxConnections = Msf.Args.ExtractValueInt(Msf.Args.Names.RoomMaxConnections, MirrorNetworkManager.maxConnections),

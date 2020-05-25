@@ -128,13 +128,29 @@ namespace Barebones.Bridges.Mirror
         protected override void OnDestroy()
         {
             base.OnDestroy();
+
             NetworkClient.UnregisterHandler<ValidateRoomAccessResultMessage>();
+
+            // Stop listening to OnServerStartedEvent of our MirrorNetworkManager
+            if (NetworkManager.singleton is MirrorNetworkManager manager)
+            {
+                manager.OnHostStartedEvent -= OnMirrorHostStartedEventHandler;
+            }
+
+            // Remove master server connection and disconnection listener
+            Connection?.RemoveDisconnectionListener(OnDisconnectedFromMasterServerEventHandler);
         }
 
         protected override void OnInitialize()
         {
             // Get mirror network manager
             MirrorNetworkManager = NetworkManager.singleton;
+
+            // If we hav offline scene in global options
+            if (Msf.Options.Has(MsfDictKeys.offlineSceneName))
+            {
+                MirrorNetworkManager.offlineScene = Msf.Options.AsString(MsfDictKeys.offlineSceneName);
+            }
 
             // Start listening to OnServerStartedEvent of our MirrorNetworkManager
             if (NetworkManager.singleton is MirrorNetworkManager manager)
@@ -147,7 +163,6 @@ namespace Barebones.Bridges.Mirror
             }
 
             // Add master server connection and disconnection listeners
-            Connection.AddConnectionListener(OnConnectedToMasterServerEventHandler, true);
             Connection.AddDisconnectionListener(OnDisconnectedFromMasterServerEventHandler, false);
 
             // If connection to master server is not established
@@ -158,19 +173,15 @@ namespace Barebones.Bridges.Mirror
         }
 
         /// <summary>
-        /// Invokes when room client is successfully connected to master server as client
-        /// </summary>
-        protected virtual void OnConnectedToMasterServerEventHandler()
-        {
-            logger.Debug("Room client is successfully connected to master server");
-        }
-
-        /// <summary>
         /// Fired when this room client is disconnected from master as client.
         /// </summary>
         protected virtual void OnDisconnectedFromMasterServerEventHandler()
         {
             logger.Debug("Room client was disconnected to master server");
+
+            NetworkClient.UnregisterHandler<ValidateRoomAccessResultMessage>();
+
+            // Stop mirror client
             MirrorNetworkManager.StopClient();
         }
 
@@ -197,32 +208,25 @@ namespace Barebones.Bridges.Mirror
             // If we are in test mode
             if (IsAllowedToBeStartedInEditor())
             {
-                MsfTimer.WaitUntil(() => NetworkClient.active, (isSuccessful) => {
-
-                    // Register listener for access validation message from mirror room server
-                    NetworkClient.RegisterHandler<ValidateRoomAccessResultMessage>(ValidateRoomAccessResultHandler, false);
-
-                    if (!Msf.Client.Auth.IsSignedIn)
+                if (!Msf.Client.Auth.IsSignedIn)
+                {
+                    if (signInAsGuest)
                     {
-                        if (signInAsGuest)
-                        {
-                            Msf.Client.Auth.SignInAsGuest(OnSignInCallbackHandler);
-                        }
-                        else
-                        {
-                            Msf.Client.Auth.SignIn(username, password, OnSignInCallbackHandler);
-                        }
+                        Msf.Client.Auth.SignInAsGuest(OnSignInCallbackHandler);
                     }
                     else
                     {
-                        // If we want to join room immediately
-                        if (autoJoinRoom)
-                        {
-                            // Let's get access to room
-                            GetRoomAccess(Msf.Options.AsInt(MsfDictKeys.roomId));
-                        }
+                        Msf.Client.Auth.SignIn(username, password, OnSignInCallbackHandler);
                     }
-                }, 5f);
+                }
+                else
+                {
+                    // If we want to join room immediately
+                    if (autoJoinRoom)
+                    {
+                        StartClient();
+                    }
+                }
             }
         }
 
@@ -242,12 +246,13 @@ namespace Barebones.Bridges.Mirror
             // If we want to join room immediately
             if (autoJoinRoom)
             {
-                // Let's get access to room
-                GetRoomAccess(Msf.Options.AsInt(MsfDictKeys.roomId));
+                StartClient();
             }
         }
 
         #endregion
+
+        #region MIRROR EVENTS
 
         /// <summary>
         /// Invokes when room client is successfully connected to mirror server
@@ -256,9 +261,14 @@ namespace Barebones.Bridges.Mirror
         {
             logger.Debug($"Validating access to room server with token [{roomAccess.Token}]");
 
+            // Register listener for access validation message from mirror room server
+            NetworkClient.RegisterHandler<ValidateRoomAccessResultMessage>(ValidateRoomAccessResultHandler, false);
+
             // Send validation message to room server
             connection.Send(new ValidateRoomAccessRequestMessage(roomAccess.Token));
         }
+
+        #endregion
 
         /// <summary>
         /// Tries to get access data for room we want to connect to
@@ -289,8 +299,7 @@ namespace Barebones.Bridges.Mirror
                     if (!isSuccessful)
                     {
                         logger.Error("We could not connect to room. Please try again later or contact to administrator");
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("We could not connect to room. Please try again later or contact to administrator"));
-                        return;
+                        MirrorNetworkManager.StopClient();
                     }
                     else
                     {
@@ -355,6 +364,15 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         /// <param name="conn"></param>
         protected virtual void OnAccessDenied(NetworkConnection conn) { }
+
+        /// <summary>
+        /// Start room client
+        /// </summary>
+        public void StartClient()
+        {
+            // Let's get access to room
+            GetRoomAccess(Msf.Options.AsInt(MsfDictKeys.roomId));
+        }
 
         /// <summary>
         /// Create the network player in mirror networking

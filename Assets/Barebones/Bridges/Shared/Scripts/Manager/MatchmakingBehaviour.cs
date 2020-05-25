@@ -1,28 +1,23 @@
 ﻿using Aevien.UI;
-using Barebones.Bridges.Mirror;
-using Barebones.Games;
+using Barebones.MasterServer;
 using Barebones.Networking;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
+namespace Barebones.Games
 {
-    public class ClientManager : BaseClientBehaviour
+    public class MatchmakingBehaviour : BaseClientBehaviour
     {
-        [Header("Components"), SerializeField]
-        private ClientToMasterConnector clientToMasterConnector;
-
         private CreateNewRoomView createNewRoomView;
-        private GamesListView gamesListView;
+
+        [SerializeField]
+        protected string startRoomScene = "Room";
+
+        public UnityEvent OnRoomStartedEvent;
 
         protected override void OnInitialize()
         {
-            if (!clientToMasterConnector)
-                clientToMasterConnector = FindObjectOfType<ClientToMasterConnector>();
-
             // Set cliet mode
             Msf.Client.Rooms.ForceClientMode = true;
 
@@ -31,11 +26,16 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
             Msf.Options.Set(MsfDictKeys.offlineSceneName, SceneManager.GetActiveScene().name);
 
             createNewRoomView = ViewsManager.GetView<CreateNewRoomView>("CreateNewRoomView");
-            gamesListView = ViewsManager.GetView<GamesListView>("GamesListView");
         }
 
         public void CreateNewRoom()
         {
+            if (!createNewRoomView)
+            {
+                ViewsManager.NotifyNoViewFound("CreateNewRoomView");
+                return;
+            }
+
             createNewRoomView.Hide();
 
             Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Starting room... Please wait!");
@@ -51,7 +51,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
             Msf.Client.Spawners.RequestSpawn(spawnOptions, customSpawnOptions, createNewRoomView.RegionName, (controller, error) =>
             {
-                if (controller == null) {
+                if (controller == null)
+                {
                     Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
                     Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(error, null));
                     return;
@@ -74,16 +75,19 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
                         return;
                     }
 
-                    gamesListView.Show();
+                    OnRoomStartedEvent?.Invoke();
 
                     logger.Info("You have successfully spawned new room");
                 }, 60f);
             });
         }
 
-        public void Quit()
+        public void StartMatch()
         {
-            Msf.Runtime.Quit();
+            ScenesLoader.LoadSceneByName(startRoomScene, (progressValue) =>
+            {
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Loading scene {Mathf.RoundToInt(progressValue * 100f)}% ... Please wait!");
+            }, null);
         }
     }
 }

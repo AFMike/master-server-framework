@@ -1,13 +1,12 @@
 ﻿using Aevien.UI;
-using Barebones.Games;
 using Barebones.Logging;
+using Barebones.MasterServer;
 using Barebones.Networking;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
-namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
+namespace Barebones.Games
 {
     public class GamesListView : UIView
     {
@@ -16,6 +15,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
         [SerializeField]
         private RectTransform listContainer;
 
+        public UnityEvent OnStartGameEvent;
+
         protected override void OnShow()
         {
             FindGames();
@@ -23,6 +24,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         public void FindGames()
         {
+            ClearGamesList();
+
             Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Finding rooms... Please wait!");
 
             MsfTimer.WaitForSeconds(1f, () =>
@@ -44,8 +47,6 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         private void DrawGamesList(IEnumerable<GameInfoPacket> games)
         {
-            ClearGamesList();
-
             if (listContainer && gameItemPrefab)
             {
                 foreach (GameInfoPacket game in games)
@@ -75,13 +76,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
         public void StartGame(GameInfoPacket gameInfo)
         {
-            Msf.Options.Set(MsfDictKeys.autoStartRoomClient, true);
+            OnStartGameEvent?.Invoke();
             Msf.Options.Set(MsfDictKeys.roomId, gameInfo.Id);
-
-            ScenesLoader.LoadSceneByName("Room", (progressValue) =>
-            {
-                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Loading scene {Mathf.RoundToInt(progressValue * 100f)}% ... Please wait!");
-            }, null);
         }
     }
 }

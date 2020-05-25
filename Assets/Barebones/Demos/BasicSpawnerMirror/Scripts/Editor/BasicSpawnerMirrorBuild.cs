@@ -146,7 +146,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
             BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = new[] {
-                    "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Room/Room.unity"
+                    "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Room/RoomStart.unity",
+                    "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Room/RoomOnline.unity"
                 },
                 locationPathName = Path.Combine(buildFolder, "Room.exe"),
                 target = BuildTarget.StandaloneWindows64,
@@ -188,7 +189,8 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
             {
                 scenes = new[] {
                     "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Client/Client.unity",
-                    "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Room/Room.unity"
+                    "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Room/RoomStart.unity",
+                    "Assets/Barebones/Demos/BasicSpawnerMirror/Scenes/Room/RoomOnline.unity"
                 },
                 locationPathName = Path.Combine(buildFolder, "Client.exe"),
                 target = BuildTarget.StandaloneWindows64,

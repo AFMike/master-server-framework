@@ -1,10 +1,9 @@
 ﻿using Aevien.UI;
-using System.Collections;
-using System.Collections.Generic;
+using Barebones.MasterServer;
 using TMPro;
 using UnityEngine;
 
-namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
+namespace Barebones.Games
 {
     public class GameItem : MonoBehaviour
     {

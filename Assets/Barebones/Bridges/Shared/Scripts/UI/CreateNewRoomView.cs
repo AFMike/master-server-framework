@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
+namespace Barebones.Games
 {
     public class CreateNewRoomView : UIView
     {
         private TMP_InputField roomNameInputField;
         private TMP_InputField roomMaxConnectionsInputField;
-        private TMP_InputField regionNameInputField;
+        private TMP_InputField roomRegionNameInputField;
 
         protected override void Start()
         {
@@ -18,7 +18,7 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
 
             roomNameInputField = ChildComponent<TMP_InputField>("roomNameInputField");
             roomMaxConnectionsInputField = ChildComponent<TMP_InputField>("roomMaxConnectionsInputField");
-            regionNameInputField = ChildComponent<TMP_InputField>("regionNameInputField");
+            roomRegionNameInputField = ChildComponent<TMP_InputField>("roomRegionNameInputField");
         }
 
         public string RoomName
@@ -53,13 +53,13 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
         {
             get
             {
-                return regionNameInputField != null ? regionNameInputField.text : string.Empty;
+                return roomRegionNameInputField != null ? roomRegionNameInputField.text : string.Empty;
             }
 
             set
             {
-                if (regionNameInputField)
-                    regionNameInputField.text = value;
+                if (roomRegionNameInputField)
+                    roomRegionNameInputField.text = value;
             }
         }
     }

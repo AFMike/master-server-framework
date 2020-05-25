@@ -1,6 +1,21 @@
 ## Updates Log
 
+### Msf 3.6.2
+
+Added systems:
+- AccountsBehaviour - is responsible for managing of user account​
+- MatchmakingBehaviour​ - helps to create simple game match on master server and connect to created game room
+- MirrorRoomClient - manages connection to room server and is responsible for getting access to room server with the help of​ access token and getting data about room server from master server
+- MirrorRoomClientStarter - helps to start ​MirrorRoomClient and connect to MirrorRoomServer
+- MirrorRoomServer - ​​​is responsible for managing of  room players and their profiles and accounts. It is also responsible for starting Mirror Server
+- MirrorNetworkManager - is a extension of NetworkManager  and​  main system to manage the ​MirrorRoomClient ​and MirrorRoomServer . It has events you can register to listen to NetworkManager callbacks​
+
+Shared:
+
+- This folder has another useful systems to help you to start your prototype demo fast and easily.​
+
 ### Msf 3.6.1
+
  - Delete old version before import
 
 ### Msf 3.6.0

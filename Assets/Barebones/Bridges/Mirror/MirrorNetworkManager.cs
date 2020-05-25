@@ -41,19 +41,34 @@ namespace Barebones.Bridges.Mirror
         public event Action OnHostStartedEvent;
 
         /// <summary>
+        /// Invokes when mirror host is stopped
+        /// </summary>
+        public event Action OnHostStopEvent;
+
+        /// <summary>
         /// This is called on the Server when a Client disconnects from the Server
         /// </summary>
         public event Action<NetworkConnection> OnClientDisconnectedEvent;
+
+        /// <summary>
+        /// Called on clients when connected to a server
+        /// </summary>
+        public event Action<NetworkConnection> OnConnectedEvent;
+
+        /// <summary>
+        /// Called on clients when disconnected from a server
+        /// </summary>
+        public event Action<NetworkConnection> OnDisconnectedEvent;
 
         public override void Awake()
         {
             logger = Msf.Create.Logger(GetType().Name);
             logger.LogLevel = logLevel;
 
-            base.Awake();
-
             // Prevent to create player automatically
             autoCreatePlayer = false;
+
+            base.Awake();
         }
 
         #region MIRROR CALLBACKS
@@ -64,6 +79,10 @@ namespace Barebones.Bridges.Mirror
         public override void OnStartServer()
         {
             base.OnStartServer();
+
+            // Register handler to listen to player creation message
+            NetworkServer.RegisterHandler<CreatePlayerMessage>(CreatePlayerRequestHandler, false);
+
             OnServerStartedEvent?.Invoke();
         }
 
@@ -71,6 +90,12 @@ namespace Barebones.Bridges.Mirror
         {
             base.OnStartHost();
             OnHostStartedEvent?.Invoke();
+        }
+
+        public override void OnStopHost()
+        {
+            base.OnStopHost();
+            OnHostStopEvent?.Invoke();
         }
 
         public override void OnServerDisconnect(NetworkConnection conn)
@@ -82,9 +107,13 @@ namespace Barebones.Bridges.Mirror
         public override void OnClientConnect(NetworkConnection conn)
         {
             base.OnClientConnect(conn);
-            
-            // Register handler to listen to player creation message
-            NetworkServer.RegisterHandler<CreatePlayerMessage>(CreatePlayerRequestHandler, false);
+            OnConnectedEvent?.Invoke(conn);
+        }
+
+        public override void OnClientDisconnect(NetworkConnection conn)
+        {
+            base.OnClientDisconnect(conn);
+            OnDisconnectedEvent?.Invoke(conn);
         }
 
         #endregion

@@ -1,18 +1,30 @@
-﻿using System.Collections;
+﻿using Barebones.MasterServer;
+using Barebones.Networking;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MirrorRoomClientStarter : MonoBehaviour
+namespace Barebones.Bridges.Mirror
 {
-    // Start is called before the first frame update
-    void Start()
+    public class MirrorRoomClientStarter : BaseClientBehaviour
     {
-        
-    }
+        protected override void OnInitialize()
+        {
+            if (Msf.Options.Has(MsfDictKeys.autoStartRoomClient))
+            {
+                Debug.Log("Helllllllooooooo");
+                Connection.AddConnectionListener(OnConnectedToMasterServerEventHandler);
+            }
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        private void OnConnectedToMasterServerEventHandler()
+        {
+            MsfTimer.WaitForEndOfFrame(() =>
+            {
+                Debug.Log("I'm heeeeeere");
+                MirrorRoomClient.Instance.StartClient();
+            });
+        }
     }
 }

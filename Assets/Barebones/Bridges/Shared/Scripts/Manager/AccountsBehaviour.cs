@@ -77,14 +77,14 @@ namespace Barebones.Games
                     }
                 }
 
-                if (!IsConnected)
+                Connection.AddConnectionListener(OnClientConnectedToServer);
+                Connection.AddDisconnectionListener(OnClientDisconnectedFromServer, false);
+
+                if (!Connection.IsConnected && !Connection.IsConnecting)
                 {
                     Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Connecting to master... Please wait!");
                     clientToMasterConnector.StartConnection();
                 }
-
-                Connection.AddConnectionListener(OnClientConnectedToServer);
-                Connection.AddDisconnectionListener(OnClientDisconnectedFromServer, false);
             });
         }
 
