@@ -129,14 +129,19 @@ namespace Barebones.Bridges.Mirror
         #endregion
 
         /// <summary>
-        /// Invokes whenclient requested to create player on mirror server
+        /// Invokes when client requested to create player on mirror server
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
         protected virtual void CreatePlayerRequestHandler(NetworkConnection connection, CreatePlayerMessage message)
         {
-            var playerObject = Instantiate(playerPrefab);
-            NetworkServer.AddPlayerForConnection(connection, playerObject);
+            // Get start position of player
+            Transform startPos = GetStartPosition();
+            GameObject player = startPos != null
+                ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
+                : Instantiate(playerPrefab);
+
+            NetworkServer.AddPlayerForConnection(connection, player);
         }
     }
 }

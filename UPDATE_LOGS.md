@@ -1,5 +1,15 @@
 ## Updates Log
 
+### Msf 3.7.0
+
+Added Mirror FPS character controller:
+
+- CharacterBehaviour - generic class.
+- CharacterMovement - is responsible for character movement.
+- CharacterInput - is responsible for using input system of Unity and control character.
+- CharacterFpsLook - fps mode camera controller.
+- CharacterAvatar - is responsible for network avatar of character.
+
 ### Msf 3.6.3
 
 Made some changes and improvements to MirrorRoomServer and MirrorRoomClient

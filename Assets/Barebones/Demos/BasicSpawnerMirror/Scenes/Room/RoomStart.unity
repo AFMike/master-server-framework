@@ -848,7 +848,7 @@ MonoBehaviour:
   initModulesAtStart: 1
   masterIp: 127.0.0.1
   masterPort: 5000
-  autoStartInEditor: 0
+  autoStartInEditor: 1
   startServerAsHost: 1
 --- !u!1001 &1547812731
 PrefabInstance:

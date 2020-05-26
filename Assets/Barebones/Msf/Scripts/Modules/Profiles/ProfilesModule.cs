@@ -28,22 +28,27 @@ namespace Barebones.MasterServer
         /// server to submit last changes
         /// </summary>
         public float unloadProfileAfter = 20f;
+
         /// <summary>
         /// Interval, in which updated profiles will be saved to database
         /// </summary>
         public float saveProfileInterval = 1f;
+
         /// <summary>
         /// Interval, in which profile updates will be sent to clients
         /// </summary>
         public float clientUpdateInterval = 0f;
+
         /// <summary>
         /// Permission user need to have to edit profile
         /// </summary>
         public int editProfilePermissionLevel = 0;
+
         /// <summary>
         /// DB to work with profile data
         /// </summary>
         public IProfilesDatabaseAccessor profileDatabaseAccessor;
+
         /// <summary>
         /// Ignore errors occurred when profile data mismatch
         /// </summary>
@@ -55,6 +60,7 @@ namespace Barebones.MasterServer
         /// structure of a profile.
         /// </summary>
         public ProfileFactory ProfileFactory { get; set; }
+
         public Dictionary<string, ObservableServerProfile> ProfilesList { get; protected set; }
 
         protected override void Awake()

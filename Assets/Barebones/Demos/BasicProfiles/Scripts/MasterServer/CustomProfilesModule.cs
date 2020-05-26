@@ -36,6 +36,12 @@ namespace Barebones.MasterServer.Examples.BasicProfile
             InvokeRepeating(nameof(IncreaseResources), 1f, 1f);
         }
 
+        /// <summary>
+        /// This method is just for creation of profile on server side as default for users that are logged in for the first time
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="clientPeer"></param>
+        /// <returns></returns>
         private ObservableServerProfile CreateProfileInServer(string username, IPeer clientPeer)
         {
             return new ObservableServerProfile(username, clientPeer)

@@ -14,10 +14,12 @@ namespace Barebones.MasterServer
         /// Username of the client, who's profile this is
         /// </summary>
         public string Username { get; private set; }
+
         /// <summary>
         /// Peer of the owner
         /// </summary>
         public IPeer ClientPeer { get; set; }
+
         /// <summary>
         /// Should this profile to be saved to database
         /// </summary>

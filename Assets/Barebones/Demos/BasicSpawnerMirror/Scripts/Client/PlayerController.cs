@@ -11,5 +11,10 @@ namespace Barebones.MasterServer.Examples.BasicSpawnerMirror
         {
            
         }
+
+        private void Update()
+        {
+            //if()
+        }
     }
 }
