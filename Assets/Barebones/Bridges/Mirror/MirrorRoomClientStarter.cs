@@ -1,5 +1,6 @@
 ﻿using Barebones.MasterServer;
 using Barebones.Networking;
+using Mirror;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,16 +14,15 @@ namespace Barebones.Bridges.Mirror
         {
             if (Msf.Options.Has(MsfDictKeys.autoStartRoomClient))
             {
-                Debug.Log("Helllllllooooooo");
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Connecting to room... Please wait!");
                 Connection.AddConnectionListener(OnConnectedToMasterServerEventHandler);
             }
         }
 
-        private void OnConnectedToMasterServerEventHandler()
+        protected virtual void OnConnectedToMasterServerEventHandler()
         {
             MsfTimer.WaitForEndOfFrame(() =>
             {
-                Debug.Log("I'm heeeeeere");
                 MirrorRoomClient.Instance.StartClient();
             });
         }

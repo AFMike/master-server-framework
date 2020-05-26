@@ -1,5 +1,9 @@
 ## Updates Log
 
+### Msf 3.6.3
+
+Made some changes and improvements to MirrorRoomServer and MirrorRoomClient
+
 ### Msf 3.6.2
 
 Added systems:

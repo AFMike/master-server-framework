@@ -28,13 +28,6 @@ namespace Barebones.Bridges.Mirror
         protected int masterPort = 5000;
 
         /// <summary>
-        /// If true the system will try to join you to server automatically
-        /// </summary>
-        [Header("Client Settings")]
-        [SerializeField, Tooltip("If true the system will try to join you to server automatically")]
-        protected bool autoJoinRoom = true;
-
-        /// <summary>
         /// Time of waiting the connection to mirror server
         /// </summary>
         [SerializeField, Tooltip("Time of waiting the connection to mirror server")]
@@ -48,9 +41,9 @@ namespace Barebones.Bridges.Mirror
         };
 
         /// <summary>
-        /// This will start server in editor automatically
+        /// This will start client in editor automatically
         /// </summary>
-        [SerializeField, Tooltip("This will start server in editor automatically")]
+        [SerializeField, Tooltip("This will start client in editor automatically")]
         protected bool autoStartInEditor = true;
 
         /// <summary>
@@ -62,13 +55,13 @@ namespace Barebones.Bridges.Mirror
         /// <summary>
         /// If <see cref="signInAsGuest"/> is not true system will try sign in as registereg user in test mode using this username
         /// </summary>
-        [SerializeField, Tooltip("If <see signInAsGuest is not true system will try sign in as registereg user in test mode using this username")]
+        [SerializeField, Tooltip("If signInAsGuest is not true system will try sign in as registereg user in test mode using this username")]
         protected string username = "qwerty";
 
         /// <summary>
         /// If <see cref="signInAsGuest"/> is not true system will try sign in as registereg user in test mode using this password
         /// </summary>
-        [SerializeField, Tooltip("If <see signInAsGuest is not true system will try sign in as registereg user in test mode using this password")]
+        [SerializeField, Tooltip("If signInAsGuest is not true system will try sign in as registereg user in test mode using this password")]
         protected string password = "qwerty12345";
 
         #endregion
@@ -134,7 +127,7 @@ namespace Barebones.Bridges.Mirror
             // Stop listening to OnServerStartedEvent of our MirrorNetworkManager
             if (NetworkManager.singleton is MirrorNetworkManager manager)
             {
-                manager.OnHostStartedEvent -= OnMirrorHostStartedEventHandler;
+                manager.OnClientStartedEvent -= OnMirrorClientStartedEventHandler;
             }
 
             // Remove master server connection and disconnection listener
@@ -155,7 +148,7 @@ namespace Barebones.Bridges.Mirror
             // Start listening to OnServerStartedEvent of our MirrorNetworkManager
             if (NetworkManager.singleton is MirrorNetworkManager manager)
             {
-                manager.OnHostStartedEvent += OnMirrorHostStartedEventHandler;
+                manager.OnClientStartedEvent += OnMirrorClientStartedEventHandler;
             }
             else
             {
@@ -200,33 +193,15 @@ namespace Barebones.Bridges.Mirror
         }
 
         /// <summary>
-        /// Fired when mirror networking is started as host.
+        /// Fired when mirror client is started.
         /// This is usefull in test mode.
         /// </summary>
-        protected virtual void OnMirrorHostStartedEventHandler()
+        protected virtual void OnMirrorClientStartedEventHandler()
         {
             // If we are in test mode
             if (IsAllowedToBeStartedInEditor())
             {
-                if (!Msf.Client.Auth.IsSignedIn)
-                {
-                    if (signInAsGuest)
-                    {
-                        Msf.Client.Auth.SignInAsGuest(OnSignInCallbackHandler);
-                    }
-                    else
-                    {
-                        Msf.Client.Auth.SignIn(username, password, OnSignInCallbackHandler);
-                    }
-                }
-                else
-                {
-                    // If we want to join room immediately
-                    if (autoJoinRoom)
-                    {
-                        StartClient();
-                    }
-                }
+                StartClient();
             }
         }
 
@@ -243,11 +218,7 @@ namespace Barebones.Bridges.Mirror
                 return;
             }
 
-            // If we want to join room immediately
-            if (autoJoinRoom)
-            {
-                StartClient();
-            }
+            StartClient();
         }
 
         #endregion
@@ -277,13 +248,15 @@ namespace Barebones.Bridges.Mirror
         protected virtual void GetRoomAccess(int roomId)
         {
             logger.Debug($"Getting access to room {roomId}");
+            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Getting access to room {roomId}... Please wait!");
 
             Msf.Client.Rooms.GetAccess(roomId, (access, error) =>
             {
                 if (access == null)
                 {
+                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
                     logger.Error(error);
-                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator"));
+                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator", ()=> { Msf.Runtime.Quit(); }));
                     return;
                 }
 
@@ -293,9 +266,13 @@ namespace Barebones.Bridges.Mirror
                 // Save gotten room access
                 roomAccess = access;
 
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Joinig room {roomId}... Please wait!");
+
                 // Wait for connection to mirror server
                 MsfTimer.WaitWhile(() => !NetworkClient.isConnected, isSuccessful =>
                 {
+                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
+
                     if (!isSuccessful)
                     {
                         logger.Error("We could not connect to room. Please try again later or contact to administrator");
@@ -353,10 +330,7 @@ namespace Barebones.Bridges.Mirror
         /// <param name="conn"></param>
         protected virtual void OnAccessGranted(NetworkConnection conn)
         {
-            if (autoJoinRoom)
-            {
-                CreatePlayer();
-            }
+            CreatePlayer();
         }
 
         /// <summary>
@@ -370,8 +344,43 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         public void StartClient()
         {
-            // Let's get access to room
-            GetRoomAccess(Msf.Options.AsInt(MsfDictKeys.roomId));
+            if (!Msf.Client.Auth.IsSignedIn)
+            {
+                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Signing in... Please wait!");
+
+                if (signInAsGuest)
+                {
+                    Msf.Client.Auth.SignInAsGuest(OnSignInCallbackHandler);
+                }
+                else
+                {
+                    Msf.Client.Auth.SignIn(username, password, OnSignInCallbackHandler);
+                }
+            }
+            else
+            {
+                if (!Msf.Options.Has(MsfDictKeys.roomId))
+                {
+                    Msf.Client.Matchmaker.FindGames((games) => {
+
+                        if(games != null && games.Count > 0)
+                        {
+                            // Save room id to global options just for test purpose only
+                            Msf.Options.Add(MsfDictKeys.roomId, games.First().Id);
+                            StartClient();
+                        }
+                        else
+                        {
+                            Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator", () => { Msf.Runtime.Quit(); }));
+                        }
+                    });
+                }
+                else
+                {
+                    // Let's get access to room
+                    GetRoomAccess(Msf.Options.AsInt(MsfDictKeys.roomId));
+                }
+            }
         }
 
         /// <summary>
