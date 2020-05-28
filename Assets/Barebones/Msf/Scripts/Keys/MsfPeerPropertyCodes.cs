@@ -2,7 +2,7 @@
 {
     public enum MsfPeerPropertyCodes : short
     {
-        Start = 32000,
+        Start = 26000,
 
         // Rooms
         RegisteredRooms,

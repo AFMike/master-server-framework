@@ -15,7 +15,7 @@ namespace Barebones.Bridges.Mirror.Character
         private float rotationSmoothTime = 5f;
 
         /// <summary>
-        /// Направление, в которое постоянно должен смотреть игрок
+        /// The direction to which the character is required to look
         /// </summary>
         private Quaternion playerTargetDirectionAngle;
 
@@ -25,7 +25,7 @@ namespace Barebones.Bridges.Mirror.Character
             {
                 var aimDirection = lookController.AimDirection();
 
-                // Если персонаж двигается но не находится в режиме боя
+                // If we are moving but not armed mode
                 if (inputController.IsMoving() && !inputController.IsArmed())
                 {
                     // Вычисляем новый угол поворота игрока
@@ -36,18 +36,18 @@ namespace Barebones.Bridges.Mirror.Character
                         playerTargetDirectionAngle = Quaternion.LookRotation(t_currentDirection) * lookController.GetRotation();
                     }
                 }
-                // Если персонаж двигается и находится в режиме боя
+                // If we are moving and armed mode
                 else if (inputController.IsMoving() && inputController.IsArmed())
                 {
                     playerTargetDirectionAngle = Quaternion.LookRotation(new Vector3(aimDirection.x, 0f, aimDirection.z));
                 }
-                // Если персонаж не двигается и находится в режиме боя
+                // If we are not moving and not armed mode
                 else if (!inputController.IsMoving() && inputController.IsArmed())
                 {
                     playerTargetDirectionAngle = Quaternion.LookRotation(new Vector3(aimDirection.x, 0f, aimDirection.z));
                 }
 
-                // Плавно поворачиваем игрока в направлении целевого угла поворота
+                // Rotate character to target direction
                 transform.rotation = Quaternion.Lerp(transform.rotation, playerTargetDirectionAngle, Time.deltaTime * rotationSmoothTime);
 
                 // Let's calculate input direction
@@ -77,10 +77,10 @@ namespace Barebones.Bridges.Mirror.Character
             }
             else
             {
-                calculatedMovementDirection += Physics.gravity * gravityMultiplier * Time.fixedDeltaTime;
+                calculatedMovementDirection += Physics.gravity * gravityMultiplier * Time.deltaTime;
             }
 
-            characterController.Move(calculatedMovementDirection * Time.fixedDeltaTime);
+            characterController.Move(calculatedMovementDirection * Time.deltaTime);
         }
     }
 }

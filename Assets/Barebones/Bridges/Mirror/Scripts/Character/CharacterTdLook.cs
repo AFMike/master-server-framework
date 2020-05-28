@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Mirror;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -86,20 +87,14 @@ namespace Barebones.Bridges.Mirror.Character
             && cameraOffsetPoint
             && movementController;
 
+        [Client]
         private void Update()
         {
             if (isLocalPlayer && IsReady)
             {
-                // Обновляем дистанцию камеры от игрока
                 UpdateCameraDistance();
-
-                // Обновление позиции камеры
                 UpdateCameraPosition();
-
-                // Обновление смещения камеры вперед относительно игрока
                 UpdateCameraOffset();
-
-                // Обновляем вращение камеры вокруг игрока
                 UpdateCameraRotation();
             }
         }
@@ -120,7 +115,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Срабатывает при создании локального игрока
+        /// When local player is created
         /// </summary>
         public override void OnStartLocalPlayer()
         {
@@ -130,7 +125,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Создаем управляющие элементы камеры игрока
+        /// Create camera control elements
         /// </summary>
         private void CreateCameraControls()
         {
@@ -181,7 +176,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Пересчитвываем дистанцию, вдруг максимальная меньше минимальной
+        /// Just calculates the distance. If max distance less than min
         /// </summary>
         private void RecalculateDistance()
         {
@@ -194,7 +189,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Обновление смещения камеры вперед относительно игрока
+        /// Updates camera offset in front of character
         /// </summary>
         private void UpdateCameraOffset()
         {
@@ -209,7 +204,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Обновляем вращение камеры вокруг игрока
+        /// Updates camera rotation
         /// </summary>
         private void UpdateCameraRotation()
         {
@@ -226,28 +221,25 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Обновляем дистанцию камеры от игрока
+        /// Updates distance between camera and character
         /// </summary>
         private void UpdateCameraDistance()
         {
-            // Устанавливаем новую дистанцию камеры от персонажа не превышая указанные границы
             currentCameraDistance = Mathf.Clamp(currentCameraDistance - (inputController.MouseVerticalScroll() * distanceScrollPower), minDistance, maxDistance);
             topDownPlayerCamera.transform.localPosition = Vector3.Lerp(topDownPlayerCamera.transform.localPosition, new Vector3(0f, 0f, currentCameraDistance * -1f), Time.deltaTime * distanceSmoothTime);
         }
 
         /// <summary>
-        /// Обновление позиции камеры
+        /// Updates camera position
         /// </summary>
         private void UpdateCameraPosition()
         {
             if (useOffsetDistance)
             {
-                // Камера постоянно следует за точкой смещения
                 cameraRoot.transform.position = Vector3.Lerp(cameraRoot.transform.position, cameraOffsetPoint.transform.position, Time.deltaTime * followSmoothTime);
             }
             else
             {
-                // Камера постоянно следует за персонажем
                 cameraRoot.transform.position = transform.position;
             }
         }
@@ -260,7 +252,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Получаем угол поворота камеры в координатах <see cref="Quaternion"/>
+        /// Gets camera root rotation angle in <see cref="Quaternion"/>
         /// </summary>
         /// <returns></returns>
         public Quaternion GetRotation()
@@ -269,7 +261,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Получаем угол поворота камеры в координатах <see cref="Vector3"/>
+        /// Gets camera root rotation angle in <see cref="Vector3"/>
         /// </summary>
         /// <returns></returns>
         public Vector3 GetEulerRotation()
@@ -278,7 +270,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Получаем угол камеры вокруг оси Y в координатах <see cref="Quaternion"/>
+        /// Gets camera root yaw angle in <see cref="Quaternion"/>
         /// </summary>
         /// <returns></returns>
         public float GetQuaternionYaw()
@@ -287,7 +279,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Получаем угол камеры вокруг оси Y в координатах <see cref="Vector3"/>
+        /// Gets camera root yaw angle in <see cref="Vector3"/>
         /// </summary>
         /// <returns></returns>
         public float GetEulerYaw()
@@ -296,7 +288,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Вектор направления прицеливания
+        /// Direction to the point at what the character is looking in armed mode
         /// </summary>
         /// <returns></returns>
         public Vector3 AimDirection()
@@ -312,7 +304,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Угол прицеливания по оси Y без знака
+        /// Character aim yaw angle
         /// </summary>
         /// <returns></returns>
         public float AimYawAngle()
@@ -321,7 +313,7 @@ namespace Barebones.Bridges.Mirror.Character
         }
 
         /// <summary>
-        /// Угол прицеливания по оси Y со знаком
+        /// Character aim yaw signed angle
         /// </summary>
         /// <returns></returns>
         public float AimSignedYawAngle()
@@ -329,6 +321,10 @@ namespace Barebones.Bridges.Mirror.Character
             return Vector3.SignedAngle(transform.forward, new Vector3(AimDirection().x, 0f, AimDirection().z), Vector3.up);
         }
 
+        /// <summary>
+        /// Character aim pitch signed angle
+        /// </summary>
+        /// <returns></returns>
         public float AimSignedPitchAngle()
         {
             return Vector3.SignedAngle(transform.forward, new Vector3(AimDirection().x, 0f, AimDirection().z), Vector3.left);

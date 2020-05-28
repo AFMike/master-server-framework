@@ -1,4 +1,5 @@
-﻿using Barebones.MasterServer;
+﻿using Aevien.JackalGame;
+using Barebones.MasterServer;
 using Barebones.Networking;
 using Mirror;
 using System;
@@ -10,6 +11,12 @@ namespace Barebones.Bridges.Mirror
     public class MirrorRoomServer : BaseClientBehaviour
     {
         #region INSPECTOR
+
+        /// <summary>
+        /// Loads player profile after he joined the room
+        /// </summary>
+        [Header("Master Connection Settings"), SerializeField, Tooltip("Loads player profile after he joined the room")]
+        protected bool autoLoadUserProfile = true;
 
         /// <summary>
         /// Master server IP address to connect room server to master server as client
@@ -97,7 +104,7 @@ namespace Barebones.Bridges.Mirror
         protected override void Awake()
         {
             // Only one room server can exist in scene
-            if(Instance != null)
+            if (Instance != null)
             {
                 Destroy(gameObject);
                 return;
@@ -130,7 +137,7 @@ namespace Barebones.Bridges.Mirror
             MirrorNetworkManager = NetworkManager.singleton;
 
             // Start listening to OnServerStartedEvent of our MirrorNetworkManager
-            if(NetworkManager.singleton is MirrorNetworkManager manager)
+            if (NetworkManager.singleton is MirrorNetworkManager manager)
             {
                 manager.OnServerStartedEvent += OnMirrorServerStartedEventHandler;
                 manager.OnClientDisconnectedEvent += OnMirrorClientDisconnectedEvent;
@@ -244,7 +251,7 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         private void OnMirrorHostStoppedEventHandler()
         {
-            if(CurrentRoomController != null)
+            if (CurrentRoomController != null)
             {
                 Connection?.Disconnect();
                 CurrentRoomController = null;
@@ -353,7 +360,8 @@ namespace Barebones.Bridges.Mirror
                 SetPort((ushort)roomOptions.RoomPort);
 
                 // Finalize spawn task before we start mirror server 
-                taskController.FinalizeTask(new DictionaryOptions(), () => {
+                taskController.FinalizeTask(new DictionaryOptions(), () =>
+                {
                     // Start Mirror server
                     MirrorNetworkManager.StartServer();
                 });
@@ -431,14 +439,6 @@ namespace Barebones.Bridges.Mirror
                         return;
                     }
 
-                    logger.Debug($"Client {conn.connectionId} has become a player of this room. Congratulations to {accountInfo.Username}");
-
-                    conn.Send(new ValidateRoomAccessResultMessage()
-                    {
-                        Error = string.Empty,
-                        Status = ResponseStatus.Success
-                    });
-
                     // Create new room player
                     var player = new MirrorRoomPlayer(usernameAndPeerId.PeerId, conn, accountInfo.Username, accountInfo.CustomOptions);
 
@@ -447,17 +447,53 @@ namespace Barebones.Bridges.Mirror
                     roomPlayersByMirrorPeerId.Add(conn.connectionId, player);
                     roomPlayersByUsername.Add(accountInfo.Username, player);
 
-                    // Inform subscribers about this player
-                    OnPlayerJoinedRoomEvent?.Invoke(player);
+                    // If server is required user profile
+                    if (autoLoadUserProfile)
+                    {
+                        LoadPlayerProfile(accountInfo.Username, (isLoadProfileSuccess, loadProfileError) =>
+                        {
+                            if (isLoadProfileSuccess)
+                            {
+                                FinalizePlayerJoining(conn);
+                            }
+                        });
+                    }
+                    else
+                    {
+                        FinalizePlayerJoining(conn);
+                    }
                 });
             });
+        }
+
+        /// <summary>
+        /// Finalize player joining to server room
+        /// </summary>
+        /// <param name="conn"></param>
+        protected virtual void FinalizePlayerJoining(NetworkConnection conn)
+        {
+            if (roomPlayersByMirrorPeerId.ContainsKey(conn.connectionId))
+            {
+                MirrorRoomPlayer player = roomPlayersByMirrorPeerId[conn.connectionId];
+
+                logger.Debug($"Client {conn.connectionId} has become a player of this room. Congratulations to {player.Username}");
+
+                conn.Send(new ValidateRoomAccessResultMessage()
+                {
+                    Error = string.Empty,
+                    Status = ResponseStatus.Success
+                });
+
+                // Inform subscribers about this player
+                OnPlayerJoinedRoomEvent?.Invoke(player);
+            }
         }
 
         /// <summary>
         /// Sets an address 
         /// </summary>
         /// <param name="roomAddress"></param>
-        public void SetAddress(string roomAddress)
+        public virtual void SetAddress(string roomAddress)
         {
             NetworkManager.singleton.networkAddress = roomAddress;
         }
@@ -466,7 +502,7 @@ namespace Barebones.Bridges.Mirror
         /// Gets an address
         /// </summary>
         /// <param name="roomIp"></param>
-        public string GetAddress()
+        public virtual string GetAddress()
         {
             return NetworkManager.singleton.networkAddress;
         }
@@ -501,6 +537,31 @@ namespace Barebones.Bridges.Mirror
             {
                 logger.Error("You are trying to use TelepathyTransport. But it is not found on the scene. Try to override this method to create you own implementation");
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// Loads player profile
+        /// </summary>
+        /// <param name="successCallback"></param>
+        public void LoadPlayerProfile(string username, SuccessCallback successCallback)
+        {
+            if (roomPlayersByUsername.ContainsKey(username))
+            {
+                MirrorRoomPlayer player = roomPlayersByUsername[username];
+
+                Msf.Server.Profiles.FillProfileValues(player.Profile, (isSuccess, error) =>
+                {
+                    if (!isSuccess)
+                    {
+                        logger.Error("Room server cannot retrieve player profile from master server");
+                        successCallback?.Invoke(false, "Room server cannot retrieve player profile from master server");
+                        MsfTimer.WaitForSeconds(1f, () => player.MirrorPeer.Disconnect());
+                        return;
+                    }
+
+                    successCallback?.Invoke(true, string.Empty);
+                });
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Mirror;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -66,6 +67,7 @@ namespace Barebones.Bridges.Mirror.Character
         /// </summary>
         public bool IsRunning { get; protected set; }
 
+        [Client]
         protected void Update()
         {
             if (isLocalPlayer && IsReady)
@@ -121,10 +123,10 @@ namespace Barebones.Bridges.Mirror.Character
             }
             else
             {
-                calculatedMovementDirection += Physics.gravity * gravityMultiplier * Time.fixedDeltaTime;
+                calculatedMovementDirection += Physics.gravity * gravityMultiplier * Time.deltaTime;
             }
 
-            characterController.Move(calculatedMovementDirection * Time.fixedDeltaTime);
+            characterController.Move(calculatedMovementDirection * Time.deltaTime);
         }
     }
 }

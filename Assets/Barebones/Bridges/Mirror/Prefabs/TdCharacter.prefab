@@ -136,8 +136,8 @@ MonoBehaviour:
   syncInterval: 0.1
   gravityMultiplier: 1
   stickToGroundPower: 5
-  walkSpeed: 1.5
-  runSpeed: 3
+  walkSpeed: 3
+  runSpeed: 5
   jumpIsAllowed: 1
   jumpPower: 8
   jumpRate: 1
