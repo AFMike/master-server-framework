@@ -9,10 +9,10 @@
 
 ### Msf 3.8.0
 
-​Added Top down character controller. 
+Added Top down character controller. 
 
 - CharacterTdLook - is responsible for controlling top down camera and character angle. It also useful for root motion animator controller to control movement animation axis.
-​- CharacterTdMovement - is responsible for character movement. It also takes into account data from ​CharacterTdLook  to move character according to angle​ of the character.​
+- CharacterTdMovement - is responsible for character movement. It also takes into account data from ​CharacterTdLook  to move character according to angle of the character.
 
 ### Msf 3.7.0
 
