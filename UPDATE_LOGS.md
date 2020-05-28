@@ -6,6 +6,7 @@
 
 - Now the MirrorRoomServer can load player profile on server. This will help you to use server side player profile and change in mirror room server.​
 - Fixed bug in CharacterMovement and CharacterTdMovement scripts.
+- Another fixes
 
 ### Msf 3.8.0
 
