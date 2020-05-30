@@ -1,3 +1,5 @@
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=37V2ZB4T8BD42)
+
 ## Barebones Master Server Framework for Unity
 
 [![](http://i.imgur.com/9SrutM0.png)](https://www.assetstore.unity3d.com/#!/content/71391)
