@@ -28,22 +28,29 @@ namespace Barebones.MasterServer
 
         [Header("General"), SerializeField, Tooltip("Log level of this script's logger")]
         protected LogLevel logLevel = LogLevel.Info;
+
         [SerializeField, Tooltip("Log level of internal SpawnerController logger")]
         protected LogLevel spawnerLogLevel = LogLevel.Warn;
 
         [Header("Spawner Default Options")]
         [SerializeField, Tooltip("Default IP address")]
         protected string machineIp = "127.0.0.1";
+
         [SerializeField, Tooltip("If true server will try to get you machine public IP. This feature is for quick way to get IP of the machine on which the room server is running. Do not use it on your local machine.")]
         protected bool usePublicIp = false;
+
         [SerializeField, Tooltip("Default path to executable file")]
         protected string executableFilePath = "";
+
         [SerializeField, Tooltip("Use this to set whether or not to spawn room/server in headless mode.")]
         protected bool spawnInBatchmode = false;
+
         [SerializeField, Tooltip("Max number of rooms/server SpawnerController can run")]
         protected int maxProcesses = 5;
+
         [SerializeField, Tooltip("Use this to set whether or not to spawn room/server for browser games. This feature works only if game server uses websocket transport for connections")]
         protected bool spawnWebSocketServers = false;
+
         [SerializeField, Tooltip("Spawner region used when you are trying to start rooms by given region. Empty means International")]
         protected string region = "";
 
@@ -59,8 +66,10 @@ namespace Barebones.MasterServer
 
         [Header("Running in Editor"), SerializeField, Tooltip("If true, when running in editor, spawner server will start automatically (after connecting to master)")]
         protected bool autoStartInEditor = true;
+
         [SerializeField, Tooltip("If true, and if running in editor, path to executable will be overriden, and a value from 'exePathFromEditor' will be used.")]
         protected bool overrideExePathInEditor = true;
+
         [SerializeField, Tooltip("Path to the executable to be spawned as server")]
         protected string exePathFromEditor = "C:/Please set your own path";
 
@@ -211,7 +220,7 @@ namespace Barebones.MasterServer
                     return;
                 }
 
-                spawnerController = controller as SpawnerController;
+                spawnerController = controller;
                 spawnerController.Logger.LogLevel = spawnerLogLevel;
 
                 spawnerController.SpawnSettings.UseWebSockets = Msf.Args.IsProvided(Msf.Args.Names.UseWebSockets)

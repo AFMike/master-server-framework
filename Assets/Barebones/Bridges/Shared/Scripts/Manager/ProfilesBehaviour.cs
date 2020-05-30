@@ -17,6 +17,11 @@ namespace Barebones.Games
         /// </summary>
         public UnityEvent OnProfileLoadedEvent;
 
+        /// <summary>
+        /// Invokes when profile is not loaded successfully
+        /// </summary>
+        public UnityEvent OnProfileLoadFailedEvent;
+
         #endregion
 
         /// <summary>
@@ -26,14 +31,7 @@ namespace Barebones.Games
 
         protected override void OnInitialize()
         {
-            Profile = new ObservableProfile
-            {
-                new ObservableString((short)ObservablePropertiyCodes.DisplayName),
-                new ObservableString((short)ObservablePropertiyCodes.Avatar),
-                new ObservableFloat((short)ObservablePropertiyCodes.Bronze),
-                new ObservableFloat((short)ObservablePropertiyCodes.Silver),
-                new ObservableFloat((short)ObservablePropertiyCodes.Gold)
-            };
+            Profile = new ObservableProfile();
         }
 
         /// <summary>
@@ -52,15 +50,16 @@ namespace Barebones.Games
             {
                 Msf.Client.Profiles.GetProfileValues(Profile, (isSuccessful, error) =>
                 {
+                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
+
                     if (isSuccessful)
                     {
-                        Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
                         OnProfileLoadedEvent?.Invoke();
                     }
                     else
                     {
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox,
-                            new OkDialogBoxViewEventMessage($"When requesting profile data an error occurred. [{error}]"));
+                        logger.Error("Could not load user profile");
+                        OnProfileLoadFailedEvent?.Invoke();
                     }
                 });
             });

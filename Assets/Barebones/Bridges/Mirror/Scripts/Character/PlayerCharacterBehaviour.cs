@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Barebones.Bridges.Mirror.Character
 {
-    public class CharacterBehaviour : NetworkBehaviour
+    public class PlayerCharacterBehaviour : NetworkBehaviour
     {
         /// <summary>
         /// Check if this behaviour is ready

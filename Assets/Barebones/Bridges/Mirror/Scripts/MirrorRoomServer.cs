@@ -15,7 +15,7 @@ namespace Barebones.Bridges.Mirror
         /// <summary>
         /// Loads player profile after he joined the room
         /// </summary>
-        [Header("Master Connection Settings"), SerializeField, Tooltip("Loads player profile after he joined the room")]
+        [Header("Server Player Settings"), SerializeField, Tooltip("Loads player profile after he joined the room")]
         protected bool autoLoadUserProfile = true;
 
         /// <summary>
@@ -103,6 +103,8 @@ namespace Barebones.Bridges.Mirror
 
         protected override void Awake()
         {
+            base.Awake();
+
             // Only one room server can exist in scene
             if (Instance != null)
             {
@@ -114,7 +116,8 @@ namespace Barebones.Bridges.Mirror
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            base.Awake();
+            // Do not initialize if we are in client mode
+            if (Msf.Client.Rooms.ForceClientMode) return;
 
             // Create filtered lists of players
             roomPlayersByMsfPeerId = new Dictionary<int, MirrorRoomPlayer>();
@@ -130,6 +133,8 @@ namespace Barebones.Bridges.Mirror
 
         protected override void OnInitialize()
         {
+            if (Msf.Client.Rooms.ForceClientMode) return;
+
             // Register handler to listen to client access validation request
             NetworkServer.RegisterHandler<ValidateRoomAccessRequestMessage>(ValidateRoomAccessRequestHandler, false);
 
@@ -312,7 +317,7 @@ namespace Barebones.Bridges.Mirror
         }
 
         /// <summary>
-        /// Set this room options
+        /// Sets this room options. Remember that this will be overridden if room was spawned by spawner system
         /// </summary>
         /// <returns></returns>
         protected virtual RoomOptions SetRoomOptions()
@@ -354,6 +359,24 @@ namespace Barebones.Bridges.Mirror
                 {
                     logger.Error($"Room server process cannot be registered. The reason is: {error}");
                     return;
+                }
+
+                // If max players param was given from spawner task
+                if (taskController.Options.Has(MsfDictKeys.maxPlayers))
+                {
+                    roomOptions.MaxConnections = taskController.Options.AsInt(MsfDictKeys.maxPlayers);
+                }
+
+                // If password was given from spawner task
+                if (taskController.Options.Has(MsfDictKeys.roomPassword))
+                {
+                    roomOptions.Password = taskController.Options.AsString(MsfDictKeys.roomPassword);
+                }
+
+                // If max players was given from spawner task
+                if (taskController.Options.Has(MsfDictKeys.roomName))
+                {
+                    roomOptions.Name = taskController.Options.AsString(MsfDictKeys.roomName);
                 }
 
                 // Set port of the Mirror server
@@ -440,7 +463,10 @@ namespace Barebones.Bridges.Mirror
                     }
 
                     // Create new room player
-                    var player = new MirrorRoomPlayer(usernameAndPeerId.PeerId, conn, accountInfo.Username, accountInfo.CustomOptions);
+                    var player = new MirrorRoomPlayer(usernameAndPeerId.PeerId, conn, accountInfo.Username, accountInfo.CustomOptions)
+                    {
+                        Profile = ProfileFactory(accountInfo.Username)
+                    };
 
                     // Add this player to filtered lists
                     roomPlayersByMsfPeerId.Add(usernameAndPeerId.PeerId, player);
@@ -464,6 +490,16 @@ namespace Barebones.Bridges.Mirror
                     }
                 });
             });
+        }
+
+        /// <summary>
+        /// This will create room server player profile with all its properties
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        protected virtual ObservableServerProfile ProfileFactory(string username)
+        {
+            return new ObservableServerProfile(username);
         }
 
         /// <summary>
@@ -560,9 +596,43 @@ namespace Barebones.Bridges.Mirror
                         return;
                     }
 
+                    logger.Debug($"Profile of player {username} is successfully loaded. Player info: {player}");
                     successCallback?.Invoke(true, string.Empty);
                 });
             }
+        }
+
+        /// <summary>
+        /// Get <see cref="MirrorRoomPlayer"/> by Mirror peer Id
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public MirrorRoomPlayer GetRoomPlayerByMirrorPeer(NetworkConnection connection)
+        {
+            roomPlayersByMirrorPeerId.TryGetValue(connection.connectionId, out MirrorRoomPlayer player);
+            return player;
+        }
+
+        /// <summary>
+        /// Get <see cref="MirrorRoomPlayer"/> by Msf peer Id
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public MirrorRoomPlayer GetRoomPlayerByMsfPeer(int connection)
+        {
+            roomPlayersByMsfPeerId.TryGetValue(connection, out MirrorRoomPlayer player);
+            return player;
+        }
+
+        /// <summary>
+        /// Get <see cref="MirrorRoomPlayer"/> by Msf username
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public MirrorRoomPlayer GetRoomPlayerByUsername(string username)
+        {
+            roomPlayersByUsername.TryGetValue(username, out MirrorRoomPlayer player);
+            return player;
         }
     }
 }

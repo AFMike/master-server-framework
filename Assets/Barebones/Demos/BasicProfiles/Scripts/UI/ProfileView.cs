@@ -10,7 +10,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
     public class ProfileView : UIView
     {
         private Image avatarImage;
-        private ProfilesManager profilesManager;
+        private DemoProfilesManager profilesManager;
         private UIProperty displayNameUIProperty;
         private UIProperty bronzeUIProperty;
         private UIProperty silverUIProperty;
@@ -78,7 +78,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 
             if (!profilesManager)
             {
-                profilesManager = FindObjectOfType<ProfilesManager>();
+                profilesManager = FindObjectOfType<DemoProfilesManager>();
             }
 
             profilesManager.OnPropertyUpdatedEvent += ProfilesManager_OnPropertyUpdatedEvent;

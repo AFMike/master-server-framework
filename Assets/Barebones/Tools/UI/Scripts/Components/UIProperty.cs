@@ -9,9 +9,9 @@ namespace Aevien.UI
     public class UIProperty : MonoBehaviour
     {
         [Header("Components"), SerializeField]
-        private Image iconImage;
+        protected Image iconImage;
         [SerializeField]
-        private TextMeshProUGUI lableText;
+        protected TextMeshProUGUI lableText;
 
         public string Lable
         {

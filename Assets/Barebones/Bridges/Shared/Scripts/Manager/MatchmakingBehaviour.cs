@@ -44,6 +44,7 @@ namespace Barebones.Games
             var spawnOptions = new DictionaryOptions();
             spawnOptions.Add(MsfDictKeys.maxPlayers, createNewRoomView.MaxConnections);
             spawnOptions.Add(MsfDictKeys.roomName, createNewRoomView.RoomName);
+            spawnOptions.Add(MsfDictKeys.roomPassword, createNewRoomView.Password);
 
             // Custom options that will be given to room directly
             var customSpawnOptions = new DictionaryOptions();

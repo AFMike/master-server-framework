@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
-    public class CharacterAvatar : CharacterBehaviour
+    public class PlayerCharacterAvatar : PlayerCharacterBehaviour
     {
         [Header("Components"), SerializeField]
         protected GameObject[] remoteParts;

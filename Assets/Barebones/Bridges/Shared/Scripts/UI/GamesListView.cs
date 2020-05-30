@@ -3,6 +3,7 @@ using Barebones.Logging;
 using Barebones.MasterServer;
 using Barebones.Networking;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -14,6 +15,8 @@ namespace Barebones.Games
         private GameItem gameItemPrefab;
         [SerializeField]
         private RectTransform listContainer;
+        [SerializeField]
+        private TextMeshProUGUI statusInfoText;
 
         public UnityEvent OnStartGameEvent;
 
@@ -26,20 +29,27 @@ namespace Barebones.Games
         {
             ClearGamesList();
 
-            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Finding rooms... Please wait!");
+            canvasGroup.interactable = false;
 
-            MsfTimer.WaitForSeconds(1f, () =>
+            if (statusInfoText)
+            {
+                statusInfoText.text = "Finding rooms... Please wait!";
+                statusInfoText.gameObject.SetActive(true);
+            }
+
+            MsfTimer.WaitForSeconds(0.2f, () =>
             {
                 Msf.Client.Matchmaker.FindGames((games) =>
                 {
-                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
+                    canvasGroup.interactable = true;
 
                     if (games.Count == 0)
                     {
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("No games found!"));
+                        statusInfoText.text = "No games found! Try to create your own.";
                         return;
                     }
 
+                    statusInfoText.gameObject.SetActive(false);
                     DrawGamesList(games);
                 });
             });
@@ -76,8 +86,21 @@ namespace Barebones.Games
 
         public void StartGame(GameInfoPacket gameInfo)
         {
-            OnStartGameEvent?.Invoke();
             Msf.Options.Set(MsfDictKeys.roomId, gameInfo.Id);
+
+            if (gameInfo.IsPasswordProtected)
+            {
+                Msf.Events.Invoke(MsfEventKeys.showPasswordDialogBox,
+                    new PasswordInputDialoxBoxEventMessage("Room is required the password. Please enter room password below",
+                    () =>
+                    {
+                        OnStartGameEvent?.Invoke();
+                    }));
+            }
+            else
+            {
+                OnStartGameEvent?.Invoke();
+            }
         }
     }
 }

@@ -9,13 +9,13 @@ namespace Barebones.MasterServer
     {
         private readonly IClientSocket _connection;
         public int SpawnId { get; private set; }
-        public DictionaryOptions CustomOptions { get; private set; }
+        public DictionaryOptions Options { get; private set; }
 
         public SpawnTaskController(int spawnId, DictionaryOptions options, IClientSocket connection)
         {
             _connection = connection;
             SpawnId = spawnId;
-            CustomOptions = options;
+            Options = options;
         }
 
         /// <summary>

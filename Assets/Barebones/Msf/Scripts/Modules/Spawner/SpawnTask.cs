@@ -96,12 +96,12 @@ namespace Barebones.MasterServer
         /// </summary>
         public event Action<SpawnStatus> OnStatusChangedEvent;
 
-        public SpawnTask(int spawnTaskId, RegisteredSpawner spawner, DictionaryOptions properties, DictionaryOptions customOptions)
+        public SpawnTask(int spawnTaskId, RegisteredSpawner spawner, DictionaryOptions options, DictionaryOptions customOptions)
         {
             Id = spawnTaskId;
 
             Spawner = spawner;
-            Options = properties;
+            Options = options;
             CustomOptions = customOptions;
 
             UniqueCode = Msf.Helper.CreateRandomString(6);

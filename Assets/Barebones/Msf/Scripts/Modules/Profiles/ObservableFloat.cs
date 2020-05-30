@@ -20,8 +20,11 @@ namespace Barebones.MasterServer
 
         public void Set(float val)
         {
-            _value = val;
-            MarkDirty();
+            if(_value != val)
+            {
+                _value = val;
+                MarkDirty();
+            }
         }
 
         public bool TryTake(float amount)

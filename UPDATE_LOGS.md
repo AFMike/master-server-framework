@@ -1,5 +1,35 @@
 ## Updates Log
 
+### Msf 3.8.2
+
+​Mirror fixes and features.
+
+- Renamed all Character classes to PlayerChatacter.
+- Fixed error in MirrorRoomClient when system tryes to assign roomId.
+- Fixed bug in MirrorRoomClient. When client gets access to room and when access failed. You now can go back to offlineScene or stop player.
+- Fixed bug in MirrorRoomClientStarter when it is destroyed it will be successfully unregistered fomr connection listener.
+- Added information output to MirrorRoomPlayer.
+- Added ProfileFactory method to MirrorRoomServer. This will help you initialize player's profile info on the server side.
+- Added GetRoomPlayerByMirrorPeer method to MirrorRoomServer. This will help you to find MirrorRoomPlayer by Mirror peer id.
+- Added GetRoomPlayerByMsfPeer method to MirrorRoomServer. This will help you to find MirrorRoomPlayer by Msf peer id.
+- Added GetRoomPlayerByUsername method to MirrorRoomServer. This will help you to find MirrorRoomPlayer by Msf username.
+
+MSF fixes and features.
+
+- ProfilesManager class is now extendable.
+- Fixed bug in ObservableProperty. When you set new property value it is now checked if value is the same or not to optimize networking logic.
+- Another bugs and errors fixes.
+
+Shared fixes and features.
+
+- CreateNewRoomView now has Password field.
+- GameItem outputs the information about if room has password or does not.
+- GamesListView now chack if room has password or does not and shows dialog box to enter the password if it exists.
+
+Tools fixes and features.
+
+- Added UIProgressProperty that will help you to create HUD components such as Health bar, Stamina bar etc.
+
 ### Msf 3.8.1
 
 ​Mirror fixes and features.

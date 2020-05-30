@@ -18,7 +18,7 @@ namespace Barebones.Games
         {
             if (gameNameText)
             {
-                gameNameText.text = gameInfo.Name;
+                gameNameText.text = gameInfo.IsPasswordProtected ? $"{gameInfo.Name} <color=yellow>[Password]</color>" : gameInfo.Name;
             }
 
             if (gameAddressText)

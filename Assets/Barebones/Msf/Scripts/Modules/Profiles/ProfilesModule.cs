@@ -151,15 +151,10 @@ namespace Barebones.MasterServer
         {
             if (ProfileFactory != null)
             {
-                var profile = ProfileFactory(username, clientPeer);
-                profile.ClientPeer = clientPeer;
-                return profile;
+                return ProfileFactory(username, clientPeer);
             }
 
-            return new ObservableServerProfile(username)
-            {
-                ClientPeer = clientPeer
-            };
+            return new ObservableServerProfile(username, clientPeer);
         }
 
         /// <summary>

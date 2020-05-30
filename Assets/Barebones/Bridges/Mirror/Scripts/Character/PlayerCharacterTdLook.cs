@@ -6,17 +6,17 @@ using UnityEngine;
 namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CharacterInput))]
-    public class CharacterTdLook : CharacterBehaviour
+    [RequireComponent(typeof(PlayerCharacterInput))]
+    public class PlayerCharacterTdLook : PlayerCharacterBehaviour
     {
         #region INSPECTOR
 
         [Header("Components"), SerializeField]
         private Camera topDownPlayerCamera;
         [SerializeField]
-        private CharacterInput inputController = null;
+        private PlayerCharacterInput inputController = null;
         [SerializeField]
-        private CharacterMovement movementController = null;
+        private PlayerCharacterMovement movementController = null;
 
         [Header("Distance Settings"), SerializeField, Range(5f, 100f)]
         private float minDistance = 5f;

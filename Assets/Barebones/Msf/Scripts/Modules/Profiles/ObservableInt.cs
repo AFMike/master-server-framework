@@ -20,8 +20,11 @@ namespace Barebones.MasterServer
 
         public void Set(int val)
         {
-            _value = val;
-            MarkDirty();
+            if (_value != val)
+            {
+                _value = val;
+                MarkDirty();
+            }
         }
 
         public bool TryTake(int amount)
@@ -45,6 +48,7 @@ namespace Barebones.MasterServer
         public override void FromBytes(byte[] data)
         {
             _value = EndianBitConverter.Big.ToInt32(data, 0);
+            MarkDirty();
         }
 
         public override string Serialize()

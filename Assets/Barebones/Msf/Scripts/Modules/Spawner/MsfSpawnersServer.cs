@@ -168,7 +168,10 @@ namespace Barebones.MasterServer
                     return;
                 }
 
+                // Read spawn task options received from master server
                 var options = new DictionaryOptions(new Dictionary<string, string>().FromBytes(response.AsBytes()));
+                
+                // Create spawn task controller
                 var process = new SpawnTaskController(spawnId, options, connection);
 
                 callback.Invoke(process, null);

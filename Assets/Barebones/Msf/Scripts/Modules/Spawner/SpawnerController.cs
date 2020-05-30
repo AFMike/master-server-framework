@@ -172,7 +172,7 @@ namespace Barebones.MasterServer
             var masterIpArgument = string.IsNullOrEmpty(SpawnSettings.MasterIp) ?
                 Connection.ConnectionIp : SpawnSettings.MasterIp;
 
-            // Create msater IP arg
+            // Create master IP arg
             processArguments.Set(Msf.Args.Names.MasterIp, masterIpArgument);
 
             /************************************************************************/

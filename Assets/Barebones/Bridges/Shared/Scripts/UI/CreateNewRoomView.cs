@@ -11,6 +11,7 @@ namespace Barebones.Games
         private TMP_InputField roomNameInputField;
         private TMP_InputField roomMaxConnectionsInputField;
         private TMP_InputField roomRegionNameInputField;
+        private TMP_InputField roomPasswordInputField;
 
         protected override void Start()
         {
@@ -19,6 +20,7 @@ namespace Barebones.Games
             roomNameInputField = ChildComponent<TMP_InputField>("roomNameInputField");
             roomMaxConnectionsInputField = ChildComponent<TMP_InputField>("roomMaxConnectionsInputField");
             roomRegionNameInputField = ChildComponent<TMP_InputField>("roomRegionNameInputField");
+            roomPasswordInputField = ChildComponent<TMP_InputField>("roomPasswordInputField");
         }
 
         public string RoomName
@@ -60,6 +62,20 @@ namespace Barebones.Games
             {
                 if (roomRegionNameInputField)
                     roomRegionNameInputField.text = value;
+            }
+        }
+
+        public string Password
+        {
+            get
+            {
+                return roomPasswordInputField != null ? roomPasswordInputField.text : string.Empty;
+            }
+
+            set
+            {
+                if (roomPasswordInputField)
+                    roomPasswordInputField.text = value;
             }
         }
     }

@@ -9,7 +9,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 {
     public enum ObservablePropertiyCodes { DisplayName, Avatar, Bronze, Silver, Gold }
 
-    public class CustomProfilesModule : ProfilesModule
+    public class DemoProfilesModule : ProfilesModule
     {
         [Header("Start Values"), SerializeField]
         private float bronze = 100;
@@ -17,6 +17,8 @@ namespace Barebones.MasterServer.Examples.BasicProfile
         private float silver = 50;
         [SerializeField]
         private float gold = 50;
+        [SerializeField]
+        private string avatarUrl = "https://i.imgur.com/JQ9pRoD.png";
 
         public HelpBox _header = new HelpBox()
         {
@@ -47,7 +49,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
             return new ObservableServerProfile(username, clientPeer)
             {
                 new ObservableString((short)ObservablePropertiyCodes.DisplayName, SimpleNameGenerator.Generate(Gender.Male)),
-                new ObservableString((short)ObservablePropertiyCodes.Avatar, "https://i.imgur.com/JQ9pRoD.png"),
+                new ObservableString((short)ObservablePropertiyCodes.Avatar, avatarUrl),
                 new ObservableFloat((short)ObservablePropertiyCodes.Bronze, bronze),
                 new ObservableFloat((short)ObservablePropertiyCodes.Silver, silver),
                 new ObservableFloat((short)ObservablePropertiyCodes.Gold, gold)

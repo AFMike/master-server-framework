@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Barebones.Bridges.Mirror
 {
@@ -250,13 +251,25 @@ namespace Barebones.Bridges.Mirror
             logger.Debug($"Getting access to room {roomId}");
             Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Getting access to room {roomId}... Please wait!");
 
-            Msf.Client.Rooms.GetAccess(roomId, (access, error) =>
+            Msf.Client.Rooms.GetAccess(roomId, Msf.Options.AsString(MsfDictKeys.roomPassword, string.Empty), (access, error) =>
             {
                 if (access == null)
                 {
                     Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
                     logger.Error(error);
-                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator", ()=> { Msf.Runtime.Quit(); }));
+                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox,
+                        new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator",
+                        () =>
+                        {
+                            if (IsAllowedToBeStartedInEditor())
+                            {
+                                Msf.Runtime.Quit();
+                            }
+                            else
+                            {
+                                SceneManager.LoadScene(MirrorNetworkManager.offlineScene);
+                            }
+                        }));
                     return;
                 }
 
@@ -361,12 +374,13 @@ namespace Barebones.Bridges.Mirror
             {
                 if (!Msf.Options.Has(MsfDictKeys.roomId))
                 {
-                    Msf.Client.Matchmaker.FindGames((games) => {
+                    Msf.Client.Matchmaker.FindGames((games) =>
+                    {
 
-                        if(games != null && games.Count > 0)
+                        if (games != null && games.Count > 0)
                         {
                             // Save room id to global options just for test purpose only
-                            Msf.Options.Add(MsfDictKeys.roomId, games.First().Id);
+                            Msf.Options.Set(MsfDictKeys.roomId, games.First().Id);
                             StartClient();
                         }
                         else

@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CharacterInput))]
-    public class CharacterFpsLook : CharacterBehaviour
+    [RequireComponent(typeof(PlayerCharacterInput))]
+    public class PlayerCharacterFpsLook : PlayerCharacterBehaviour
     {
         #region INSPECTOR
 
@@ -30,7 +30,7 @@ namespace Barebones.Bridges.Mirror.Character
         [Header("Components"), SerializeField]
         protected Camera lookCamera;
         [SerializeField]
-        protected CharacterInput inputBehaviour;
+        protected PlayerCharacterInput inputBehaviour;
 
         #endregion
 

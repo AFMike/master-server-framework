@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CharacterInput), typeof(CharacterController))]
-    public class CharacterMovement : CharacterBehaviour
+    [RequireComponent(typeof(PlayerCharacterInput), typeof(CharacterController))]
+    public class PlayerCharacterMovement : PlayerCharacterBehaviour
     {
         #region INSPECTOR
 
@@ -29,11 +29,17 @@ namespace Barebones.Bridges.Mirror.Character
         protected float jumpRate = 1f;
 
         [Header("Components"), SerializeField]
-        protected CharacterInput inputController;
+        protected PlayerCharacterInput inputController;
         [SerializeField]
         protected CharacterController characterController;
 
         #endregion
+
+        /// <summary>
+        /// Check if running mode is allowed for character
+        /// </summary>
+        [SyncVar]
+        protected bool runningIsAllowed = true;
 
         /// <summary>
         /// Current calculated movement direction
@@ -93,7 +99,7 @@ namespace Barebones.Bridges.Mirror.Character
         protected virtual void UpdateMovementStates()
         {
             IsWalking = inputController.IsMoving();
-            IsRunning = IsWalking && inputController.IsRunnning();
+            IsRunning = IsWalking && inputController.IsRunnning() && runningIsAllowed;
         }
 
         protected virtual void UpdateMovement()
@@ -102,7 +108,7 @@ namespace Barebones.Bridges.Mirror.Character
             {
                 calculatedInputDirection = transform.forward * inputController.Vertical() + transform.right * inputController.Horizontal();
 
-                if (IsRunning)
+                if (IsRunning && runningIsAllowed)
                 {
                     CurrentMovementSpeed = runSpeed;
                 }
@@ -127,6 +133,16 @@ namespace Barebones.Bridges.Mirror.Character
             }
 
             characterController.Move(calculatedMovementDirection * Time.deltaTime);
+        }
+
+        /// <summary>
+        /// Enable or disable running mode
+        /// </summary>
+        /// <param name="value"></param>
+        [Server]
+        public void AllowRunning(bool value)
+        {
+            runningIsAllowed = value;
         }
     }
 }

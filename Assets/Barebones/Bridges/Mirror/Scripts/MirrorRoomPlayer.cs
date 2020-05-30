@@ -46,5 +46,17 @@ namespace Barebones.Bridges.Mirror
         /// Player profile
         /// </summary>
         public ObservableServerProfile Profile { get; set; }
+
+        public override string ToString()
+        {
+            DictionaryOptions options = new DictionaryOptions();
+            options.Add("Username", Username);
+            options.Add("MirrorPeerId", MirrorPeer.connectionId);
+            options.Add("MsfPeerId", MsfPeerId);
+            options.Append(Profile.ToStringsDictionary());
+            options.Append(CustomOptions);
+
+            return options.ToReadableString();
+        }
     }
 }

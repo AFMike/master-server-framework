@@ -15,13 +15,13 @@ namespace Barebones.Games
 
         private void OnShowOkDialogBoxEventHandler(EventMessage message)
         {
-            var alertOkEventMessageData = message.GetData<OkDialogBoxViewEventMessage>();
+            var messageData = message.GetData<OkDialogBoxViewEventMessage>();
 
-            SetLables(alertOkEventMessageData.Message);
+            SetLables(messageData.Message);
 
-            if (alertOkEventMessageData.OkCallback != null)
+            if (messageData.OkCallback != null)
             {
-                SetButtonsClick(alertOkEventMessageData.OkCallback);
+                SetButtonsClick(messageData.OkCallback);
             }
             else
             {

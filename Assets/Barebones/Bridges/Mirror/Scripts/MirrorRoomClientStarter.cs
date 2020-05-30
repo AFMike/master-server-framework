@@ -10,6 +10,12 @@ namespace Barebones.Bridges.Mirror
 {
     public class MirrorRoomClientStarter : BaseClientBehaviour
     {
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Connection.RemoveConnectionListener(OnConnectedToMasterServerEventHandler);
+        }
+
         protected override void OnInitialize()
         {
             if (Msf.Options.Has(MsfDictKeys.autoStartRoomClient))

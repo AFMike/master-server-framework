@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4419978036856062522}
   - component: {fileID: 3678545693570467138}
   - component: {fileID: 1037248149617175897}
+  - component: {fileID: 1627956425691095850}
   - component: {fileID: 8311143467505641361}
   m_Layer: 0
   m_Name: TdCharacter
@@ -160,6 +161,20 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   remoteParts: []
+--- !u!114 &1627956425691095850
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1551455602030449158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce6893053f9fd7a48b92743dc95827ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
 --- !u!114 &8311143467505641361
 MonoBehaviour:
   m_ObjectHideFlags: 0

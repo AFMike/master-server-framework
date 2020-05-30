@@ -308,6 +308,8 @@ namespace Barebones.Games
 
         public void SignOut()
         {
+            logger.Debug("Sign out");
+
             OnSignedOutEvent?.Invoke();
             Msf.Client.Auth.SignOut(true);
             ViewsManager.HideAllViews();

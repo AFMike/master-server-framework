@@ -9,7 +9,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 {
     public class ProfileSettingsView : UIView
     {
-        private ProfilesManager profilesManager;
+        private DemoProfilesManager profilesManager;
         private TMP_InputField displayNameInputField;
         private TMP_InputField avatarUrlInputField;
 
@@ -47,7 +47,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
 
             if (!profilesManager)
             {
-                profilesManager = FindObjectOfType<ProfilesManager>();
+                profilesManager = FindObjectOfType<DemoProfilesManager>();
             }
 
             profilesManager.OnPropertyUpdatedEvent += ProfilesManager_OnPropertyUpdatedEvent;

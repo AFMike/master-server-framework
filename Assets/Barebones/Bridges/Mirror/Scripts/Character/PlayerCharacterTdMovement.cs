@@ -5,11 +5,11 @@ using UnityEngine;
 namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(CharacterInput), typeof(CharacterController))]
-    public class CharacterTdMovement : CharacterMovement
+    [RequireComponent(typeof(PlayerCharacterInput), typeof(CharacterController))]
+    public class PlayerCharacterTdMovement : PlayerCharacterMovement
     {
         [Header("Components"), SerializeField]
-        protected CharacterTdLook lookController;
+        protected PlayerCharacterTdLook lookController;
 
         [Header("Rotation Settings"), SerializeField, Range(5f, 20f)]
         private float rotationSmoothTime = 5f;
@@ -56,7 +56,7 @@ namespace Barebones.Bridges.Mirror.Character
 
                 calculatedInputDirection = Quaternion.Euler(compositeAngle) * lookController.GetRotation() * transform.forward * inputController.MovementAxisMagnitude();
 
-                if (IsRunning)
+                if (IsRunning && runningIsAllowed)
                 {
                     CurrentMovementSpeed = runSpeed;
                 }

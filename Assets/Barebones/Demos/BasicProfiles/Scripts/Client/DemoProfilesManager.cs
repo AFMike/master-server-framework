@@ -10,15 +10,12 @@ using UnityEngine.Events;
 
 namespace Barebones.MasterServer.Examples.BasicProfile
 {
-    public class ProfilesManager : BaseClientBehaviour
+    public class DemoProfilesManager : ProfilesManager
     {
-        public ObservableProfile Profile { get; private set; }
-
         private ProfileView profileView;
         private ProfileSettingsView profileSettingsView;
 
         public event Action<short, IObservableProperty> OnPropertyUpdatedEvent;
-        public UnityEvent OnProfileLoadedEvent;
         public UnityEvent OnProfileSavedEvent;
 
         protected override void OnInitialize()
@@ -50,28 +47,6 @@ namespace Barebones.MasterServer.Examples.BasicProfile
             OnPropertyUpdatedEvent?.Invoke(key, property);
 
             logger.Debug($"Property with code: {key} were updated: {property.Serialize()}");
-        }
-
-        public void LoadProfile()
-        {
-            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Loading profile... Please wait!");
-
-            MsfTimer.WaitForSeconds(1f, () =>
-            {
-                Msf.Client.Profiles.GetProfileValues(Profile, (isSuccessful, error) =>
-                {
-                    if (isSuccessful)
-                    {
-                        Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
-                        OnProfileLoadedEvent?.Invoke();
-                    }
-                    else
-                    {
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox,
-                            new OkDialogBoxViewEventMessage($"When requesting profile data an error occurred. [{error}]"));
-                    }
-                });
-            });
         }
 
         public void UpdateProfile()

@@ -6606,6 +6606,7 @@ MonoBehaviour:
   logLevel: 0
   usernameMinChars: 4
   usernameMaxChars: 12
+  useEmailConfirmation: 1
   enableGuestLogin: 1
   guestPrefix: Guest
   useGuestFriendlyName: 1
@@ -6664,6 +6665,7 @@ MonoBehaviour:
   bronze: 100
   silver: 20
   gold: 50
+  avatarUrl: https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTqKx74kfXfKQHJycu1xTcgNh4jD1cNWZ04hqKr8cOFVbPY3G_V&usqp=CAU
 --- !u!1001 &1213814630
 PrefabInstance:
   m_ObjectHideFlags: 0

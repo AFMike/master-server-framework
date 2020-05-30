@@ -10,5 +10,8 @@
 
         public static string showYesNoDialogBox = "msf.showYesNoDialog";
         public static string hideYesNoDialogBox = "msf.hideYesNoDialog";
+
+        public static string showPasswordDialogBox = "msf.showPasswordDialog";
+        public static string hidePasswordDialogBox = "msf.hidePasswordDialog";
     }
 }

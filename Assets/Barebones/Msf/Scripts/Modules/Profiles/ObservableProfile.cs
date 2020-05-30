@@ -14,16 +14,16 @@ namespace Barebones.MasterServer
     public class ObservableProfile : IEnumerable<IObservableProperty>
     {
         /// <summary>
-        /// Profile properties list
-        /// </summary>
-        private Dictionary<short, IObservableProperty> _properties;
-
-        /// <summary>
         /// Properties that are changed and waiting for to be sent
         /// </summary>
         private HashSet<IObservableProperty> _notBroadcastedProperties;
 
         public delegate void PropertyUpdateHandler(short propertyCode, IObservableProperty property);
+
+        /// <summary>
+        /// Profile properties list
+        /// </summary>
+        public Dictionary<short, IObservableProperty> Properties { get; protected set; }
 
         /// <summary>
         /// 
@@ -42,7 +42,7 @@ namespace Barebones.MasterServer
 
         public ObservableProfile()
         {
-            _properties = new Dictionary<short, IObservableProperty>();
+            Properties = new Dictionary<short, IObservableProperty>();
             _notBroadcastedProperties = new HashSet<IObservableProperty>();
             UnsavedProperties = new HashSet<IObservableProperty>();
         }
@@ -55,7 +55,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// The number of properties the profile has
         /// </summary>
-        public int PropertyCount { get { return _properties.Count; } }
+        public int PropertyCount { get { return Properties.Count; } }
 
         /// <summary>
         /// Returns an observable value of given type
@@ -65,7 +65,7 @@ namespace Barebones.MasterServer
         /// <returns></returns>
         public T GetProperty<T>(short key) where T : class, IObservableProperty
         {
-            return _properties[key].CastTo<T>();
+            return Properties[key].CastTo<T>();
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Barebones.MasterServer
         /// </summary>
         public IObservableProperty GetProperty(short key)
         {
-            return _properties[key];
+            return Properties[key];
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Barebones.MasterServer
         /// <returns></returns>
         public bool TryGetProperty<T>(short key, out T result) where T : class, IObservableProperty
         {
-            bool getResult = _properties.TryGetValue(key, out IObservableProperty val);
+            bool getResult = Properties.TryGetValue(key, out IObservableProperty val);
             result = val as T;
             return getResult;
         }
@@ -96,7 +96,7 @@ namespace Barebones.MasterServer
         /// <param name="property"></param>
         public void AddProperty(IObservableProperty property)
         {
-            _properties.Add(property.Key, property);
+            Properties.Add(property.Key, property);
             property.OnDirtyEvent += OnDirtyProperty;
         }
 
@@ -137,9 +137,9 @@ namespace Barebones.MasterServer
                 using (var writer = new EndianBinaryWriter(EndianBitConverter.Big, stream))
                 {
                     // Write count
-                    writer.Write(_properties.Count);
+                    writer.Write(Properties.Count);
 
-                    foreach (var value in _properties)
+                    foreach (var value in Properties)
                     {
                         // Write key
                         writer.Write(value.Key);
@@ -174,12 +174,12 @@ namespace Barebones.MasterServer
                         var length = reader.ReadInt32();
                         var valueData = reader.ReadBytes(length);
 
-                        if (!_properties.ContainsKey(key))
+                        if (!Properties.ContainsKey(key))
                         {
                             continue;
                         }
 
-                        _properties[key].FromBytes(valueData);
+                        Properties[key].FromBytes(valueData);
                     }
                 }
             }
@@ -194,7 +194,7 @@ namespace Barebones.MasterServer
             foreach (var pair in dataData)
             {
                 IObservableProperty property;
-                _properties.TryGetValue(pair.Key, out property);
+                Properties.TryGetValue(pair.Key, out property);
                 if (property != null)
                 {
                     property.Deserialize(pair.Value);
@@ -303,7 +303,7 @@ namespace Barebones.MasterServer
             // Update observables
             foreach (var updateEntry in dataRead)
             {
-                if (_properties.TryGetValue(updateEntry.Key, out IObservableProperty property))
+                if (Properties.TryGetValue(updateEntry.Key, out IObservableProperty property))
                 {
                     property.ApplyUpdates(updateEntry.Value);
                 }
@@ -311,16 +311,16 @@ namespace Barebones.MasterServer
         }
 
         /// <summary>
-        /// Serializes all of the properties to short/string dictionary
+        /// Serializes all of the properties to dictionary
         /// </summary>
         /// <returns></returns>
-        public Dictionary<short, string> ToStringsDictionary()
+        public Dictionary<string, string> ToStringsDictionary()
         {
-            var dict = new Dictionary<short, string>();
+            var dict = new Dictionary<string, string>();
 
-            foreach (var pair in _properties)
+            foreach (var pair in Properties)
             {
-                dict.Add(pair.Key, pair.Value.Serialize());
+                dict.Add(pair.Key.ToString(), pair.Value.Serialize());
             }
 
             return dict;
@@ -330,7 +330,7 @@ namespace Barebones.MasterServer
 
         public IEnumerator<IObservableProperty> GetEnumerator()
         {
-            return _properties.Values.GetEnumerator();
+            return Properties.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

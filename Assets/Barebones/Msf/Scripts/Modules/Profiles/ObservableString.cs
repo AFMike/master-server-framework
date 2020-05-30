@@ -12,10 +12,13 @@ namespace Barebones.MasterServer
             _value = defaultVal;
         }
 
-        public void Set(string value)
+        public void Set(string val)
         {
-            _value = value;
-            MarkDirty();
+            if (_value != val)
+            {
+                _value = val;
+                MarkDirty();
+            }
         }
 
         public override byte[] ToBytes()
