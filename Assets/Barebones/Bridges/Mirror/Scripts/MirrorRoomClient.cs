@@ -73,6 +73,11 @@ namespace Barebones.Bridges.Mirror
         protected RoomAccessPacket roomAccess;
 
         /// <summary>
+        /// Check if room access is validated or not
+        /// </summary>
+        public bool RoomAccessIsValidated { get; protected set; }
+
+        /// <summary>
         /// The instance of the <see cref="MirrorRoomServer"/>
         /// </summary>
         public static MirrorRoomClient Instance { get; protected set; }
@@ -233,11 +238,20 @@ namespace Barebones.Bridges.Mirror
         {
             logger.Debug($"Validating access to room server with token [{roomAccess.Token}]");
 
-            // Register listener for access validation message from mirror room server
-            NetworkClient.RegisterHandler<ValidateRoomAccessResultMessage>(ValidateRoomAccessResultHandler, false);
+            // 
+            if (!RoomAccessIsValidated)
+            {
+                // Register listener for access validation message from mirror room server
+                NetworkClient.RegisterHandler<ValidateRoomAccessResultMessage>(ValidateRoomAccessResultHandler, false);
 
-            // Send validation message to room server
-            connection.Send(new ValidateRoomAccessRequestMessage(roomAccess.Token));
+                // Send validation message to room server
+                connection.Send(new ValidateRoomAccessRequestMessage(roomAccess.Token));
+            }
+            else
+            {
+                OnAccessGranted(connection);
+                OnAccessGrantedEvent?.Invoke();
+            }
         }
 
         #endregion
@@ -279,39 +293,45 @@ namespace Barebones.Bridges.Mirror
                 // Save gotten room access
                 roomAccess = access;
 
-                Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Joinig room {roomId}... Please wait!");
-
-                // Wait for connection to mirror server
-                MsfTimer.WaitWhile(() => !NetworkClient.isConnected, isSuccessful =>
-                {
-                    Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
-
-                    if (!isSuccessful)
-                    {
-                        logger.Error("We could not connect to room. Please try again later or contact to administrator");
-                        MirrorNetworkManager.StopClient();
-                    }
-                    else
-                    {
-                        OnConnectedToMirrorServerEventHandler(NetworkClient.connection);
-                    }
-                }, roomConnectionTimeout);
-
-                // If we are not connected to mirror server
-                if (!NetworkClient.isConnected)
-                {
-                    // Let's set the IP before we start connection
-                    SetAddress(roomAccess.RoomIp);
-
-                    // Let's set the port before we start connection
-                    SetPort(roomAccess.RoomPort);
-
-                    logger.Debug("Connecting to mirror server...");
-
-                    // Start mirror client
-                    MirrorNetworkManager.StartClient();
-                }
+                // Start joining the room
+                JoinTheRoom();
             });
+        }
+
+        protected virtual void JoinTheRoom()
+        {
+            Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, $"Joinig room {roomAccess.RoomId}... Please wait!");
+
+            // Wait for connection to mirror server
+            MsfTimer.WaitWhile(() => !NetworkClient.isConnected, isSuccessful =>
+            {
+                Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
+
+                if (!isSuccessful)
+                {
+                    logger.Error("We could not connect to room. Please try again later or contact to administrator");
+                    MirrorNetworkManager.StopClient();
+                }
+                else
+                {
+                    OnConnectedToMirrorServerEventHandler(NetworkClient.connection);
+                }
+            }, roomConnectionTimeout);
+
+            // If we are not connected to mirror server
+            if (!NetworkClient.isConnected)
+            {
+                // Let's set the IP before we start connection
+                SetAddress(roomAccess.RoomIp);
+
+                // Let's set the port before we start connection
+                SetPort(roomAccess.RoomPort);
+
+                logger.Debug("Connecting to mirror server...");
+
+                // Start mirror client
+                MirrorNetworkManager.StartClient();
+            }
         }
 
         /// <summary>
@@ -332,6 +352,8 @@ namespace Barebones.Bridges.Mirror
             }
 
             logger.Debug("Access to server room is successfully validated");
+
+            RoomAccessIsValidated = true;
 
             OnAccessGranted(conn);
             OnAccessGrantedEvent?.Invoke();

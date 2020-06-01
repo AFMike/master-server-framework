@@ -7,15 +7,11 @@ namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterInput))]
-    public class PlayerCharacterTdLook : PlayerCharacterBehaviour
+    public class PlayerCharacterTdLook : PlayerCharacterLook
     {
         #region INSPECTOR
 
         [Header("Components"), SerializeField]
-        private Camera topDownPlayerCamera;
-        [SerializeField]
-        private PlayerCharacterInput inputController = null;
-        [SerializeField]
         private PlayerCharacterMovement movementController = null;
 
         [Header("Distance Settings"), SerializeField, Range(5f, 100f)]
@@ -51,25 +47,7 @@ namespace Barebones.Bridges.Mirror.Character
         [SerializeField, Range(1f, 10f)]
         private float rotationSencitivity = 3f;
 
-        [Header("Misc Settings"), SerializeField]
-        protected bool resetCameraAfterDestroy = true;
-
         #endregion
-
-        /// <summary>
-        /// The starting parent of the camera. It is necessary to return the camera to its original place after the destruction of the current object
-        /// </summary>
-        private Transform initialCameraParent;
-
-        /// <summary>
-        /// The starting position of the camera. It is necessary to return the camera to its original place after the destruction of the current object
-        /// </summary>
-        private Vector3 initialCameraPosition;
-
-        /// <summary>
-        /// The starting rotation of the camera. It is necessaryto return the camera to its original angle after the destruction of the current object
-        /// </summary>
-        private Quaternion initialCameraRotation;
 
         private GameObject cameraRoot = null;
         private GameObject cameraYPoint = null;
@@ -79,11 +57,10 @@ namespace Barebones.Bridges.Mirror.Character
         private float currentCameraDistance = 0f;
         private float currentCameraYawAngle = 0f;
 
-        public override bool IsReady => topDownPlayerCamera
+        public override bool IsReady => base.IsReady
             && cameraRoot
             && cameraYPoint
             && cameraXPoint
-            && inputController
             && cameraOffsetPoint
             && movementController;
 
@@ -96,21 +73,6 @@ namespace Barebones.Bridges.Mirror.Character
                 UpdateCameraPosition();
                 UpdateCameraOffset();
                 UpdateCameraRotation();
-            }
-        }
-
-        protected virtual void OnDestroy()
-        {
-            if (isLocalPlayer)
-            {
-                if (resetCameraAfterDestroy && topDownPlayerCamera)
-                {
-                    topDownPlayerCamera.transform.localPosition = initialCameraPosition;
-                    topDownPlayerCamera.transform.localRotation = initialCameraRotation;
-                    topDownPlayerCamera.transform.SetParent(initialCameraParent);
-
-                    topDownPlayerCamera = null;
-                }
             }
         }
 
@@ -129,27 +91,27 @@ namespace Barebones.Bridges.Mirror.Character
         /// </summary>
         private void CreateCameraControls()
         {
-            if (topDownPlayerCamera == null)
-                topDownPlayerCamera = Camera.main;
+            if (lookCamera == null)
+                lookCamera = Camera.main;
 
-            if (topDownPlayerCamera == null)
+            if (lookCamera == null)
             {
                 var cameraObject = new GameObject("--PlayerCamera");
                 var cameraComponent = cameraObject.AddComponent<Camera>();
 
-                topDownPlayerCamera = cameraComponent;
+                lookCamera = cameraComponent;
             }
 
-            if (topDownPlayerCamera.transform.parent != null)
+            if (lookCamera.transform.parent != null)
             {
-                initialCameraPosition = topDownPlayerCamera.transform.localPosition;
-                initialCameraRotation = topDownPlayerCamera.transform.localRotation;
-                initialCameraParent = topDownPlayerCamera.transform.parent;
+                initialCameraPosition = lookCamera.transform.localPosition;
+                initialCameraRotation = lookCamera.transform.localRotation;
+                initialCameraParent = lookCamera.transform.parent;
             }
             else
             {
-                initialCameraPosition = topDownPlayerCamera.transform.position;
-                initialCameraRotation = topDownPlayerCamera.transform.rotation;
+                initialCameraPosition = lookCamera.transform.position;
+                initialCameraRotation = lookCamera.transform.rotation;
             }
 
             cameraRoot = new GameObject("-- PLAYER_CAMERA_ROOT");
@@ -164,9 +126,9 @@ namespace Barebones.Bridges.Mirror.Character
             cameraXPoint.transform.localPosition = Vector3.zero;
             cameraXPoint.transform.localRotation = Quaternion.Euler(pitchAngle, 0f, 0f);
 
-            topDownPlayerCamera.transform.SetParent(cameraXPoint.transform);
-            topDownPlayerCamera.transform.localPosition = new Vector3(0f, 0f, startDistance * -1f);
-            topDownPlayerCamera.transform.localRotation = Quaternion.identity;
+            lookCamera.transform.SetParent(cameraXPoint.transform);
+            lookCamera.transform.localPosition = new Vector3(0f, 0f, startDistance * -1f);
+            lookCamera.transform.localRotation = Quaternion.identity;
 
             cameraOffsetPoint = new GameObject("CameraOffsetPoint");
             cameraOffsetPoint.transform.SetParent(transform);
@@ -226,7 +188,7 @@ namespace Barebones.Bridges.Mirror.Character
         private void UpdateCameraDistance()
         {
             currentCameraDistance = Mathf.Clamp(currentCameraDistance - (inputController.MouseVerticalScroll() * distanceScrollPower), minDistance, maxDistance);
-            topDownPlayerCamera.transform.localPosition = Vector3.Lerp(topDownPlayerCamera.transform.localPosition, new Vector3(0f, 0f, currentCameraDistance * -1f), Time.deltaTime * distanceSmoothTime);
+            lookCamera.transform.localPosition = Vector3.Lerp(lookCamera.transform.localPosition, new Vector3(0f, 0f, currentCameraDistance * -1f), Time.deltaTime * distanceSmoothTime);
         }
 
         /// <summary>

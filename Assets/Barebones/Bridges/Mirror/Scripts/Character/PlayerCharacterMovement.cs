@@ -42,6 +42,12 @@ namespace Barebones.Bridges.Mirror.Character
         protected bool runningIsAllowed = true;
 
         /// <summary>
+        /// Check if movement mode is allowed for character
+        /// </summary>
+        [SyncVar]
+        protected bool movementIsAllowed = true;
+
+        /// <summary>
         /// Current calculated movement direction
         /// </summary>
         protected Vector3 calculatedMovementDirection = new Vector3();
@@ -86,6 +92,8 @@ namespace Barebones.Bridges.Mirror.Character
 
         protected virtual void UpdateJumpAvailability()
         {
+            if (!movementIsAllowed) return;
+
             if (jumpIsAllowed)
             {
                 IsJumpAvailable = Time.time >= nextJumpTime;
@@ -98,8 +106,21 @@ namespace Barebones.Bridges.Mirror.Character
 
         protected virtual void UpdateMovementStates()
         {
-            IsWalking = inputController.IsMoving();
+            IsWalking = inputController.IsMoving() && movementIsAllowed;
             IsRunning = IsWalking && inputController.IsRunnning() && runningIsAllowed;
+
+            if (IsRunning)
+            {
+                CurrentMovementSpeed = runSpeed;
+            }
+            else if (IsWalking)
+            {
+                CurrentMovementSpeed = walkSpeed;
+            }
+            else
+            {
+                CurrentMovementSpeed = 0f;
+            }
         }
 
         protected virtual void UpdateMovement()
@@ -107,15 +128,6 @@ namespace Barebones.Bridges.Mirror.Character
             if (characterController.isGrounded)
             {
                 calculatedInputDirection = transform.forward * inputController.Vertical() + transform.right * inputController.Horizontal();
-
-                if (IsRunning && runningIsAllowed)
-                {
-                    CurrentMovementSpeed = runSpeed;
-                }
-                else if (IsWalking)
-                {
-                    CurrentMovementSpeed = walkSpeed;
-                }
 
                 calculatedMovementDirection.y = -stickToGroundPower;
                 calculatedMovementDirection.x = calculatedInputDirection.x * CurrentMovementSpeed;
@@ -143,6 +155,16 @@ namespace Barebones.Bridges.Mirror.Character
         public void AllowRunning(bool value)
         {
             runningIsAllowed = value;
+        }
+
+        /// <summary>
+        /// Enable or disable movement mode
+        /// </summary>
+        /// <param name="value"></param>
+        [Server]
+        public void AllowMoving(bool value)
+        {
+            movementIsAllowed = value;
         }
     }
 }

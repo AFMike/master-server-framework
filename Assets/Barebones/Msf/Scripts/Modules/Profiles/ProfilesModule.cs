@@ -408,5 +408,13 @@ namespace Barebones.MasterServer
         }
 
         #endregion
+
+        public ObservableServerProfile GetProfileByUsername(string username)
+        {
+            ObservableServerProfile profile;
+            ProfilesList.TryGetValue(username, out profile);
+
+            return profile;
+        }
     }
 }

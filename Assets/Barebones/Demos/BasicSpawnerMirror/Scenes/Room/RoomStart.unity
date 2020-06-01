@@ -1478,7 +1478,7 @@ PrefabInstance:
         type: 3}
       propertyPath: helpText
       value: 
-      objectReference: {fileID: 4900000, guid: 02082f9133367d04d8084729a8034eba, type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 4067420600254518412, guid: 93bf78af47bfec04f949149d89a5a870,
         type: 3}
       propertyPath: m_textInfo.characterCount

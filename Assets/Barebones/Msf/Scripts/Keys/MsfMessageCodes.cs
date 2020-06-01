@@ -3,7 +3,7 @@
     public enum MsfMessageCodes
     {
         // Standard error code
-        Error = 25000,
+        Error = 31000,
 
         // Ping request code
         Ping,

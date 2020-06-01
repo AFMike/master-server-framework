@@ -1,5 +1,4 @@
-﻿using Aevien.JackalGame;
-using Barebones.MasterServer;
+﻿using Barebones.MasterServer;
 using Barebones.Networking;
 using Mirror;
 using System;

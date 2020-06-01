@@ -1,5 +1,9 @@
 ## Updates Log
 
+### Msf 3.8.3
+
+New features in mirror demos nd bug fixes in many classes. 
+
 ### Msf 3.8.2
 
 ​Mirror fixes and features.

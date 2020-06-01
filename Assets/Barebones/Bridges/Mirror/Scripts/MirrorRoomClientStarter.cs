@@ -13,7 +13,7 @@ namespace Barebones.Bridges.Mirror
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            Connection.RemoveConnectionListener(OnConnectedToMasterServerEventHandler);
+            Connection?.RemoveConnectionListener(OnConnectedToMasterServerEventHandler);
         }
 
         protected override void OnInitialize()

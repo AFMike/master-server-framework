@@ -89,6 +89,15 @@ TextureImporter:
   - first:
       213: 9129354605046137251
     second: silver_coins
+  - first:
+      213: -5343897376169499932
+    second: backpack
+  - first:
+      213: -4149600816155440385
+    second: config
+  - first:
+      213: 6934154925517905568
+    second: menu
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -162,6 +171,27 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
+      name: backpack
+      rect:
+        serializedVersion: 2
+        x: 530
+        y: 1139
+        width: 128
+        height: 132
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e2664946a9a6d5b0800000000000000
+      internalID: -5343897376169499932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
       name: bg_01
       rect:
         serializedVersion: 2
@@ -228,8 +258,8 @@ TextureImporter:
       name: bg_04
       rect:
         serializedVersion: 2
-        x: 493
-        y: 1081
+        x: 431
+        y: 1068
         width: 50
         height: 50
       alignment: 0
@@ -249,8 +279,8 @@ TextureImporter:
       name: bg_05
       rect:
         serializedVersion: 2
-        x: 431
-        y: 1068
+        x: 291
+        y: 1052
         width: 50
         height: 50
       alignment: 0
@@ -270,8 +300,8 @@ TextureImporter:
       name: bg_06
       rect:
         serializedVersion: 2
-        x: 555
-        y: 1081
+        x: 353
+        y: 1052
         width: 50
         height: 50
       alignment: 0
@@ -291,8 +321,8 @@ TextureImporter:
       name: bronze_coins
       rect:
         serializedVersion: 2
-        x: 530
-        y: 1143
+        x: 810
+        y: 1152
         width: 128
         height: 128
       alignment: 0
@@ -309,11 +339,32 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
+      name: config
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 1114
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffa42611b08a966c0800000000000000
+      internalID: -4149600816155440385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
       name: connection
       rect:
         serializedVersion: 2
-        x: 810
-        y: 1152
+        x: 151
+        y: 1114
         width: 128
         height: 128
       alignment: 0
@@ -375,7 +426,7 @@ TextureImporter:
       name: globe
       rect:
         serializedVersion: 2
-        x: 11
+        x: 291
         y: 1114
         width: 128
         height: 128
@@ -396,8 +447,8 @@ TextureImporter:
       name: gold_coins
       rect:
         serializedVersion: 2
-        x: 151
-        y: 1114
+        x: 493
+        y: 999
         width: 128
         height: 128
       alignment: 0
@@ -477,6 +528,27 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
+      name: menu
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 1007
+        width: 128
+        height: 95
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ae15018a211b3060800000000000000
+      internalID: 6934154925517905568
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
       name: msf_logo
       rect:
         serializedVersion: 2
@@ -543,8 +615,8 @@ TextureImporter:
       name: silver_coins
       rect:
         serializedVersion: 2
-        x: 291
-        y: 1114
+        x: 11
+        y: 974
         width: 128
         height: 128
       alignment: 0

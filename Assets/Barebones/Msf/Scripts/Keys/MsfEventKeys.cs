@@ -13,5 +13,11 @@
 
         public static string showPasswordDialogBox = "msf.showPasswordDialog";
         public static string hidePasswordDialogBox = "msf.hidePasswordDialog";
+
+        public static string playerStartedGame = "msf.playerStartedGame";
+        public static string playerFinishedGame = "msf.playerFinishedGame";
+
+        public static string gameStarted = "msf.gameStarted";
+        public static string gameOver = "msf.gameOver";
     }
 }

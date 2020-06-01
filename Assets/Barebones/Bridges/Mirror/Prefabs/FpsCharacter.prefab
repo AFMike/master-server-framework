@@ -197,8 +197,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8786336352432102920}
   - component: {fileID: 8786336352432102921}
-  - component: {fileID: 6691141937492050761}
   - component: {fileID: 2808155204996086252}
+  - component: {fileID: 8543048771385146171}
+  - component: {fileID: 6691141937492050761}
   - component: {fileID: 6494012680188734113}
   - component: {fileID: 7065511509192696153}
   - component: {fileID: 2592435469385825381}
@@ -242,20 +243,6 @@ MonoBehaviour:
   serverOnly: 0
   m_AssetId: 
   hasSpawned: 0
---- !u!114 &6691141937492050761
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8786336352432102918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f0af24057159dd448537af729435460, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
 --- !u!143 &2808155204996086252
 CharacterController:
   m_ObjectHideFlags: 0
@@ -274,6 +261,34 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &8543048771385146171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8786336352432102918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 645da8e0815571648922a38c142b97f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+--- !u!114 &6691141937492050761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8786336352432102918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f0af24057159dd448537af729435460, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
 --- !u!114 &6494012680188734113
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -328,15 +343,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  resetCameraAfterDestroy: 1
+  lookCamera: {fileID: 0}
+  inputController: {fileID: 6691141937492050761}
   cameraPoint: {x: 0, y: 1.75, z: 0.15}
   lookSensitivity: {x: 8, y: 8}
   minLookAngle: -60
   maxLookAngle: 60
   useSmoothness: 1
   smoothnessTime: 0.1
-  resetCameraAfterDestroy: 1
-  lookCamera: {fileID: 0}
-  inputBehaviour: {fileID: 6691141937492050761}
 --- !u!114 &2251705295044275089
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1551455602030449160}
   - component: {fileID: 1551455602030449161}
-  - component: {fileID: 3509149489039363913}
   - component: {fileID: 5372834753847571948}
+  - component: {fileID: -3549829255660384433}
+  - component: {fileID: 3509149489039363913}
   - component: {fileID: 4419978036856062522}
   - component: {fileID: 3678545693570467138}
   - component: {fileID: 1037248149617175897}
@@ -56,20 +57,6 @@ MonoBehaviour:
   serverOnly: 0
   m_AssetId: 
   hasSpawned: 0
---- !u!114 &3509149489039363913
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1551455602030449158}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f0af24057159dd448537af729435460, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
 --- !u!143 &5372834753847571948
 CharacterController:
   m_ObjectHideFlags: 0
@@ -88,6 +75,34 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &-3549829255660384433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1551455602030449158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 645da8e0815571648922a38c142b97f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+--- !u!114 &3509149489039363913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1551455602030449158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f0af24057159dd448537af729435460, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
 --- !u!114 &4419978036856062522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -102,7 +117,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  topDownPlayerCamera: {fileID: 0}
+  resetCameraAfterDestroy: 1
+  lookCamera: {fileID: 0}
   inputController: {fileID: 3509149489039363913}
   movementController: {fileID: 3678545693570467138}
   minDistance: 5
@@ -112,7 +128,7 @@ MonoBehaviour:
   distanceScrollPower: 1
   useOffsetDistance: 1
   maxOffsetDistance: 5
-  pitchAngle: 65
+  pitchAngle: 45
   minHorizontal: 100
   minVertical: 100
   maxHorizontal: 100
@@ -120,7 +136,6 @@ MonoBehaviour:
   usePadding: 1
   followSmoothTime: 1
   rotationSencitivity: 3
-  resetCameraAfterDestroy: 1
 --- !u!114 &3678545693570467138
 MonoBehaviour:
   m_ObjectHideFlags: 0

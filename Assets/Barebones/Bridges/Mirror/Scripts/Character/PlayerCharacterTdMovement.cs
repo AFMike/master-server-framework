@@ -47,23 +47,17 @@ namespace Barebones.Bridges.Mirror.Character
                     playerTargetDirectionAngle = Quaternion.LookRotation(new Vector3(aimDirection.x, 0f, aimDirection.z));
                 }
 
-                // Rotate character to target direction
-                transform.rotation = Quaternion.Lerp(transform.rotation, playerTargetDirectionAngle, Time.deltaTime * rotationSmoothTime);
+                if (movementIsAllowed)
+                {
+                    // Rotate character to target direction
+                    transform.rotation = Quaternion.Lerp(transform.rotation, playerTargetDirectionAngle, Time.deltaTime * rotationSmoothTime);
+                }
 
                 // Let's calculate input direction
                 var inputAxisAngle = inputController.MovementAxisDirection().Equals(Vector3.zero) ? Vector3.zero : Quaternion.LookRotation(inputController.MovementAxisDirection()).eulerAngles;
                 var compositeAngle = inputAxisAngle - transform.eulerAngles;
 
                 calculatedInputDirection = Quaternion.Euler(compositeAngle) * lookController.GetRotation() * transform.forward * inputController.MovementAxisMagnitude();
-
-                if (IsRunning && runningIsAllowed)
-                {
-                    CurrentMovementSpeed = runSpeed;
-                }
-                else if (IsWalking)
-                {
-                    CurrentMovementSpeed = walkSpeed;
-                }
 
                 calculatedMovementDirection.y = -stickToGroundPower;
                 calculatedMovementDirection.x = calculatedInputDirection.x * CurrentMovementSpeed;

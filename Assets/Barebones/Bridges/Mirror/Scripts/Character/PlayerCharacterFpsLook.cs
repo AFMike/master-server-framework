@@ -5,7 +5,7 @@ namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerCharacterInput))]
-    public class PlayerCharacterFpsLook : PlayerCharacterBehaviour
+    public class PlayerCharacterFpsLook : PlayerCharacterLook
     {
         #region INSPECTOR
 
@@ -24,30 +24,7 @@ namespace Barebones.Bridges.Mirror.Character
         [SerializeField, Range(0.01f, 1f)]
         protected float smoothnessTime = 0.1f;
 
-        [Header("Misc Settings"), SerializeField]
-        protected bool resetCameraAfterDestroy = true;
-
-        [Header("Components"), SerializeField]
-        protected Camera lookCamera;
-        [SerializeField]
-        protected PlayerCharacterInput inputBehaviour;
-
         #endregion
-
-        /// <summary>
-        /// The starting parent of the camera. It is necessary to return the camera to its original place after the destruction of the current object
-        /// </summary>
-        private Transform initialCameraParent;
-
-        /// <summary>
-        /// The starting position of the camera. It is necessary to return the camera to its original place after the destruction of the current object
-        /// </summary>
-        private Vector3 initialCameraPosition;
-
-        /// <summary>
-        /// The starting rotation of the camera. It is necessaryto return the camera to its original angle after the destruction of the current object
-        /// </summary>
-        private Quaternion initialCameraRotation;
 
         /// <summary>
         /// Current camera and character rotation
@@ -67,7 +44,7 @@ namespace Barebones.Bridges.Mirror.Character
         /// <summary>
         /// Check if this behaviour is ready
         /// </summary>
-        public override bool IsReady => lookCamera && inputBehaviour;
+        public override bool IsReady => lookCamera && inputController;
 
         [Client]
         protected void Update()
@@ -76,29 +53,6 @@ namespace Barebones.Bridges.Mirror.Character
             {
                 UpdateCameraPosition();
                 UpdateCameraRotation();
-            }
-        }
-
-        protected virtual void OnDestroy()
-        {
-            if (isLocalPlayer)
-            {
-                if (resetCameraAfterDestroy && lookCamera)
-                {
-                    if (initialCameraParent != null)
-                    {
-                        lookCamera.transform.localPosition = initialCameraPosition;
-                        lookCamera.transform.localRotation = initialCameraRotation;
-                        lookCamera.transform.SetParent(initialCameraParent);
-                    }
-                    else
-                    {
-                        lookCamera.transform.position = initialCameraPosition;
-                        lookCamera.transform.rotation = initialCameraRotation;
-                    }
-
-                    lookCamera = null;
-                }
             }
         }
 
@@ -152,8 +106,8 @@ namespace Barebones.Bridges.Mirror.Character
 
         protected virtual void UpdateCameraRotation()
         {
-            cameraRotation.y += inputBehaviour.MouseX() * lookSensitivity.x;
-            cameraRotation.x = Mathf.Clamp(cameraRotation.x - inputBehaviour.MouseY() * lookSensitivity.y, minLookAngle, maxLookAngle);
+            cameraRotation.y += inputController.MouseX() * lookSensitivity.x;
+            cameraRotation.x = Mathf.Clamp(cameraRotation.x - inputController.MouseY() * lookSensitivity.y, minLookAngle, maxLookAngle);
 
             if (useSmoothness)
             {

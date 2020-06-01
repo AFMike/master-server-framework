@@ -46,7 +46,7 @@ namespace Barebones.Games
         {
             Msf.Events.Invoke(MsfEventKeys.showLoadingInfo, "Loading profile... Please wait!");
 
-            MsfTimer.WaitForSeconds(1f, () =>
+            MsfTimer.WaitForSeconds(0.2f, () =>
             {
                 Msf.Client.Profiles.GetProfileValues(Profile, (isSuccessful, error) =>
                 {
