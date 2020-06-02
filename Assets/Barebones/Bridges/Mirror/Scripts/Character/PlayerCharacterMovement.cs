@@ -57,7 +57,7 @@ namespace Barebones.Bridges.Mirror.Character
         /// <summary>
         /// Check if this behaviour is ready
         /// </summary>
-        public override bool IsReady => inputController && characterController;
+        public override bool IsReady => inputController && characterController && ClientScene.ready;
 
         /// <summary>
         /// Speed of the character
@@ -79,7 +79,6 @@ namespace Barebones.Bridges.Mirror.Character
         /// </summary>
         public bool IsRunning { get; protected set; }
 
-        [Client]
         protected void Update()
         {
             if (isLocalPlayer && IsReady)
@@ -104,10 +103,16 @@ namespace Barebones.Bridges.Mirror.Character
             }
         }
 
+        /// <summary>
+        /// Update movement state on client
+        /// </summary>
         protected virtual void UpdateMovementStates()
         {
             IsWalking = inputController.IsMoving() && movementIsAllowed;
             IsRunning = IsWalking && inputController.IsRunnning() && runningIsAllowed;
+
+            // Send state update to server
+            CmdUpdateMovementState(IsWalking, IsRunning);
 
             if (IsRunning)
             {
@@ -121,6 +126,18 @@ namespace Barebones.Bridges.Mirror.Character
             {
                 CurrentMovementSpeed = 0f;
             }
+        }
+
+        /// <summary>
+        /// Update movement state on server
+        /// </summary>
+        /// <param name="isWalking"></param>
+        /// <param name="isRunning"></param>
+        [Command]
+        private void CmdUpdateMovementState(bool isWalking, bool isRunning)
+        {
+            IsWalking = isWalking;
+            IsRunning = isRunning;
         }
 
         protected virtual void UpdateMovement()
@@ -151,20 +168,24 @@ namespace Barebones.Bridges.Mirror.Character
         /// Enable or disable running mode
         /// </summary>
         /// <param name="value"></param>
-        [Server]
         public void AllowRunning(bool value)
         {
-            runningIsAllowed = value;
+            if (isServer)
+            {
+                runningIsAllowed = value;
+            }
         }
 
         /// <summary>
         /// Enable or disable movement mode
         /// </summary>
         /// <param name="value"></param>
-        [Server]
         public void AllowMoving(bool value)
         {
-            movementIsAllowed = value;
+            if (isServer)
+            {
+                movementIsAllowed = value;
+            }
         }
     }
 }

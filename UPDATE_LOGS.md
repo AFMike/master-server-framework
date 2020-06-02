@@ -2,6 +2,23 @@
 
 ### Msf 3.8.3
 
+- Added new event to MirrorNetworkManager class.
+- Added new command line argument "-msfRoomDefaultPort", this argument can be used only with spawner to set up new default port of room. Current default port is 1500, but with this parameter you can change it to whatever you want.
+
+- Fixed bugs in MirrorRoomClient.
+- Fixed bugs in MirrorRoomServer.
+- Fixed bugs in PlayerCharacterMovement.
+- Fixed bugs in PlayerCharacterTdLook.
+- Fixed bugs in PlayerCharacterVitals.
+- Fixed bugs in BaseClientBehaviour.
+- Fixed error in ClientInformationView.
+- Fixed bugs in RoomController.
+
+- Removed deprecated classes.
+
+
+### Msf 3.8.4
+
 New features in mirror demos nd bug fixes in many classes. 
 
 ### Msf 3.8.2

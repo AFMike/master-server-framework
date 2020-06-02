@@ -53,6 +53,11 @@ namespace Barebones.MasterServer
         public int RoomPort { get; private set; }
 
         /// <summary>
+        /// Default room port. Set this cmd if you want a spawner to start creating room ports from your own specific value
+        /// </summary>
+        public int RoomDefaultPort { get; private set; }
+
+        /// <summary>
         /// Max number of connections allowed
         /// </summary>
         public int RoomMaxConnections { get; private set; }
@@ -145,6 +150,7 @@ namespace Barebones.MasterServer
             RoomName = ExtractValue(Names.RoomName, "Room_" + Msf.Helper.CreateRandomString(5));
             RoomIp = ExtractValue(Names.RoomIp, "127.0.0.1");
             RoomPort = ExtractValueInt(Names.RoomPort, 7777);
+            RoomDefaultPort = ExtractValueInt(Names.RoomDefaultPort, 1500);
             RoomExecutablePath = ExtractValue(Names.RoomExecutablePath);
             RoomRegion = ExtractValue(Names.RoomRegion, string.Empty);
             RoomMaxConnections = ExtractValueInt(Names.RoomMaxConnections, 10);

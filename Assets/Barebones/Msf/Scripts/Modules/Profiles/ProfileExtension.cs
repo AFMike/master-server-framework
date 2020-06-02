@@ -8,10 +8,12 @@ namespace Barebones.MasterServer
         /// Username
         /// </summary>
         public string Username { get; private set; }
+
         /// <summary>
         /// Profile data
         /// </summary>
         public ObservableServerProfile Profile { get; private set; }
+
         /// <summary>
         /// Peer asigned to this extension
         /// </summary>

@@ -62,9 +62,9 @@ namespace Barebones.Bridges.Mirror.Character
             && cameraYPoint
             && cameraXPoint
             && cameraOffsetPoint
-            && movementController;
+            && movementController
+            && ClientScene.ready;
 
-        [Client]
         private void Update()
         {
             if (isLocalPlayer && IsReady)

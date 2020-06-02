@@ -73,11 +73,6 @@ namespace Barebones.Bridges.Mirror
         protected RoomAccessPacket roomAccess;
 
         /// <summary>
-        /// Check if room access is validated or not
-        /// </summary>
-        public bool RoomAccessIsValidated { get; protected set; }
-
-        /// <summary>
         /// The instance of the <see cref="MirrorRoomServer"/>
         /// </summary>
         public static MirrorRoomClient Instance { get; protected set; }
@@ -148,6 +143,7 @@ namespace Barebones.Bridges.Mirror
             // If we hav offline scene in global options
             if (Msf.Options.Has(MsfDictKeys.offlineSceneName))
             {
+                logger.Debug("Assigning offline scene to mirror network manager");
                 MirrorNetworkManager.offlineScene = Msf.Options.AsString(MsfDictKeys.offlineSceneName);
             }
 
@@ -194,8 +190,7 @@ namespace Barebones.Bridges.Mirror
         {
             return !Msf.Client.Rooms.ForceClientMode
                 && Msf.Runtime.IsEditor
-                   && autoStartInEditor
-                   && Msf.Client.Rooms.LastReceivedAccess == null;
+                   && autoStartInEditor;
         }
 
         /// <summary>
@@ -238,20 +233,11 @@ namespace Barebones.Bridges.Mirror
         {
             logger.Debug($"Validating access to room server with token [{roomAccess.Token}]");
 
-            // 
-            if (!RoomAccessIsValidated)
-            {
-                // Register listener for access validation message from mirror room server
-                NetworkClient.RegisterHandler<ValidateRoomAccessResultMessage>(ValidateRoomAccessResultHandler, false);
+            // Register listener for access validation message from mirror room server
+            NetworkClient.RegisterHandler<ValidateRoomAccessResultMessage>(ValidateRoomAccessResultHandler, false);
 
-                // Send validation message to room server
-                connection.Send(new ValidateRoomAccessRequestMessage(roomAccess.Token));
-            }
-            else
-            {
-                OnAccessGranted(connection);
-                OnAccessGrantedEvent?.Invoke();
-            }
+            // Send validation message to room server
+            connection.Send(new ValidateRoomAccessRequestMessage(roomAccess.Token));
         }
 
         #endregion
@@ -352,8 +338,6 @@ namespace Barebones.Bridges.Mirror
             }
 
             logger.Debug("Access to server room is successfully validated");
-
-            RoomAccessIsValidated = true;
 
             OnAccessGranted(conn);
             OnAccessGrantedEvent?.Invoke();

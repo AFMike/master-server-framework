@@ -48,6 +48,11 @@
         public string RoomPort { get { return "-msfRoomPort"; } }
 
         /// <summary>
+        /// Use this cmd if you want a spawner to start creating room ports from your own specific value
+        /// </summary>
+        public string RoomDefaultPort { get { return "-msfRoomDefaultPort"; } }
+
+        /// <summary>
         /// Use this cmd to setup server room as provate or not
         /// </summary>
         public string RoomIsPrivate { get { return "-msfRoomIsPrivate"; } }

@@ -6,64 +6,94 @@ using UnityEngine;
 
 namespace Barebones.Bridges.Mirror.Character
 {
-    public delegate void VitalChangeFloatDelegate(ushort key, float value);
+    public delegate void VitalChangeFloatDelegate(short key, float value);
 
     public class PlayerCharacterVitals : PlayerCharacterBehaviour
     {
-        [SyncVar]
-        private bool isAlive = true;
-
-        /// <summary>
-        /// Called on client when one of the vital value is changed
-        /// </summary>
-        [SyncEvent]
-        public event VitalChangeFloatDelegate EventOnVitalChanged;
-
         /// <summary>
         /// Called when player resurrected
         /// </summary>
-        [SyncEvent]
-        public event Action EventOnAlive;
+        public event Action OnAliveEvent;
 
         /// <summary>
         /// Called when player dies
         /// </summary>
-        [SyncEvent]
-        public event Action EventOnDie;
+        public event Action OnDieEvent;
+
+        /// <summary>
+        /// Called on client when one of the vital value is changed
+        /// </summary>
+        public event VitalChangeFloatDelegate OnVitalChangedEvent;
 
         /// <summary>
         /// Check if character is alive
         /// </summary>
-        public bool IsAlive => isAlive;
+        public bool IsAlive { get; protected set; } = true;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public void NotifyVitalChanged(ushort key, float value)
+        public void NotifyVitalChanged(short key, float value)
         {
-            EventOnVitalChanged?.Invoke(key, value);
+            if (isServer)
+            {
+                Rpc_NotifyVitalChanged(key, value);
+            }
+        }
+
+        [ClientRpc]
+        private void Rpc_NotifyVitalChanged(short key, float value)
+        {
+            if (isLocalPlayer)
+            {
+                OnVitalChangedEvent?.Invoke(key, value);
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        [Server]
-        public void SetAlive()
+        public void NotifyAlive()
         {
-            isAlive = true;
-            EventOnAlive?.Invoke();
+            if (isServer)
+            {
+                IsAlive = true;
+                Rpc_NotifyAlive();
+            }
+        }
+
+        [ClientRpc]
+        private void Rpc_NotifyAlive()
+        {
+            if (isLocalPlayer)
+            {
+                IsAlive = true;
+                OnAliveEvent?.Invoke();
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        [Server]
-        public void SetDead()
+        public void NotifyDied()
         {
-            isAlive = false;
-            EventOnDie?.Invoke();
+            if (isServer)
+            {
+                IsAlive = false;
+                Rpc_NotifyDied();
+            }
+        }
+
+        [ClientRpc]
+        private void Rpc_NotifyDied()
+        {
+            if (isLocalPlayer)
+            {
+                IsAlive = false;
+                OnDieEvent?.Invoke();
+            }
         }
     }
 }

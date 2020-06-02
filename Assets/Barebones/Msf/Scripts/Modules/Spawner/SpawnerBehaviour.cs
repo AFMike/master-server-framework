@@ -106,6 +106,8 @@ namespace Barebones.MasterServer
 
             logger = Msf.Create.Logger(GetType().Name);
             logger.LogLevel = logLevel;
+
+            Msf.Server.Spawners.DefaultPort = Msf.Args.RoomDefaultPort;
         }
 
         protected virtual void Start()

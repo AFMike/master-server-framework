@@ -21,7 +21,7 @@ namespace Barebones.Games
             helpViewSummaryPanel = ViewsManager.GetView<UIView>("HelpViewSummaryPanel");
             helpOutput = ChildComponent<TextMeshProUGUI>("helpOutput");
 
-            if (helpOutput)
+            if (helpOutput && helpText)
                 helpOutput.text = helpText.text;
         }
 

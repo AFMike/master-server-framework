@@ -912,10 +912,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logLevel: 0
   initModulesAtStart: 1
-  autoLoadUserProfile: 1
+  autoLoadUserProfile: 0
+  disconnectIfProfileFailed: 0
   masterIp: 127.0.0.1
   masterPort: 5000
-  autoStartInEditor: 1
+  autoStartInEditor: 0
   startServerAsHost: 1
 --- !u!1001 &1547812731
 PrefabInstance:

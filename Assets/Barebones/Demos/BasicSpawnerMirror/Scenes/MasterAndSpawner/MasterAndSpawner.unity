@@ -745,7 +745,7 @@ MonoBehaviour:
   machineIp: 127.0.0.1
   usePublicIp: 0
   executableFilePath: 
-  spawnInBatchmode: 0
+  spawnInBatchmode: 1
   maxProcesses: 5
   spawnWebSocketServers: 0
   region: 

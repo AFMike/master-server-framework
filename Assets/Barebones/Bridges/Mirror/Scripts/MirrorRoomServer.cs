@@ -18,6 +18,12 @@ namespace Barebones.Bridges.Mirror
         protected bool autoLoadUserProfile = true;
 
         /// <summary>
+        /// If true, than if profile loadingis failed server will disconnect user
+        /// </summary>
+        [SerializeField, Tooltip("If true, than if profile loadingis failed server will disconnect user")]
+        protected bool disconnectIfProfileFailed = false;
+
+        /// <summary>
         /// Master server IP address to connect room server to master server as client
         /// </summary>
         [Header("Master Connection Settings"), SerializeField, Tooltip("Master server IP address to connect room server to master server as client")]
@@ -73,7 +79,7 @@ namespace Barebones.Bridges.Mirror
         /// <summary>
         /// Options of this room we must share with clients
         /// </summary>
-        private RoomOptions roomOptions;
+        protected RoomOptions roomOptions;
 
         /// <summary>
         /// Mirror network manager
@@ -134,9 +140,6 @@ namespace Barebones.Bridges.Mirror
         {
             if (Msf.Client.Rooms.ForceClientMode) return;
 
-            // Register handler to listen to client access validation request
-            NetworkServer.RegisterHandler<ValidateRoomAccessRequestMessage>(ValidateRoomAccessRequestHandler, false);
-
             // Get mirror network manager
             MirrorNetworkManager = NetworkManager.singleton;
 
@@ -145,7 +148,7 @@ namespace Barebones.Bridges.Mirror
             {
                 manager.OnServerStartedEvent += OnMirrorServerStartedEventHandler;
                 manager.OnClientDisconnectedEvent += OnMirrorClientDisconnectedEvent;
-                manager.OnHostStopEvent += OnMirrorHostStoppedEventHandler;
+                manager.OnServerStoppedEvent += OnMirrorServerStoppedEventHandler;
             }
             else
             {
@@ -154,6 +157,9 @@ namespace Barebones.Bridges.Mirror
 
             // Set room oprions
             roomOptions = SetRoomOptions();
+
+            // Set port of the Mirror server
+            SetPort(roomOptions.RoomPort);
 
             // Add master server connection and disconnection listeners
             Connection.AddConnectionListener(OnConnectedToMasterServerEventHandler, true);
@@ -191,7 +197,7 @@ namespace Barebones.Bridges.Mirror
             {
                 manager.OnServerStartedEvent -= OnMirrorServerStartedEventHandler;
                 manager.OnClientDisconnectedEvent -= OnMirrorClientDisconnectedEvent;
-                manager.OnHostStopEvent -= OnMirrorHostStoppedEventHandler;
+                manager.OnServerStoppedEvent -= OnMirrorServerStoppedEventHandler;
             }
 
             // Unregister handlers
@@ -216,6 +222,9 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         protected virtual void OnMirrorServerStartedEventHandler()
         {
+            // Register handler to listen to client access validation request
+            NetworkServer.RegisterHandler<ValidateRoomAccessRequestMessage>(ValidateRoomAccessRequestHandler, false);
+
             // Start room registration
             RegisterRoomServer();
         }
@@ -226,40 +235,41 @@ namespace Barebones.Bridges.Mirror
         /// <param name="obj"></param>
         private void OnMirrorClientDisconnectedEvent(NetworkConnection connection)
         {
-            // Try to find player in filtered list
-            if (roomPlayersByMirrorPeerId.TryGetValue(connection.connectionId, out MirrorRoomPlayer player))
-            {
-                logger.Debug($"Room server player {player.Username} with room client Id {connection.connectionId} left the room");
+            MsfTimer.WaitForSeconds(0.2f, () => {
+                // Try to find player in filtered list
+                if (roomPlayersByMirrorPeerId.TryGetValue(connection.connectionId, out MirrorRoomPlayer player))
+                {
+                    logger.Debug($"Room server player {player.Username} with room client Id {connection.connectionId} left the room");
 
-                // Remove thisplayer from filtered list
-                roomPlayersByMirrorPeerId.Remove(player.MirrorPeer.connectionId);
-                roomPlayersByMsfPeerId.Remove(player.MsfPeerId);
-                roomPlayersByUsername.Remove(player.Username);
+                    // Remove thisplayer from filtered list
+                    roomPlayersByMirrorPeerId.Remove(player.MirrorPeer.connectionId);
+                    roomPlayersByMsfPeerId.Remove(player.MsfPeerId);
+                    roomPlayersByUsername.Remove(player.Username);
 
-                // Notify master server about disconnected player
-                CurrentRoomController.NotifyPlayerLeft(player.MsfPeerId);
+                    // Notify master server about disconnected player
+                    if (CurrentRoomController.IsActive)
+                        CurrentRoomController.NotifyPlayerLeft(player.MsfPeerId);
 
-                // Inform subscribers about this bad guy
-                OnPlayerLeftRoomEvent?.Invoke(player);
+                    // Inform subscribers about this bad guy
+                    OnPlayerLeftRoomEvent?.Invoke(player);
 
-            }
-            else
-            {
-                logger.Debug($"Room server client {connection.connectionId} left the room");
-            }
+                }
+                else
+                {
+                    logger.Debug($"Room server client {connection.connectionId} left the room");
+                }
+            });
         }
 
         /// <summary>
         /// Fired when mirror host was stopped.
         /// This is usefull in test mode.
         /// </summary>
-        private void OnMirrorHostStoppedEventHandler()
+        private void OnMirrorServerStoppedEventHandler()
         {
-            if (CurrentRoomController != null)
-            {
-                Connection?.Disconnect();
-                CurrentRoomController = null;
-            }
+            // Register handler to listen to client access validation request
+            NetworkServer.UnregisterHandler<ValidateRoomAccessRequestMessage>();
+            CurrentRoomController?.Destroy();
         }
 
         #endregion
@@ -292,8 +302,9 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         protected virtual void OnDisconnectedFromMasterServerEventHandler()
         {
-            // Quit the room
-            Msf.Runtime.Quit();
+            // Quit the room if we are not in editor
+            if (!Msf.Runtime.IsEditor)
+                Msf.Runtime.Quit();
         }
 
         #endregion
@@ -379,7 +390,7 @@ namespace Barebones.Bridges.Mirror
                 }
 
                 // Set port of the Mirror server
-                SetPort((ushort)roomOptions.RoomPort);
+                SetPort(roomOptions.RoomPort);
 
                 // Finalize spawn task before we start mirror server 
                 taskController.FinalizeTask(new DictionaryOptions(), () =>
@@ -407,7 +418,7 @@ namespace Barebones.Bridges.Mirror
                 CurrentRoomController = controller;
 
                 // Save room id to global options just for test purpose only
-                Msf.Options.Add(MsfDictKeys.roomId, controller.RoomId);
+                Msf.Options.Set(MsfDictKeys.roomId, controller.RoomId);
 
                 logger.Info($"Room {controller.RoomId} is successfully registered with options {roomOptions}");
             });
@@ -525,24 +536,6 @@ namespace Barebones.Bridges.Mirror
         }
 
         /// <summary>
-        /// Sets an address 
-        /// </summary>
-        /// <param name="roomAddress"></param>
-        public virtual void SetAddress(string roomAddress)
-        {
-            NetworkManager.singleton.networkAddress = roomAddress;
-        }
-
-        /// <summary>
-        /// Gets an address
-        /// </summary>
-        /// <param name="roomIp"></param>
-        public virtual string GetAddress()
-        {
-            return NetworkManager.singleton.networkAddress;
-        }
-
-        /// <summary>
         /// Set network transport port
         /// </summary>
         /// <param name="port"></param>
@@ -591,7 +584,12 @@ namespace Barebones.Bridges.Mirror
                     {
                         logger.Error("Room server cannot retrieve player profile from master server");
                         successCallback?.Invoke(false, "Room server cannot retrieve player profile from master server");
-                        MsfTimer.WaitForSeconds(1f, () => player.MirrorPeer.Disconnect());
+
+                        if (disconnectIfProfileFailed)
+                        {
+                            MsfTimer.WaitForSeconds(1f, () => player.MirrorPeer.Disconnect());
+                        }
+
                         return;
                     }
 

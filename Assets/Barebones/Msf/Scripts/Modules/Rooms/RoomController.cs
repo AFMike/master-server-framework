@@ -38,7 +38,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Room Id
         /// </summary>
-        public int RoomId { get; private set; }
+        public int RoomId { get; private set; } = -1;
 
         /// <summary>
         /// Options of current room controller
@@ -49,6 +49,11 @@ namespace Barebones.MasterServer
         /// Logger of all room controllers
         /// </summary>
         public static Logger Logger { get; private set; }
+
+        /// <summary>
+        /// Check if room is active
+        /// </summary>
+        public bool IsActive => Connection != null && RoomId > -1;
 
         /// <summary>
         /// Access provider of current room controller
@@ -82,17 +87,7 @@ namespace Barebones.MasterServer
         /// </summary>
         public void Destroy()
         {
-            Destroy((successful, error) =>
-            {
-                if (!successful)
-                {
-                    Logger.Error(error);
-                }
-                else
-                {
-                    Logger.Debug($"Room {RoomId} was successfully unregistered");
-                }
-            });
+            Destroy(null);
         }
 
         /// <summary>
@@ -100,7 +95,23 @@ namespace Barebones.MasterServer
         /// </summary>
         public void Destroy(SuccessCallback callback)
         {
-            Msf.Server.Rooms.DestroyRoom(RoomId, callback, Connection);
+            Msf.Server.Rooms.DestroyRoom(RoomId, (isSuccess, error) => {
+
+                if (!isSuccess)
+                {
+                    callback?.Invoke(false, error);
+                    Logger.Error(error);
+                    return;
+                }
+
+                Logger.Debug($"Room {RoomId} was successfully unregistered");
+
+                callback?.Invoke(true, string.Empty);
+
+                Connection = null;
+                RoomId = -1;
+
+            }, Connection);
         }
 
         /// <summary>

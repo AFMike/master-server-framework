@@ -1588,7 +1588,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logLevel: 3
-  serverIp: 13.233.129.214
+  serverIp: 127.0.0.1
   serverPort: 5000
   minTimeToConnect: 0.5
   maxTimeToConnect: 4
@@ -7575,6 +7575,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 801973862098218387, guid: 90d980f89194758419eb2a3aba567aac,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -25.000183
       objectReference: {fileID: 0}
     - target: {fileID: 801973863724863208, guid: 90d980f89194758419eb2a3aba567aac,
         type: 3}

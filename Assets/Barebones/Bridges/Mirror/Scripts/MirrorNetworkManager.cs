@@ -36,6 +36,11 @@ namespace Barebones.Bridges.Mirror
         public event Action OnServerStartedEvent;
 
         /// <summary>
+        /// Invokes when mirror server is stopped
+        /// </summary>
+        public event Action OnServerStoppedEvent;
+
+        /// <summary>
         /// Invokes when mirror host is started
         /// </summary>
         public event Action OnHostStartedEvent;
@@ -88,6 +93,13 @@ namespace Barebones.Bridges.Mirror
             // Register handler to listen to player creation message
             NetworkServer.RegisterHandler<CreatePlayerMessage>(CreatePlayerRequestHandler, false);
             OnServerStartedEvent?.Invoke();
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+
+            OnServerStoppedEvent?.Invoke();
         }
 
         public override void OnStartHost()

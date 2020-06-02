@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Barebones.Bridges.Mirror.Character
 {
     [DisallowMultipleComponent]
-    public class PlayerCharacterInput : PlayerCharacterBehaviour
+    public class PlayerCharacterInput : MonoBehaviour
     {
         public void SetMouseActive(bool value)
         {

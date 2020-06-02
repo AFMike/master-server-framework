@@ -12,7 +12,7 @@ namespace Barebones.MasterServer
         /// <summary>
         /// Client handlers list. Requires for connection changing process. <seealso cref="ChangeConnection(IClientSocket)"/>
         /// </summary>
-        private Dictionary<short, IPacketHandler> handlers;
+        protected Dictionary<short, IPacketHandler> handlers;
 
         /// <summary>
         /// Logger assigned to this module
