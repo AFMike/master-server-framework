@@ -1,7 +1,5 @@
 ﻿using Mirror;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Barebones.Bridges.Mirror.Character
@@ -10,6 +8,13 @@ namespace Barebones.Bridges.Mirror.Character
 
     public class PlayerCharacterVitals : PlayerCharacterBehaviour
     {
+        #region INSPECTOR
+
+        [Header("Components"), SerializeField]
+        private CharacterController characterController;
+
+        #endregion
+
         /// <summary>
         /// Called when player resurrected
         /// </summary>
@@ -29,6 +34,8 @@ namespace Barebones.Bridges.Mirror.Character
         /// Check if character is alive
         /// </summary>
         public bool IsAlive { get; protected set; } = true;
+
+        public override bool IsReady => characterController;
 
         /// <summary>
         /// 
@@ -81,6 +88,8 @@ namespace Barebones.Bridges.Mirror.Character
         {
             if (isServer)
             {
+                characterController.enabled = false;
+
                 IsAlive = false;
                 Rpc_NotifyDied();
             }
@@ -91,6 +100,8 @@ namespace Barebones.Bridges.Mirror.Character
         {
             if (isLocalPlayer)
             {
+                characterController.enabled = false;
+
                 IsAlive = false;
                 OnDieEvent?.Invoke();
             }

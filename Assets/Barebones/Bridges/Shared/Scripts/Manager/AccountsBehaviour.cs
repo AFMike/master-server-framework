@@ -120,7 +120,7 @@ namespace Barebones.Games
         protected virtual void OnClientDisconnectedFromServer()
         {
             Msf.Events.Invoke(MsfEventKeys.showOkDialogBox,
-                new OkDialogBoxViewEventMessage("The connection to the server has been lost. "
+                new OkDialogBoxEventMessage("The connection to the server has been lost. "
                 + "Please try again or contact the developers of the game or your internet provider.",
                 () =>
                 {
@@ -181,7 +181,7 @@ namespace Barebones.Games
                     else
                     {
                         outputMessage = $"An error occurred while signing in: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -221,7 +221,7 @@ namespace Barebones.Games
                     else
                     {
                         outputMessage = $"An error occurred while signing in: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -272,7 +272,7 @@ namespace Barebones.Games
                     else
                     {
                         outputMessage = $"An error occurred while signing up: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -299,7 +299,7 @@ namespace Barebones.Games
                     else
                     {
                         outputMessage = $"An error occurred while signing in: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -348,12 +348,12 @@ namespace Barebones.Games
                         passwordResetCodeView.Hide();
                         passwordResetView.Show();
 
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage($"We have sent an email with reset code to your address '{passwordResetCodeView.Email}'", null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage($"We have sent an email with reset code to your address '{passwordResetCodeView.Email}'", null));
                     }
                     else
                     {
                         outputMessage = $"An error occurred while password reset code: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -399,13 +399,13 @@ namespace Barebones.Games
                         passwordResetView.Hide();
                         signinView.Show();
 
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("You have successfuly changed your password. Now you can sign in.", null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage("You have successfuly changed your password. Now you can sign in.", null));
                         OnPasswordChangedEvent?.Invoke();
                     }
                     else
                     {
                         outputMessage = $"An error occurred while changing password: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -431,12 +431,12 @@ namespace Barebones.Games
                     if (isSuccessful)
                     {
                         emailConfirmationView.Show();
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage($"We have sent an email with confirmation code to your address '{Msf.Client.Auth.AccountInfo.Email}'", null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage($"We have sent an email with confirmation code to your address '{Msf.Client.Auth.AccountInfo.Email}'", null));
                     }
                     else
                     {
                         outputMessage = $"An error occurred while requesting confirmation code: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });
@@ -469,7 +469,7 @@ namespace Barebones.Games
                     else
                     {
                         outputMessage = $"An error occurred while confirming yor account: {error}";
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(outputMessage, null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(outputMessage, null));
                         logger.Error(outputMessage);
                     }
                 });

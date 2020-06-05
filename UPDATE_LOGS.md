@@ -1,6 +1,20 @@
 ## Updates Log
 
-### Msf 3.8.3
+### Msf 3.8.5
+
+- Added new events to MirrorNetworkManager.
+- Added room process terminating system to MirrorRoomServer. Now you can set up to terminate room process  when last player left the room or terminate it in given number of seconds after the last player left the room.
+
+- Fixed bug in MirrorNetworkManager when creating new player on server.
+- Fixed bug in MirrorRoomClient when getting room access.
+- Fixed bug in PlayerCharacterLook when detach camera after the player object was destroyed.
+- Fixed bug in PlayerCharacterVitals. Networking events did not worked correctly.
+- Fixed bug in SpawnerBehaviour. When public IP receiving process cannot get it we need to catch this exception to use default IP.
+- Fixed bug in ServerBehaviour. The same as in SpawnerBehaviour.
+
+- Another bufg fixes.
+
+### Msf 3.8.4
 
 - Added new event to MirrorNetworkManager class.
 - Added new command line argument "-msfRoomDefaultPort", this argument can be used only with spawner to set up new default port of room. Current default port is 1500, but with this parameter you can change it to whatever you want.
@@ -17,7 +31,7 @@
 - Removed deprecated classes.
 
 
-### Msf 3.8.4
+### Msf 3.8.3
 
 New features in mirror demos nd bug fixes in many classes. 
 

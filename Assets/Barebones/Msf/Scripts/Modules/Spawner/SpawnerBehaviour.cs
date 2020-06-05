@@ -145,10 +145,19 @@ namespace Barebones.MasterServer
                 // if you want to use your public IP address
                 if (usePublicIp)
                 {
-                    Msf.Helper.GetPublicIp(ipInfo =>
+                    Msf.Helper.GetPublicIp((ipInfo, error) =>
                     {
-                        machineIp = ipInfo.Ip;
-                        StartSpawner();
+                        if (ipInfo == null)
+                        {
+                            logger.Error(error);
+                            logger.Error($"Our public IP is not defined. Let's use IP default IP address {machineIp}");
+                        }
+                        else
+                        {
+                            logger.Info($"Our public IP is {ipInfo.Ip}");
+                            machineIp = ipInfo.Ip;
+                            StartSpawner();
+                        }
                     });
                 }
                 else

@@ -168,11 +168,21 @@ namespace Barebones.MasterServer
             {
                 logger.Info("Trying to get public IP...");
 
-                Msf.Helper.GetPublicIp((ipInfo) =>
+                Msf.Helper.GetPublicIp((ipInfo, error) =>
                 {
-                    logger.Info($"Our public IP is {ipInfo.Ip}");
-                    SetIpAddress(ipInfo.Ip);
-                    callback?.Invoke();
+                    if(ipInfo == null)
+                    {
+                        logger.Error(error);
+                        logger.Error($"Our public IP is not defined. Let's use IP default IP address {serverIP}");
+                        SetIpAddress(serverIP);
+                        callback?.Invoke();
+                    }
+                    else
+                    {
+                        logger.Info($"Our public IP is {ipInfo.Ip}");
+                        SetIpAddress(ipInfo.Ip);
+                        callback?.Invoke();
+                    }
                 });
             }
             else

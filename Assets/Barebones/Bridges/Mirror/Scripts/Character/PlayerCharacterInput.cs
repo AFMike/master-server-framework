@@ -81,10 +81,15 @@ namespace Barebones.Bridges.Mirror.Character
             return Input.GetKey(KeyCode.LeftShift) && IsMoving();
         }
 
+        public virtual bool IsAtack()
+        {
+            return Input.GetMouseButtonDown(0);
+        }
+
         public bool ScreenPointHit(out RaycastHit hit, float maxCheckDistance = Mathf.Infinity)
         {
-            Ray t_ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            return Physics.Raycast(t_ray, out hit, maxCheckDistance);
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            return Physics.Raycast(ray, out hit, maxCheckDistance);
         }
     }
 }

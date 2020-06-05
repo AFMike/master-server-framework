@@ -55,7 +55,7 @@ namespace Barebones.Games
                 if (controller == null)
                 {
                     Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
-                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(error, null));
+                    Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(error, null));
                     return;
                 }
 
@@ -72,7 +72,7 @@ namespace Barebones.Games
                     {
                         Msf.Client.Spawners.AbortSpawn(controller.SpawnTaskId);
                         logger.Error("Failed spawn new room. Time is up!");
-                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("Failed spawn new room. Time is up!", null));
+                        Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage("Failed spawn new room. Time is up!", null));
                         return;
                     }
 

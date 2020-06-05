@@ -2,6 +2,7 @@
 using Barebones.Networking;
 using Mirror;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -34,6 +35,18 @@ namespace Barebones.Bridges.Mirror
         /// </summary>
         [SerializeField, Tooltip("Master server port to connect room server to master server as client")]
         protected int masterPort = 5000;
+
+        /// <summary>
+        /// Room will be closed when last player left it
+        /// </summary>
+        [Header("Terminator Settings"), SerializeField, Tooltip("Room will be closed when last player left it")]
+        protected bool terminateRoomWhenLastPlayerQuits = false;
+
+        /// <summary>
+        /// Waits until room is empty and terminates it in the given number of seconds
+        /// </summary>
+        [Tooltip("Waits until room is empty and terminates it in the given number of seconds"), Range(0, 300)]
+        public int terminateEmptyRoomInSeconds = 60;
 
         [Header("Editor Settings"), SerializeField]
         private HelpBox editorHelp = new HelpBox()
@@ -136,9 +149,45 @@ namespace Barebones.Bridges.Mirror
             masterPort = Msf.Args.ExtractValueInt(Msf.Args.Names.MasterPort, masterPort);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        protected virtual void OnApplicationQuit()
+        {
+            if (Connection != null)
+                Connection.Disconnect();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            // Remove connection listeners
+            Connection?.RemoveConnectionListener(OnConnectedToMasterServerEventHandler);
+            Connection?.RemoveDisconnectionListener(OnDisconnectedFromMasterServerEventHandler);
+
+            // Start listenin to OnServerStartedEvent of our MirrorNetworkManager
+            if (NetworkManager.singleton is MirrorNetworkManager manager)
+            {
+                manager.OnServerStartedEvent -= OnMirrorServerStartedEventHandler;
+                manager.OnClientDisconnectedEvent -= OnMirrorClientDisconnectedEvent;
+                manager.OnServerStoppedEvent -= OnMirrorServerStoppedEventHandler;
+            }
+
+            // Unregister handlers
+            NetworkServer.UnregisterHandler<ValidateRoomAccessRequestMessage>();
+        }
+
         protected override void OnInitialize()
         {
             if (Msf.Client.Rooms.ForceClientMode) return;
+
+            // Start waiting empty room termination
+            if (!terminateRoomWhenLastPlayerQuits && terminateEmptyRoomInSeconds > 0)
+                StartCoroutine(StartEmptyIntervalsCheck(terminateEmptyRoomInSeconds));
 
             // Get mirror network manager
             MirrorNetworkManager = NetworkManager.singleton;
@@ -173,35 +222,23 @@ namespace Barebones.Bridges.Mirror
         }
 
         /// <summary>
-        /// 
+        /// Each time, after the amount of seconds provided passes, checks
+        /// if the server is empty, and if it is - terminates application
         /// </summary>
-        protected virtual void OnApplicationQuit()
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        private IEnumerator StartEmptyIntervalsCheck(float timeout)
         {
-            if (Connection != null)
-                Connection.Disconnect();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-
-            // Remove connection listeners
-            Connection?.RemoveConnectionListener(OnConnectedToMasterServerEventHandler);
-            Connection?.RemoveDisconnectionListener(OnDisconnectedFromMasterServerEventHandler);
-
-            // Start listenin to OnServerStartedEvent of our MirrorNetworkManager
-            if (NetworkManager.singleton is MirrorNetworkManager manager)
+            while (true)
             {
-                manager.OnServerStartedEvent -= OnMirrorServerStartedEventHandler;
-                manager.OnClientDisconnectedEvent -= OnMirrorClientDisconnectedEvent;
-                manager.OnServerStoppedEvent -= OnMirrorServerStoppedEventHandler;
-            }
+                yield return new WaitForSecondsRealtime(timeout);
 
-            // Unregister handlers
-            NetworkServer.UnregisterHandler<ValidateRoomAccessRequestMessage>();
+                if (roomPlayersByMirrorPeerId.Count <= 0)
+                {
+                    logger.Error("Terminating game server because it's empty at the time of an interval check.");
+                    Msf.Runtime.Quit();
+                }
+            }
         }
 
         /// <summary>
@@ -235,7 +272,8 @@ namespace Barebones.Bridges.Mirror
         /// <param name="obj"></param>
         private void OnMirrorClientDisconnectedEvent(NetworkConnection connection)
         {
-            MsfTimer.WaitForSeconds(0.2f, () => {
+            MsfTimer.WaitForSeconds(0.2f, () =>
+            {
                 // Try to find player in filtered list
                 if (roomPlayersByMirrorPeerId.TryGetValue(connection.connectionId, out MirrorRoomPlayer player))
                 {
@@ -252,6 +290,12 @@ namespace Barebones.Bridges.Mirror
 
                     // Inform subscribers about this bad guy
                     OnPlayerLeftRoomEvent?.Invoke(player);
+
+                    // If we need to terminate empty room
+                    if (terminateRoomWhenLastPlayerQuits && roomPlayersByMirrorPeerId.Count <= 0 && !Msf.Runtime.IsEditor)
+                    {
+                        Msf.Runtime.Quit();
+                    }
 
                 }
                 else
@@ -411,6 +455,11 @@ namespace Barebones.Bridges.Mirror
                 if (controller == null)
                 {
                     logger.Error(error);
+
+                    // Quit the room if we are not in editor
+                    if (!Msf.Runtime.IsEditor)
+                        Msf.Runtime.Quit();
+
                     return;
                 }
 

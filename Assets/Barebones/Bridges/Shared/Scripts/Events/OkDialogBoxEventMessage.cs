@@ -5,17 +5,17 @@ using UnityEngine.Events;
 
 namespace Barebones.Games
 {
-    public class OkDialogBoxViewEventMessage
+    public class OkDialogBoxEventMessage
     {
-        public OkDialogBoxViewEventMessage() { }
+        public OkDialogBoxEventMessage() { }
 
-        public OkDialogBoxViewEventMessage(string message)
+        public OkDialogBoxEventMessage(string message)
         {
             Message = message;
             OkCallback = null;
         }
 
-        public OkDialogBoxViewEventMessage(string message, UnityAction okCallback)
+        public OkDialogBoxEventMessage(string message, UnityAction okCallback)
         {
             Message = message;
             OkCallback = okCallback;

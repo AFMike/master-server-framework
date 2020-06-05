@@ -41,26 +41,40 @@ namespace Barebones.Bridges.Mirror.Character
 
         protected virtual void OnDestroy()
         {
-            if (isLocalPlayer)
+            if (isLocalPlayer && resetCameraAfterDestroy)
             {
-                if (resetCameraAfterDestroy && lookCamera)
-                {
-                    if (initialCameraParent != null)
-                    {
-                        lookCamera.transform.SetParent(initialCameraParent);
-                        lookCamera.transform.localPosition = initialCameraPosition;
-                        lookCamera.transform.localRotation = initialCameraRotation;
-                    }
-                    else
-                    {
-                        lookCamera.transform.SetParent(null);
-                        lookCamera.transform.position = initialCameraPosition;
-                        lookCamera.transform.rotation = initialCameraRotation;
-                    }
-
-                    lookCamera = null;
-                }
+                DetachCamera();
             }
+        }
+
+        /// <summary>
+        /// Clears camera object and set camera back to its original place
+        /// </summary>
+        public void DetachCamera()
+        {
+            if (isLocalPlayer && lookCamera)
+            {
+                if (initialCameraParent != null)
+                {
+                    lookCamera.transform.SetParent(initialCameraParent);
+                    lookCamera.transform.localPosition = initialCameraPosition;
+                    lookCamera.transform.localRotation = initialCameraRotation;
+                }
+                else
+                {
+                    lookCamera.transform.SetParent(null);
+                    lookCamera.transform.position = initialCameraPosition;
+                    lookCamera.transform.rotation = initialCameraRotation;
+                }
+
+                lookCamera = null;
+            }
+        }
+
+        public override void OnStopAuthority()
+        {
+            base.OnStopAuthority();
+            DetachCamera();
         }
 
         [Server]

@@ -71,7 +71,7 @@ namespace Barebones.MasterServer
         /// Retrieves current public IP
         /// </summary>
         /// <param name="callback"></param>
-        public void GetPublicIp(Action<MsfIpInfo> callback)
+        public void GetPublicIp(Action<MsfIpInfo, string> callback)
         {
             MsfTimer.Instance.StartCoroutine(GetPublicIPCoroutine(callback));
         }
@@ -99,22 +99,20 @@ namespace Barebones.MasterServer
         /// </summary>
         /// <param name="callback"></param>
         /// <returns></returns>
-        private IEnumerator GetPublicIPCoroutine(Action<MsfIpInfo> callback)
+        private IEnumerator GetPublicIPCoroutine(Action<MsfIpInfo, string> callback)
         {
             UnityWebRequest www = UnityWebRequest.Get("https://ifconfig.co/json");
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.Log(www.error);
+                callback?.Invoke(null, www.error);
+                Debug.LogError(www.error);
             }
             else
             {
                 var ipInfo = JsonConvert.DeserializeObject<MsfIpInfo>(www.downloadHandler.text);
-
-                Debug.Log(ipInfo);
-
-                callback?.Invoke(ipInfo);
+                callback?.Invoke(ipInfo, string.Empty);
             }
         }
     }

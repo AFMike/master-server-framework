@@ -1,27 +1,33 @@
 ﻿using Aevien.UI;
 using Barebones.MasterServer;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Barebones.Games
 {
     [RequireComponent(typeof(UIView))]
-    public class OkDialogBoxView : PopupViewComponent
+    public class YesNoDialogBoxView : PopupViewComponent
     {
         public override void OnOwnerStart()
         {
-            Msf.Events.AddEventListener(MsfEventKeys.showOkDialogBox, OnShowDialogBoxEventHandler);
-            Msf.Events.AddEventListener(MsfEventKeys.hideOkDialogBox, OnHideDialogBoxEventHandler);
+            Msf.Events.AddEventListener(MsfEventKeys.showYesNoDialogBox, OnShowDialogBoxEventHandler);
+            Msf.Events.AddEventListener(MsfEventKeys.hideYesNoDialogBox, OnHideDialogBoxEventHandler);
         }
 
         private void OnShowDialogBoxEventHandler(EventMessage message)
         {
-            var messageData = message.GetData<OkDialogBoxEventMessage>();
+            var messageData = message.GetData<YesNoDialogBoxEventMessage>();
 
             SetLables(messageData.Message);
 
             SetButtonsClick(() =>
             {
-                messageData.OkCallback?.Invoke();
+                messageData.YesCallback?.Invoke();
+                Owner.Hide();
+            }, () =>
+            {
+                messageData.NoCallback?.Invoke();
                 Owner.Hide();
             });
 

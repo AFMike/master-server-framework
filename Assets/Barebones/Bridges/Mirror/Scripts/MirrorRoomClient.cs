@@ -151,6 +151,7 @@ namespace Barebones.Bridges.Mirror
             if (NetworkManager.singleton is MirrorNetworkManager manager)
             {
                 manager.OnClientStartedEvent += OnMirrorClientStartedEventHandler;
+                manager.OnClientStoppedEvent += OnMirrorClientStoppedEventHandler;
             }
             else
             {
@@ -195,7 +196,6 @@ namespace Barebones.Bridges.Mirror
 
         /// <summary>
         /// Fired when mirror client is started.
-        /// This is usefull in test mode.
         /// </summary>
         protected virtual void OnMirrorClientStartedEventHandler()
         {
@@ -204,6 +204,14 @@ namespace Barebones.Bridges.Mirror
             {
                 StartClient();
             }
+        }
+
+        /// <summary>
+        /// Fired when mirror client is stopped
+        /// </summary>
+        protected virtual void OnMirrorClientStoppedEventHandler()
+        {
+            Msf.Options.Remove(MsfDictKeys.roomId);
         }
 
         /// <summary>
@@ -258,10 +266,10 @@ namespace Barebones.Bridges.Mirror
                     Msf.Events.Invoke(MsfEventKeys.hideLoadingInfo);
                     logger.Error(error);
                     Msf.Events.Invoke(MsfEventKeys.showOkDialogBox,
-                        new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator",
+                        new OkDialogBoxEventMessage("We could not get access to room. Please try again later or contact to administrator",
                         () =>
                         {
-                            if (IsAllowedToBeStartedInEditor())
+                            if (string.IsNullOrEmpty(MirrorNetworkManager.offlineScene))
                             {
                                 Msf.Runtime.Quit();
                             }
@@ -382,7 +390,6 @@ namespace Barebones.Bridges.Mirror
                 {
                     Msf.Client.Matchmaker.FindGames((games) =>
                     {
-
                         if (games != null && games.Count > 0)
                         {
                             // Save room id to global options just for test purpose only
@@ -391,7 +398,7 @@ namespace Barebones.Bridges.Mirror
                         }
                         else
                         {
-                            Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage("We could not get access to room. Please try again later or contact to administrator", () => { Msf.Runtime.Quit(); }));
+                            Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage("We could not get access to room. Please try again later or contact to administrator", () => { Msf.Runtime.Quit(); }));
                         }
                     });
                 }

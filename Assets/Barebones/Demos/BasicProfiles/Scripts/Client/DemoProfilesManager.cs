@@ -77,7 +77,7 @@ namespace Barebones.MasterServer.Examples.BasicProfile
             }
             else
             {
-                Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxViewEventMessage(response.AsString()));
+                Msf.Events.Invoke(MsfEventKeys.showOkDialogBox, new OkDialogBoxEventMessage(response.AsString()));
                 logger.Error(response.AsString());
             }
         }

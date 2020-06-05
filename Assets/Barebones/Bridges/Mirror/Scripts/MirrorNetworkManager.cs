@@ -46,14 +46,19 @@ namespace Barebones.Bridges.Mirror
         public event Action OnHostStartedEvent;
 
         /// <summary>
+        /// Invokes when mirror host is stopped
+        /// </summary>
+        public event Action OnHostStopEvent;
+
+        /// <summary>
         /// Invokes when mirror client is started
         /// </summary>
         public event Action OnClientStartedEvent;
 
         /// <summary>
-        /// Invokes when mirror host is stopped
+        /// Invokes when mirror client is stopped
         /// </summary>
-        public event Action OnHostStopEvent;
+        public event Action OnClientStoppedEvent;
 
         /// <summary>
         /// This is called on the Server when a Client disconnects from the Server
@@ -98,7 +103,6 @@ namespace Barebones.Bridges.Mirror
         public override void OnStopServer()
         {
             base.OnStopServer();
-
             OnServerStoppedEvent?.Invoke();
         }
 
@@ -118,6 +122,12 @@ namespace Barebones.Bridges.Mirror
         {
             base.OnStartClient();
             OnClientStartedEvent?.Invoke();
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            OnClientStoppedEvent?.Invoke();
         }
 
         public override void OnServerDisconnect(NetworkConnection conn)
@@ -147,13 +157,23 @@ namespace Barebones.Bridges.Mirror
         /// <param name="arg2"></param>
         protected virtual void CreatePlayerRequestHandler(NetworkConnection connection, CreatePlayerMessage message)
         {
+            // Try to get old player
+            var oldPlayer = connection.identity?.gameObject;
+
             // Get start position of player
             Transform startPos = GetStartPosition();
-            GameObject player = startPos != null
-                ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
-                : Instantiate(playerPrefab);
 
-            NetworkServer.AddPlayerForConnection(connection, player);
+            // Create new player
+            GameObject player = startPos != null ? Instantiate(playerPrefab, startPos.position, startPos.rotation) : Instantiate(playerPrefab);
+
+            if (oldPlayer)
+            {
+                NetworkServer.ReplacePlayerForConnection(connection, player);
+            }
+            else
+            {
+                NetworkServer.AddPlayerForConnection(connection, player);
+            }
         }
     }
 }
