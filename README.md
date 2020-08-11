@@ -2,7 +2,7 @@
 
 ## Master Server Toolkit for Unity
 
-[![](https://master-toolkit.com/media/th4iz2gx/msf_logo.jpg)
+![](https://master-toolkit.com/media/th4iz2gx/msf_logo.jpg)
 
 Old [Asset Store Link](https://www.assetstore.unity3d.com/#!/content/71391) v2.0.4
 
