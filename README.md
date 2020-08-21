@@ -6,7 +6,7 @@
 
 Old [Asset Store Link](https://assetstore.unity.com/packages/tools/network/master-server-framework-71391) v2.0.4
 
-### [Download latest version package](https://aevien.itch.io/master-server-framework)
+### [Download latest version package](https://aevien.itch.io/mst)
 
 ## What Is This?
 
